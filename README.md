@@ -50,3 +50,7 @@ mulehang-blog
 3. **启动应用**: 运行 `com.mulehang.BlogWebApplication` 启动类。
 4. **访问文档**: 项目启动后访问 `http://localhost:8080/doc.html` 查看 API 文档。
 
+## 📄 许可证
+
+本项目采用 [MIT License](LICENSE) 许可。
+

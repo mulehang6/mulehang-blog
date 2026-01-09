@@ -43,3 +43,6 @@ build/
 # Build
 target/
 
+# Custom folders
+docs/
+

@@ -1,0 +1,45 @@
+package com.mulehang.blog.controller.api.v1;
+
+import com.mulehang.blog.model.Result;
+import com.mulehang.blog.storage.StorageService;
+import com.mulehang.blog.vo.UploadFileVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.dromara.x.file.storage.core.FileInfo;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+/**
+ * 文件上传 API。
+ */
+@RestController
+@RequestMapping("/api/v1/files")
+@Tag(name = "文件上传", description = "文件上传相关接口")
+public class FileController {
+
+    private final StorageService storageService;
+
+    public FileController(StorageService storageService) {
+        this.storageService = storageService;
+    }
+
+    @PostMapping("/upload")
+    @Operation(summary = "上传文件")
+    public Result<UploadFileVO> upload(@RequestParam("file") MultipartFile file) {
+        FileInfo info = storageService.upload(file);
+
+        UploadFileVO vo = new UploadFileVO();
+        vo.setUrl(info.getUrl());
+        vo.setPlatform(info.getPlatform());
+        vo.setPath(info.getPath());
+        vo.setFilename(info.getFilename());
+        vo.setOriginalFilename(info.getOriginalFilename());
+        vo.setExt(info.getExt());
+        vo.setSize(info.getSize());
+
+        return Result.ok(vo);
+    }
+}

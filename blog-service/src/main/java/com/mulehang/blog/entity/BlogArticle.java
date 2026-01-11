@@ -23,6 +23,8 @@ public class BlogArticle extends BaseEntity {
 
     private String slug;// 文章唯一标识
 
+    private String summary;// 摘要
+
     private String coverUrl;// 封面图片地址
 
     private Integer status;// 状态
@@ -34,6 +36,8 @@ public class BlogArticle extends BaseEntity {
     private Integer isPinned;// 是否置顶
 
     private Long authorId;// 逻辑外键，关联 sys_user.id
+
+    private Long categoryId;// 逻辑外键，关联 blog_category.id
 
     private Long columnId;// 逻辑外键，关联 blog_column.id
 

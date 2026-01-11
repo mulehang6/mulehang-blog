@@ -4,9 +4,9 @@ services:
     container_name: mulehang-blog-mysql
     environment:
       - 'MYSQL_DATABASE=mulehang_blog'
-      - 'MYSQL_ROOT_PASSWORD=verysecret'
-      - 'MYSQL_USER=myuser'
-      - 'MYSQL_PASSWORD=secret'
+      - 'MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}'
+      - 'MYSQL_USER=${MYSQL_USER}'
+      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'
       - 'TZ=Asia/Shanghai'
     ports:
       - '3306:3306'
@@ -63,7 +63,7 @@ services:
   #   container_name: mulehang-blog-mongodb
   #   environment:
   #     - 'MONGO_INITDB_ROOT_USERNAME=admin'
-  #     - 'MONGO_INITDB_ROOT_PASSWORD=admin123'
+  #     - 'MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}'
   #     - 'MONGO_INITDB_DATABASE=mulehang_blog'
   #   ports:
   #     - '27017:27017'

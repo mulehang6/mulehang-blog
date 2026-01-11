@@ -43,6 +43,10 @@ build/
 # Build
 target/
 
+# Local-only sensitive configs
+**/application-dev.yml
+.env
+
 # Custom folders
 docs/
 .mvn/

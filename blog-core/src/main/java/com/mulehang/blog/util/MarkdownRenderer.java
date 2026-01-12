@@ -15,6 +15,11 @@ public class MarkdownRenderer {
         this.markdownService = markdownService;
     }
 
+    /**
+     * 将 Markdown 转换为 HTML。
+     * @param markdown Markdown 文本
+     * @return HTML 文本
+     */
     public String renderToHtml(String markdown) {
         return markdownService.renderToHtml(markdown);
     }

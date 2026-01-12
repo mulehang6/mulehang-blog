@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
+    /**
+     * 插入时自动填充 createTime/updateTime/isDeleted。
+     * @param metaObject 元对象
+     */
     @Override
     public void insertFill(MetaObject metaObject) {
         // 自动填充 createTime/updateTime/isDeleted
@@ -20,6 +24,10 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "isDeleted", Integer.class, 0);
     }
 
+    /**
+     * 更新时自动填充 updateTime。
+     * @param metaObject 元对象
+     */
     @Override
     public void updateFill(MetaObject metaObject) {
         this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());

@@ -26,6 +26,11 @@ public class XFileStorageServiceImpl implements StorageService {
         this.properties = properties;
     }
 
+    /**
+     * 上传文件。
+     * @param file 文件
+     * @return 文件信息
+     */
     @Override
     public FileInfo upload(MultipartFile file) {
         validate(file);
@@ -51,6 +56,10 @@ public class XFileStorageServiceImpl implements StorageService {
         return fileInfo;
     }
 
+    /**
+     * 验证上传的文件。
+     * @param file 文件
+     */
     private void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("上传的文件为空");
@@ -67,6 +76,11 @@ public class XFileStorageServiceImpl implements StorageService {
         }
     }
 
+    /**
+     * 标准化路径。
+     * @param path 路径
+     * @return 标准化后的路径
+     */
     private String normalizePath(String path) {
         if (!StringUtils.hasText(path)) {
             return "";

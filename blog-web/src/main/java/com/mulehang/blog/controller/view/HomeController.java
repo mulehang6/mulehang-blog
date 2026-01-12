@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HomeController {
 
+    /**
+     * 首页。
+     *
+     * @param model 模型
+     * @return 视图名称
+     */
     @GetMapping("/")
     public String index(Model model) {
         model.addAttribute("message", "Hello Mulehang Blog");

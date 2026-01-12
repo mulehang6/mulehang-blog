@@ -11,20 +11,35 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 专栏 Service。
+ */
 @Service
 public class ColumnServiceImpl implements ColumnService {
 
     private final BlogColumnMapper columnMapper;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public ColumnServiceImpl(BlogColumnMapper columnMapper) {
         this.columnMapper = columnMapper;
     }
 
+    /**
+     * 创建专栏。
+     *
+     * @param dto 专栏创建 DTO
+     * @return 专栏 ID
+     * @throws IllegalArgumentException 当 dto 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(ColumnDTO dto) {
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("参数 dto 不能为空");
         }
         BlogColumn c = new BlogColumn();
         c.setName(dto.getName());
@@ -37,14 +52,21 @@ public class ColumnServiceImpl implements ColumnService {
         return c.getId();
     }
 
+    /**
+     * 更新专栏。
+     *
+     * @param id 专栏 ID
+     * @param dto 专栏更新 DTO
+     * @throws IllegalArgumentException 当 id 或 dto 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, ColumnDTO dto) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("参数 dto 不能为空");
         }
         BlogColumn patch = new BlogColumn();
         patch.setId(id);
@@ -57,23 +79,41 @@ public class ColumnServiceImpl implements ColumnService {
         columnMapper.updateById(patch);
     }
 
+    /**
+     * 删除专栏。
+     *
+     * @param id 专栏 ID
+     * @throws IllegalArgumentException 当 id 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         columnMapper.deleteById(id);
     }
 
+    /**
+     * 根据 ID 获取专栏。
+     *
+     * @param id 专栏 ID
+     * @return 专栏 VO
+     * @throws IllegalArgumentException 当 id 为空时抛出
+     */
     @Override
     public ColumnVO getById(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         return toVO(columnMapper.selectById(id));
     }
 
+    /**
+     * 获取所有专栏。
+     *
+     * @return 专栏列表
+     */
     @Override
     public List<ColumnVO> listAll() {
         return columnMapper.selectList(new LambdaQueryWrapper<BlogColumn>()
@@ -84,6 +124,12 @@ public class ColumnServiceImpl implements ColumnService {
                 .toList();
     }
 
+    /**
+     * 将专栏实体转换为专栏 VO。
+     *
+     * @param c 专栏实体
+     * @return 专栏 VO
+     */
     private ColumnVO toVO(BlogColumn c) {
         if (c == null) {
             return null;

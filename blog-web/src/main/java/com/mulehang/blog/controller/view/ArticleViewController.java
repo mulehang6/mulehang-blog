@@ -17,10 +17,22 @@ public class ArticleViewController {
 
     private final ArticleService articleService;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public ArticleViewController(ArticleService articleService) {
         this.articleService = articleService;
     }
 
+    /**
+     * 文章详情页。
+     *
+     * @param slug 文章 slug
+     * @param model 模型
+     * @return 视图名称
+     */
     @GetMapping("/{slug}")
     public String detail(@PathVariable String slug, Model model) {
         ArticleDetailVO detail = articleService.getArticleBySlug(slug);

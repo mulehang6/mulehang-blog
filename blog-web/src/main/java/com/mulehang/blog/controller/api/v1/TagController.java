@@ -20,16 +20,34 @@ public class TagController {
 
     private final TagService tagService;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public TagController(TagService tagService) {
         this.tagService = tagService;
     }
 
+    /**
+     * 创建标签。
+     *
+     * @param dto 标签创建 DTO
+     * @return 标签 ID
+     */
     @PostMapping
     @Operation(summary = "创建标签")
     public Result<Long> create(@RequestBody TagDTO dto) {
         return Result.ok(tagService.create(dto));
     }
 
+    /**
+     * 更新标签。
+     *
+     * @param id 标签 ID
+     * @param dto 标签更新 DTO
+     * @return 操作结果
+     */
     @PutMapping("/{id}")
     @Operation(summary = "更新标签")
     public Result<Void> update(@PathVariable Long id, @RequestBody TagDTO dto) {
@@ -37,6 +55,12 @@ public class TagController {
         return Result.ok();
     }
 
+    /**
+     * 删除标签。
+     *
+     * @param id 标签 ID
+     * @return 操作结果
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除标签")
     public Result<Void> delete(@PathVariable Long id) {
@@ -44,12 +68,23 @@ public class TagController {
         return Result.ok();
     }
 
+    /**
+     * 获取标签详情。
+     *
+     * @param id 标签 ID
+     * @return 标签详情
+     */
     @GetMapping("/{id}")
     @Operation(summary = "获取标签详情")
     public Result<TagVO> getById(@PathVariable Long id) {
         return Result.ok(tagService.getById(id));
     }
 
+    /**
+     * 标签列表。
+     *
+     * @return 标签列表
+     */
     @GetMapping
     @Operation(summary = "标签列表")
     public Result<List<TagVO>> listAll() {

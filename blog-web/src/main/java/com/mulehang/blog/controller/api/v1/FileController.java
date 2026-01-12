@@ -22,10 +22,21 @@ public class FileController {
 
     private final StorageService storageService;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public FileController(StorageService storageService) {
         this.storageService = storageService;
     }
 
+    /**
+     * 上传文件。
+     *
+     * @param file 上传的文件
+     * @return 文件上传结果
+     */
     @PostMapping("/upload")
     @Operation(summary = "上传文件")
     public Result<UploadFileVO> upload(@RequestParam("file") MultipartFile file) {

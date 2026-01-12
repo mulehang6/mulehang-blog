@@ -19,6 +19,15 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * 配置安全过滤器链。
+     *
+     * <p>当前配置禁用 CSRF，允许 Swagger 文档和 API 接口直接访问，其他请求需要认证。</p>
+     *
+     * @param http HTTP 安全配置
+     * @return 安全过滤器链
+     * @throws Exception 配置异常
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

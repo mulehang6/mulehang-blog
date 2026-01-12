@@ -11,20 +11,35 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 标签 Service。
+ */
 @Service
 public class TagServiceImpl implements TagService {
 
     private final BlogTagMapper tagMapper;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public TagServiceImpl(BlogTagMapper tagMapper) {
         this.tagMapper = tagMapper;
     }
 
+    /**
+     * 创建标签。
+     *
+     * @param dto 标签创建 DTO
+     * @return 标签 ID
+     * @throws IllegalArgumentException 当 dto 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(TagDTO dto) {
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("参数 dto 不能为空");
         }
         BlogTag t = new BlogTag();
         t.setName(dto.getName());
@@ -35,14 +50,21 @@ public class TagServiceImpl implements TagService {
         return t.getId();
     }
 
+    /**
+     * 更新标签。
+     *
+     * @param id 标签 ID
+     * @param dto 标签更新 DTO
+     * @throws IllegalArgumentException 当 id 或 dto 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, TagDTO dto) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("参数 dto 不能为空");
         }
         BlogTag patch = new BlogTag();
         patch.setId(id);
@@ -53,23 +75,41 @@ public class TagServiceImpl implements TagService {
         tagMapper.updateById(patch);
     }
 
+    /**
+     * 删除标签。
+     *
+     * @param id 标签 ID
+     * @throws IllegalArgumentException 当 id 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         tagMapper.deleteById(id);
     }
 
+    /**
+     * 根据 ID 获取标签。
+     *
+     * @param id 标签 ID
+     * @return 标签 VO
+     * @throws IllegalArgumentException 当 id 为空时抛出
+     */
     @Override
     public TagVO getById(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("参数 id 不能为空");
         }
         return toVO(tagMapper.selectById(id));
     }
 
+    /**
+     * 获取所有标签。
+     *
+     * @return 标签列表
+     */
     @Override
     public List<TagVO> listAll() {
         return tagMapper.selectList(new LambdaQueryWrapper<BlogTag>()
@@ -79,6 +119,12 @@ public class TagServiceImpl implements TagService {
                 .toList();
     }
 
+    /**
+     * 将标签实体转换为标签 VO。
+     *
+     * @param t 标签实体
+     * @return 标签 VO
+     */
     private TagVO toVO(BlogTag t) {
         if (t == null) {
             return null;

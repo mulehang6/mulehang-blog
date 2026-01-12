@@ -10,7 +10,11 @@ import com.mulehang.blog.dto.ArticleUpdateDTO;
 import com.mulehang.blog.entity.*;
 import com.mulehang.blog.mapper.*;
 import com.mulehang.blog.model.PageResult;
+import com.mulehang.blog.cache.MultiLevelCache;
+import com.mulehang.blog.redis.RedisKeys;
 import com.mulehang.blog.service.ArticleService;
+import com.mulehang.blog.service.CacheConsistencyService;
+import com.mulehang.blog.service.HotArticleService;
 import com.mulehang.blog.util.MarkdownRenderer;
 import com.mulehang.blog.vo.*;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * 文章 Service。
+ */
 @Service
 public class ArticleServiceImpl implements ArticleService {
 
@@ -45,7 +52,15 @@ public class ArticleServiceImpl implements ArticleService {
     private final SysUserMapper userMapper;
     private final ArticleConverter articleConverter;
     private final MarkdownRenderer markdownRenderer;
+    private final HotArticleService hotArticleService;
+    private final CacheConsistencyService cacheConsistencyService;
+    private final MultiLevelCache multiLevelCache;
 
+    /**
+     * 构造函数（构造器注入）。
+     *
+     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     */
     public ArticleServiceImpl(BlogArticleMapper articleMapper,
                               BlogArticleBodyMapper bodyMapper,
                               BlogArticleTagMapper articleTagMapper,
@@ -54,7 +69,10 @@ public class ArticleServiceImpl implements ArticleService {
                               BlogTagMapper tagMapper,
                               SysUserMapper userMapper,
                               ArticleConverter articleConverter,
-                              MarkdownRenderer markdownRenderer) {
+                              MarkdownRenderer markdownRenderer,
+                              HotArticleService hotArticleService,
+                              CacheConsistencyService cacheConsistencyService,
+                              MultiLevelCache multiLevelCache) {
         this.articleMapper = articleMapper;
         this.bodyMapper = bodyMapper;
         this.articleTagMapper = articleTagMapper;
@@ -64,19 +82,25 @@ public class ArticleServiceImpl implements ArticleService {
         this.userMapper = userMapper;
         this.articleConverter = articleConverter;
         this.markdownRenderer = markdownRenderer;
+        this.hotArticleService = hotArticleService;
+        this.cacheConsistencyService = cacheConsistencyService;
+        this.multiLevelCache = multiLevelCache;
     }
 
+    /**
+     * 创建文章。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createArticle(ArticleCreateDTO dto) {
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("dto 为空");
         }
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
-            throw new IllegalArgumentException("title is blank");
+            throw new IllegalArgumentException("标题为空");
         }
         if (dto.getContentMd() == null) {
-            throw new IllegalArgumentException("contentMd is null");
+            throw new IllegalArgumentException("内容为空");
         }
 
         BlogArticle article = articleConverter.toArticleEntity(dto);
@@ -107,22 +131,28 @@ public class ArticleServiceImpl implements ArticleService {
         bodyMapper.insert(body);
 
         saveArticleTags(article.getId(), dto.getTagIds());
+
+        // Cache-Aside（旁路缓存）：创建操作写入后应淘汰缓存
+        cacheConsistencyService.evictArticleDetail(article.getId());
         return article.getId();
     }
 
+    /**
+     * 更新文章。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateArticle(Long id, ArticleUpdateDTO dto) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("id 为空");
         }
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("dto 为空");
         }
 
         BlogArticle existing = articleMapper.selectById(id);
         if (existing == null) {
-            throw new IllegalArgumentException("article not found: " + id);
+            throw new IllegalArgumentException("找不到文章: " + id);
         }
 
         BlogArticle patch = new BlogArticle();
@@ -174,17 +204,28 @@ public class ArticleServiceImpl implements ArticleService {
             publishPatch.setPublishTime(LocalDateTime.now());
             articleMapper.updateById(publishPatch);
         }
+
+        // Cache-Aside（旁路缓存）+ 延迟双删（Delayed Double Delete）
+        cacheConsistencyService.evictArticleDetail(id);
     }
 
+    /**
+     * 发布文章。
+     *
+     * <p>将文章状态设置为已发布，并在首次发布时写入发布时间。</p>
+     *
+     * @param id 文章 ID
+     * @throws IllegalArgumentException 当 id 为空或文章不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishArticle(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("id 为空");
         }
         BlogArticle existing = articleMapper.selectById(id);
         if (existing == null) {
-            throw new IllegalArgumentException("article not found: " + id);
+            throw new IllegalArgumentException("文章未找到: " + id);
         }
         if (Objects.equals(existing.getStatus(), STATUS_PUBLISHED) && existing.getPublishTime() != null) {
             return;
@@ -194,34 +235,111 @@ public class ArticleServiceImpl implements ArticleService {
         patch.setStatus(STATUS_PUBLISHED);
         patch.setPublishTime(LocalDateTime.now());
         articleMapper.updateById(patch);
+
+        // 发布后应淘汰文章详情缓存
+        cacheConsistencyService.evictArticleDetail(id);
     }
 
+    /**
+     * 根据文章 ID 获取文章详情。
+     *
+     * <p>使用多级缓存读取详情（Cache-Aside），读取成功后会对热榜阅读计数进行累加。</p>
+     *
+     * @param id 文章 ID
+     * @return 文章详情
+     * @throws IllegalArgumentException 当 id 为空或文章不存在时抛出
+     */
     @Override
     public ArticleDetailVO getArticleDetail(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("id 为空");
         }
-        BlogArticle article = articleMapper.selectById(id);
-        if (article == null) {
-            throw new IllegalArgumentException("article not found: " + id);
+
+        // Cache-Aside（旁路缓存）：通过 ID 获取文章详情应读取缓存
+        String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + id;
+        ArticleDetailVO vo = multiLevelCache.get(cacheKey, ArticleDetailVO.class, () -> {
+            BlogArticle article = articleMapper.selectById(id);
+            if (article == null) {
+                return null;
+            }
+            return buildDetail(article);
+        });
+        if (vo == null) {
+            throw new IllegalArgumentException("通过 ID 找不到文章: " + id);
         }
-        return buildDetail(article);
+        // 访问详情时，增加热榜阅读计数（ZINCRBY）
+        hotArticleService.incrementReadCount(id);
+        return vo;
     }
 
+    /**
+     * 根据 slug 获取文章详情。
+     *
+     * <p>仅查询已发布文章，并复用与 {@link #getArticleDetail(Long)} 相同的缓存 Key。</p>
+     *
+     * @param slug 文章 slug
+     * @return 文章详情
+     * @throws IllegalArgumentException 当 slug 为空或文章不存在时抛出
+     */
     @Override
     public ArticleDetailVO getArticleBySlug(String slug) {
         if (slug == null || slug.isBlank()) {
-            throw new IllegalArgumentException("slug is blank");
+            throw new IllegalArgumentException("slug 为空");
         }
         BlogArticle article = articleMapper.selectOne(new LambdaQueryWrapper<BlogArticle>()
                 .eq(BlogArticle::getSlug, slug)
                 .eq(BlogArticle::getStatus, STATUS_PUBLISHED));
         if (article == null) {
-            throw new IllegalArgumentException("article not found by slug: " + slug);
+            throw new IllegalArgumentException("通过 slug 找不到文章: " + slug);
         }
-        return buildDetail(article);
+        // Cache-Aside（旁路缓存）：复用与 getArticleDetail(id) 相同的缓存 Key
+        Long id = article.getId();
+        String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + id;
+        ArticleDetailVO vo = multiLevelCache.get(cacheKey, ArticleDetailVO.class, () -> buildDetail(article));
+
+        // 访问详情时，增加热榜阅读计数（ZINCRBY）
+        hotArticleService.incrementReadCount(id);
+        return vo;
     }
 
+    /**
+     * 获取热榜文章列表。
+     *
+     * <p>先从 Redis 热榜中获取文章 ID，再按 ID 查询文章并按热榜顺序返回。</p>
+     *
+     * @param topN 返回数量（TopN）
+     * @return 热榜文章列表
+     */
+    @Override
+    public List<ArticleListVO> listHotArticles(int topN) {
+        List<Long> ids = hotArticleService.getHotArticleIds(topN);
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<BlogArticle> articles = articleMapper.selectList(new LambdaQueryWrapper<BlogArticle>()
+                .in(BlogArticle::getId, ids));
+        if (articles == null || articles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 从 Redis 热榜中获取文章 ID，再按 ID 查询文章。
+        Map<Long, BlogArticle> map = articles.stream()
+                .collect(Collectors.toMap(BlogArticle::getId, Function.identity(), (a, b) -> a));
+        List<BlogArticle> ordered = ids.stream()
+                .map(map::get)
+                .filter(Objects::nonNull)
+                .toList();
+        return buildListVO(ordered);
+    }
+
+    /**
+     * 分页查询文章列表。
+     *
+     * <p>支持按状态/分类/专栏/作者/标签/关键词过滤，并支持排序字段与顺序。</p>
+     *
+     * @param query 查询条件（允许为空，空则使用默认分页参数）
+     * @return 分页结果
+     */
     @Override
     public PageResult<ArticleListVO> listArticles(ArticleQueryDTO query) {
         if (query == null) {
@@ -274,16 +392,34 @@ public class ArticleServiceImpl implements ArticleService {
         return pr;
     }
 
+    /**
+     * 删除文章。
+     *
+     * <p>当前采用逻辑删除（由 MyBatis-Plus 逻辑删除机制处理），并淘汰文章详情缓存。</p>
+     *
+     * @param id 文章 ID
+     * @throws IllegalArgumentException 当 id 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteArticle(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("id is null");
+            throw new IllegalArgumentException("id 为空");
         }
         // 逻辑删除即可（MyBatis-Plus 逻辑删除：@TableLogic）。
         articleMapper.deleteById(id);
+
+        // 删除后应淘汰文章详情缓存
+        cacheConsistencyService.evictArticleDetail(id);
     }
 
+    /**
+     * 应用排序规则。
+     *
+     * @param qw        查询条件构造器
+     * @param sortBy    排序字段（如 publishTime/createTime/readCount）
+     * @param sortOrder 排序方向（asc/desc，不区分大小写）
+     */
     private void applySort(LambdaQueryWrapper<BlogArticle> qw, String sortBy, String sortOrder) {
         boolean asc = "asc".equalsIgnoreCase(sortOrder);
         if (sortBy == null || sortBy.isBlank()) {
@@ -298,6 +434,14 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 组装文章详情 VO。
+     *
+     * <p>包含正文、作者、分类、专栏、标签等关联信息。</p>
+     *
+     * @param article 文章实体
+     * @return 详情 VO
+     */
     private ArticleDetailVO buildDetail(BlogArticle article) {
         BlogArticleBody body = bodyMapper.selectOne(new LambdaQueryWrapper<BlogArticleBody>()
                 .eq(BlogArticleBody::getArticleId, article.getId()));
@@ -335,6 +479,14 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 将文章实体列表转换为列表页 VO。
+     *
+     * <p>为减少 N+1 查询，会批量加载作者/分类/标签等数据后再组装。</p>
+     *
+     * @param articles 文章实体列表
+     * @return 列表页 VO
+     */
     private List<ArticleListVO> buildListVO(List<BlogArticle> articles) {
         Set<Long> authorIds = articles.stream().map(BlogArticle::getAuthorId).filter(Objects::nonNull).collect(Collectors.toSet());
         Set<Long> categoryIds = articles.stream().map(BlogArticle::getCategoryId).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -398,6 +550,12 @@ public class ArticleServiceImpl implements ArticleService {
         return list;
     }
 
+    /**
+     * 根据文章 ID 加载标签列表。
+     *
+     * @param articleId 文章 ID
+     * @return 标签列表
+     */
     private List<TagVO> loadTagsByArticleId(Long articleId) {
         List<BlogArticleTag> rels = articleTagMapper.selectList(new LambdaQueryWrapper<BlogArticleTag>()
                 .eq(BlogArticleTag::getArticleId, articleId));
@@ -414,6 +572,12 @@ public class ArticleServiceImpl implements ArticleService {
                 .toList();
     }
 
+    /**
+     * 保存文章与标签的关联关系。
+     *
+     * @param articleId 文章 ID
+     * @param tagIds    标签 ID 列表
+     */
     private void saveArticleTags(Long articleId, List<Long> tagIds) {
         List<BlogArticleTag> rels = articleConverter.tagIdsToArticleTags(tagIds);
         if (rels == null || rels.isEmpty()) {
@@ -425,6 +589,14 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 统计 Markdown 内容的“字数”。
+     *
+     * <p>这里采用简单策略：统计非空白字符数量。</p>
+     *
+     * @param contentMd Markdown 内容
+     * @return 字数（非空白字符数）
+     */
     private int countWords(String contentMd) {
         if (contentMd == null || contentMd.isBlank()) {
             return 0;
@@ -438,6 +610,14 @@ public class ArticleServiceImpl implements ArticleService {
         return cnt;
     }
 
+    /**
+     * 根据标题生成文章 slug。
+     *
+     * <p>会将标题规整为小写、去除非法字符、空格替换为连字符，并追加随机后缀避免冲突。</p>
+     *
+     * @param title 文章标题
+     * @return slug
+     */
     private String generateSlug(String title) {
         String base = title == null ? "" : title.trim().toLowerCase(Locale.ROOT);
         base = base.replaceAll("[^a-z0-9\\s-]", "");
@@ -450,6 +630,14 @@ public class ArticleServiceImpl implements ArticleService {
         return base + "-" + suffix;
     }
 
+    /**
+     * 将 Long 安全转换为 int。
+     *
+     * <p>当值超过 int 最大值时进行截断，避免溢出。</p>
+     *
+     * @param v 数值
+     * @return int 值
+     */
     private int safeInt(Long v) {
         if (v == null) {
             return 0;
@@ -457,6 +645,12 @@ public class ArticleServiceImpl implements ArticleService {
         return v > Integer.MAX_VALUE ? Integer.MAX_VALUE : v.intValue();
     }
 
+    /**
+     * 将用户实体转换为用户 VO。
+     *
+     * @param u 用户实体
+     * @return 用户 VO
+     */
     private UserVO toUserVO(SysUser u) {
         if (u == null) {
             return null;
@@ -470,6 +664,12 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 将分类实体转换为分类 VO。
+     *
+     * @param c 分类实体
+     * @return 分类 VO
+     */
     private CategoryVO toCategoryVO(BlogCategory c) {
         if (c == null) {
             return null;
@@ -485,6 +685,12 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 将专栏实体转换为专栏 VO。
+     *
+     * @param c 专栏实体
+     * @return 专栏 VO
+     */
     private ColumnVO toColumnVO(BlogColumn c) {
         if (c == null) {
             return null;
@@ -500,6 +706,12 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 将标签实体转换为标签 VO。
+     *
+     * @param t 标签实体
+     * @return 标签 VO
+     */
     private TagVO toTagVO(BlogTag t) {
         if (t == null) {
             return null;

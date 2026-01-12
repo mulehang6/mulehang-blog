@@ -5,12 +5,10 @@ import com.mulehang.blog.service.DelayedEmailService;
 import com.mulehang.blog.task.EmailTask;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBlockingQueue;
-import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 延迟邮件 Service。
@@ -37,12 +35,8 @@ public class DelayedEmailServiceImpl implements DelayedEmailService {
         if (task == null) {
             throw new IllegalArgumentException("参数 task 不能为空");
         }
-        if (delay == null || delay.isNegative()) {
-            delay = Duration.ZERO;
-        }
 
         RBlockingQueue<EmailTask> blockingQueue = redissonClient.getBlockingQueue(RedisKeys.DELAYED_EMAIL_QUEUE);
-        RDelayedQueue<EmailTask> delayedQueue = redissonClient.getDelayedQueue(blockingQueue);
-        delayedQueue.offer(task, delay.toMillis(), TimeUnit.MILLISECONDS);
+        blockingQueue.offerAsync(task);
     }
 }

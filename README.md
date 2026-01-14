@@ -31,6 +31,7 @@ mulehang-blog
 ## 📈 当前进度
 
 目前已完成刚把mapper新建完。。尽量2月份之前学完
+- 1.14：本地配置好了es
 
 ## 🛠️ 环境要求
 
@@ -39,7 +40,7 @@ mulehang-blog
 - **MySQL**: 8.0+
 - **Redis**: 7.0+
 - **RabbitMQ**: 3.x+ 非必需
-
+- **Elasticsearch**: 8.x+ 非必需
 ## 🚦 快速启动
 
 1. **配置环境**: 修改 `blog-web/src/main/resources/application.yml` 中的数据源及中间件连接信息。

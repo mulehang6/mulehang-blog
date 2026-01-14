@@ -50,3 +50,5 @@ docs/
 /.factory/
 .mcp.json
 opencode.json
+/.claude/
+/scripts/es-lab.ps1

@@ -2,12 +2,16 @@
 
 ## 项目结构与模块组织
 这是一个 Spring Boot 3.3.7、Java 21 的多模块 Maven 项目。模块依赖流程：`blog-web` -> `blog-service` -> (`blog-core`, `blog-api`)。
-- `blog-api`：DTO/VO 契约和共享响应模型。
-- `blog-core`：基础设施工具（缓存、JWT、Markdown、OSS 等）。
-- `blog-service`：业务逻辑、数据访问、Liquibase、MQ、邮件、WebSocket。
+- `blog-api`：DTO/VO 契约、统一响应模型、枚举常量。
+- `blog-core`：基础设施工具（多级缓存、JWT、Markdown 渲染、文件存储、Redis 工具等）。
+- `blog-service`：业务逻辑、数据访问（MyBatis-Plus Mapper）、Liquibase、MQ、邮件、Redisson 分布式锁/延迟队列。
 - `blog-ui`：Thymeleaf 模板和 Web 资源（`blog-ui/src/main/resources/templates`）。
-- `blog-web`：Web 层和应用入口（`blog-web/src/main/java`）。
+- `blog-web`：Web 层控制器、全局异常处理、SpringDoc 配置、Spring Boot 主类。
 使用标准 Maven 布局：`*/src/main/java`、`*/src/main/resources`、`*/src/test/java`。
+
+## 已完成的里程碑
+- **Milestone 1（文章发布链路）**：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）。
+- **Milestone 2（缓存与热点数据）**：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略。
 
 ## 构建、测试和开发命令
 - `docker compose up -d`：从 `compose.yaml` 启动 MySQL、Redis、RabbitMQ。

@@ -61,6 +61,15 @@ spring:
         acknowledge-mode: manual
         prefetch: 1
 
+  # Elasticsearch 配置（Milestone 3：搜索）
+  # 说明：
+  # - 使用 Spring Boot 自动配置的 ES Java Client（elasticsearch-java）
+  # - 默认端口按你本地 ES 设置为 9201；如需调整，用环境变量 ELASTICSEARCH_URIS 覆盖
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9201}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
   # 邮件配置（需要时启用）
   mail:
     host: smtp.example.com

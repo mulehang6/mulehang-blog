@@ -111,6 +111,16 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
+        <!-- Elasticsearch (Milestone 3: 搜索)
+             说明：
+             - 使用 Elasticsearch 8.x 官方 Java Client（co.elastic.clients:elasticsearch-java）
+             - Spring Boot 会基于 spring.elasticsearch.* 自动装配 ElasticsearchClient Bean（后续直接注入即可）
+         -->
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

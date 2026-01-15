@@ -8,6 +8,7 @@ import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
 import com.mulehang.blog.dto.ArticleUpdateDTO;
 import com.mulehang.blog.entity.*;
+import com.mulehang.blog.es.ArticleIndexService;
 import com.mulehang.blog.mapper.*;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.cache.MultiLevelCache;
@@ -17,6 +18,7 @@ import com.mulehang.blog.service.CacheConsistencyService;
 import com.mulehang.blog.service.HotArticleService;
 import com.mulehang.blog.util.MarkdownRenderer;
 import com.mulehang.blog.vo.*;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +59,15 @@ public class ArticleServiceImpl implements ArticleService {
     private final MultiLevelCache multiLevelCache;
 
     /**
+     * Elasticsearch 索引服务（可选）。
+     * <p>
+     * 说明：ES 属于 Milestone 3 的可选组件，因此这里用 {@link ObjectProvider} 做“可选注入”，
+     * 未启用 ES 时不会影响文章主流程。
+     * </p>
+     */
+    private final ObjectProvider<ArticleIndexService> articleIndexServiceProvider;
+
+    /**
      * 构造函数（构造器注入）。
      *
      * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
@@ -72,7 +83,8 @@ public class ArticleServiceImpl implements ArticleService {
                               MarkdownRenderer markdownRenderer,
                               HotArticleService hotArticleService,
                               CacheConsistencyService cacheConsistencyService,
-                              MultiLevelCache multiLevelCache) {
+                              MultiLevelCache multiLevelCache,
+                              ObjectProvider<ArticleIndexService> articleIndexServiceProvider) {
         this.articleMapper = articleMapper;
         this.bodyMapper = bodyMapper;
         this.articleTagMapper = articleTagMapper;
@@ -85,6 +97,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.hotArticleService = hotArticleService;
         this.cacheConsistencyService = cacheConsistencyService;
         this.multiLevelCache = multiLevelCache;
+        this.articleIndexServiceProvider = articleIndexServiceProvider;
     }
 
     /**
@@ -134,6 +147,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         // Cache-Aside（旁路缓存）：创建操作写入后应淘汰缓存
         cacheConsistencyService.evictArticleDetail(article.getId());
+
+        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
+        syncEsIndexAfterCommitIfEnabled(article.getId());
         return article.getId();
     }
 
@@ -207,6 +223,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         // Cache-Aside（旁路缓存）+ 延迟双删（Delayed Double Delete）
         cacheConsistencyService.evictArticleDetail(id);
+
+        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
+        syncEsIndexAfterCommitIfEnabled(id);
     }
 
     /**
@@ -238,6 +257,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 发布后应淘汰文章详情缓存
         cacheConsistencyService.evictArticleDetail(id);
+
+        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
+        syncEsIndexAfterCommitIfEnabled(id);
     }
 
     /**
@@ -411,6 +433,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 删除后应淘汰文章详情缓存
         cacheConsistencyService.evictArticleDetail(id);
+
+        // ES 索引删除：事务提交后异步删除（ES 可选组件，未启用则直接跳过）
+        deleteEsIndexAfterCommitIfEnabled(id);
     }
 
     /**
@@ -587,6 +612,38 @@ public class ArticleServiceImpl implements ArticleService {
             rel.setArticleId(articleId);
             articleTagMapper.insert(rel);
         }
+    }
+
+    /**
+     * 如果启用了 Elasticsearch，则在事务提交后异步同步文章索引。
+     *
+     * <p>说明：</p>
+     * <ul>
+     *     <li>ES 作为可选组件：未启用时，该方法会直接返回。</li>
+     *     <li>同步发生在事务提交后：避免事务回滚导致 ES 与 MySQL 不一致。</li>
+     * </ul>
+     *
+     * @param articleId 文章 ID
+     */
+    private void syncEsIndexAfterCommitIfEnabled(Long articleId) {
+        ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
+        if (indexService == null) {
+            return;
+        }
+        indexService.syncArticleAfterCommit(articleId);
+    }
+
+    /**
+     * 如果启用了 Elasticsearch，则在事务提交后异步删除文章索引。
+     *
+     * @param articleId 文章 ID
+     */
+    private void deleteEsIndexAfterCommitIfEnabled(Long articleId) {
+        ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
+        if (indexService == null) {
+            return;
+        }
+        indexService.deleteArticleAfterCommit(articleId);
     }
 
     /**

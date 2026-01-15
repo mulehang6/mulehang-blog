@@ -2,7 +2,9 @@ package com.mulehang.blog.controller.api.v1;
 
 import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
+import com.mulehang.blog.dto.ArticleSearchDTO;
 import com.mulehang.blog.dto.ArticleUpdateDTO;
+import com.mulehang.blog.es.ArticleSearchService;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.service.ArticleService;
@@ -11,9 +13,11 @@ import com.mulehang.blog.service.LikeService;
 import com.mulehang.blog.task.EmailTask;
 import com.mulehang.blog.vo.ArticleDetailVO;
 import com.mulehang.blog.vo.ArticleListVO;
+import com.mulehang.blog.vo.ArticleSearchVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,16 +33,27 @@ public class ArticleController {
     private final DelayedEmailService delayedEmailService;
 
     /**
+     * ES 搜索服务（可选）。
+     * <p>
+     * 说明：ES 属于 Milestone 3 的可选组件，因此使用 {@link ObjectProvider} 做可选注入。
+     * 当 ES 未启用时，搜索接口会返回友好错误信息。
+     * </p>
+     */
+    private final ObjectProvider<ArticleSearchService> articleSearchServiceProvider;
+
+    /**
      * 构造函数（构造器注入）。
      *
      * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
      */
     public ArticleController(ArticleService articleService,
                              LikeService likeService,
-                             DelayedEmailService delayedEmailService) {
+                             DelayedEmailService delayedEmailService,
+                             ObjectProvider<ArticleSearchService> articleSearchServiceProvider) {
         this.articleService = articleService;
         this.likeService = likeService;
         this.delayedEmailService = delayedEmailService;
+        this.articleSearchServiceProvider = articleSearchServiceProvider;
     }
 
     /**
@@ -114,6 +129,36 @@ public class ArticleController {
     @Operation(summary = "分页查询文章")
     public Result<PageResult<ArticleListVO>> list(ArticleQueryDTO query) {
         return Result.ok(articleService.listArticles(query));
+    }
+
+    /**
+     * 搜索文章（Elasticsearch）。
+     *
+     * <p>接口约定：</p>
+     * <ul>
+     *     <li>GET /api/v1/articles/search</li>
+     *     <li>参数：keyword/pageNo/pageSize/categoryId/authorId/tag</li>
+     *     <li>返回：{@link PageResult}<{@link ArticleSearchVO}>，包含 title/summary 高亮字段</li>
+     * </ul>
+     *
+     * <p>为什么不直接复用分页查询接口？</p>
+     * <ul>
+     *     <li>分页查询：主要走 MySQL like/eq 条件。</li>
+     *     <li>搜索：走 ES 全文检索 + 高亮，返回结构会多出 highlight 字段。</li>
+     * </ul>
+     *
+     * @param query 搜索条件
+     * @return 搜索结果分页
+     */
+    @GetMapping("/search")
+    @Operation(summary = "全文搜索文章（ES）")
+    public Result<PageResult<ArticleSearchVO>> search(ArticleSearchDTO query) {
+        ArticleSearchService searchService = articleSearchServiceProvider.getIfAvailable();
+        if (searchService == null) {
+            // ES 未启用：给出明确提示（不抛异常避免出现 500 stacktrace）
+            return Result.fail("Elasticsearch 未启用或未配置：请确认已启动 ES 并配置 spring.elasticsearch.uris");
+        }
+        return Result.ok(searchService.search(query));
     }
 
     /**

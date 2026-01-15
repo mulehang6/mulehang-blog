@@ -40,6 +40,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class BlogArticleIndexInitializer implements ApplicationRunner {
 
+    private static final String ANALYZER_IK_MAX_WORD = "ik_max_word";
+    private static final String ANALYZER_IK_SMART = "ik_smart";
+    private static final String ANALYZER_STANDARD = "standard";
+
     /**
      * Elasticsearch 官方 Java Client。
      * <p>
@@ -83,8 +87,29 @@ public class BlogArticleIndexInitializer implements ApplicationRunner {
             return;
         }
 
-        // 创建索引 + mapping
-        CreateIndexResponse resp = esClient.indices().create(req -> req
+        // 优先使用 IK 分词器，若插件缺失则回退到 standard
+        try {
+            CreateIndexResponse resp = createIndexWithAnalyzer(ANALYZER_IK_MAX_WORD, ANALYZER_IK_SMART);
+            log.info("ES 索引创建完成（IK）：index={}, acknowledged={}, shardsAcknowledged={}",
+                    EsIndexNames.BLOG_ARTICLE, resp.acknowledged(), resp.shardsAcknowledged());
+        } catch (Exception e) {
+            log.warn("ES 索引创建失败（IK 分词器不可用，尝试回退到 standard），msg={}", e.getMessage());
+            CreateIndexResponse resp = createIndexWithAnalyzer(ANALYZER_STANDARD, ANALYZER_STANDARD);
+            log.info("ES 索引创建完成（standard）：index={}, acknowledged={}, shardsAcknowledged={}",
+                    EsIndexNames.BLOG_ARTICLE, resp.acknowledged(), resp.shardsAcknowledged());
+        }
+    }
+
+    /**
+     * 使用指定分词器创建索引。
+     *
+     * @param analyzer        索引分词器
+     * @param searchAnalyzer  搜索分词器
+     * @return 创建索引响应
+     * @throws IOException 与 ES 通信失败
+     */
+    private CreateIndexResponse createIndexWithAnalyzer(String analyzer, String searchAnalyzer) throws IOException {
+        return esClient.indices().create(req -> req
                 .index(EsIndexNames.BLOG_ARTICLE)
                 // settings：学习项目默认 1 分片 + 0 副本，减少资源占用（生产环境请按实际调整）
                 .settings(s -> s
@@ -96,13 +121,12 @@ public class BlogArticleIndexInitializer implements ApplicationRunner {
                         .properties("id", p -> p.long_(t -> t))
 
                         // ===== 全文检索字段（text）=====
-                        // 重要：使用 IK 分词器，需要 ES 安装 IK 插件。
                         // title：权重最高（搜索时会设置 title^3）。
-                        .properties("title", p -> p.text(t -> t.analyzer("ik_max_word").searchAnalyzer("ik_smart")))
+                        .properties("title", p -> p.text(t -> t.analyzer(analyzer).searchAnalyzer(searchAnalyzer)))
                         // summary：摘要（搜索时会设置 summary^2）。
-                        .properties("summary", p -> p.text(t -> t.analyzer("ik_max_word").searchAnalyzer("ik_smart")))
+                        .properties("summary", p -> p.text(t -> t.analyzer(analyzer).searchAnalyzer(searchAnalyzer)))
                         // content：正文（权重最低）。
-                        .properties("content", p -> p.text(t -> t.analyzer("ik_max_word").searchAnalyzer("ik_smart")))
+                        .properties("content", p -> p.text(t -> t.analyzer(analyzer).searchAnalyzer(searchAnalyzer)))
 
                         // ===== 结构化字段（keyword/number/date）=====
                         .properties("slug", p -> p.keyword(t -> t))
@@ -131,8 +155,5 @@ public class BlogArticleIndexInitializer implements ApplicationRunner {
                         .properties("commentCount", p -> p.integer(t -> t))
                 )
         );
-
-        log.info("ES 索引创建完成：index={}, acknowledged={}, shardsAcknowledged={}",
-                EsIndexNames.BLOG_ARTICLE, resp.acknowledged(), resp.shardsAcknowledged());
     }
 }

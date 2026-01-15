@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import jakarta.annotation.PreDestroy;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -72,7 +74,7 @@ public class ArticleIndexService {
      *     <li>线程设为 daemon，避免阻止 JVM 退出。</li>
      * </ul>
      */
-    private static final ExecutorService INDEX_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+    private final ExecutorService indexExecutor = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r);
         t.setName("es-article-indexer");
         t.setDaemon(true);
@@ -113,11 +115,11 @@ public class ArticleIndexService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    INDEX_EXECUTOR.execute(task);
+                    indexExecutor.execute(task);
                 }
             });
         } else {
-            INDEX_EXECUTOR.execute(task);
+            indexExecutor.execute(task);
         }
     }
 
@@ -146,12 +148,22 @@ public class ArticleIndexService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    INDEX_EXECUTOR.execute(task);
+                    indexExecutor.execute(task);
                 }
             });
         } else {
-            INDEX_EXECUTOR.execute(task);
+            indexExecutor.execute(task);
         }
+    }
+
+    /**
+     * 关闭 ES 索引同步线程池。
+     *
+     * <p>避免应用热重启时出现线程泄漏。</p>
+     */
+    @PreDestroy
+    public void shutdownExecutor() {
+        indexExecutor.shutdown();
     }
 
     /**

@@ -74,4 +74,22 @@ public class MarkdownService {
         String html = renderer.render(document);
         return Jsoup.clean(html, safelist);
     }
+
+    /**
+     * 清洗高亮片段 HTML（仅允许有限标签与属性）。
+     *
+     * <p>用于 ES 高亮结果（通常包含 <em>），避免前端渲染时的 XSS。</p>
+     *
+     * @param highlight 高亮 HTML
+     * @return 清洗后的高亮 HTML
+     */
+    public String sanitizeHighlight(String highlight) {
+        if (highlight == null || highlight.isBlank()) {
+            return highlight;
+        }
+        Safelist highlightSafelist = Safelist.none()
+                .addTags("em")
+                .addAttributes(":all", "class");
+        return Jsoup.clean(highlight, highlightSafelist);
+    }
 }

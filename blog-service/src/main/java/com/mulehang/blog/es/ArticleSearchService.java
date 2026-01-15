@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.mulehang.blog.dto.ArticleSearchDTO;
 import com.mulehang.blog.es.document.ArticleDocument;
 import com.mulehang.blog.model.PageResult;
+import com.mulehang.blog.util.MarkdownRenderer;
 import com.mulehang.blog.vo.ArticleSearchVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class ArticleSearchService {
     private static final int STATUS_PUBLISHED = 1;
 
     private final ElasticsearchClient esClient;
+    private final MarkdownRenderer markdownRenderer;
 
     /**
      * 搜索文章。
@@ -189,8 +191,8 @@ public class ArticleSearchService {
             // 高亮字段：可能不存在
             Map<String, List<String>> highlight = hit.highlight();
             if (highlight != null) {
-                vo.setHighlightTitle(joinHighlight(highlight.get("title")));
-                vo.setHighlightSummary(joinHighlight(highlight.get("summary")));
+                vo.setHighlightTitle(cleanHighlight(joinHighlight(highlight.get("title"))));
+                vo.setHighlightSummary(cleanHighlight(joinHighlight(highlight.get("summary"))));
             }
 
             list.add(vo);
@@ -228,5 +230,20 @@ public class ArticleSearchService {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * 清洗高亮 HTML，限制为安全白名单。
+     *
+     * <p>避免前端直接渲染高亮字段时出现 XSS。</p>
+     *
+     * @param highlight 高亮字符串
+     * @return 清洗后的高亮字符串
+     */
+    private String cleanHighlight(String highlight) {
+        if (highlight == null || highlight.isBlank()) {
+            return highlight;
+        }
+        return markdownRenderer.sanitizeHighlight(highlight);
     }
 }

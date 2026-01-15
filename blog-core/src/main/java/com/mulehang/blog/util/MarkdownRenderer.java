@@ -23,4 +23,14 @@ public class MarkdownRenderer {
     public String renderToHtml(String markdown) {
         return markdownService.renderToHtml(markdown);
     }
+
+    /**
+     * 清洗高亮 HTML（仅允许 <em> 等必要标签）。
+     *
+     * @param highlight 高亮片段
+     * @return 清洗后的高亮片段
+     */
+    public String sanitizeHighlight(String highlight) {
+        return markdownService.sanitizeHighlight(highlight);
+    }
 }

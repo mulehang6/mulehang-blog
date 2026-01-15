@@ -31,7 +31,7 @@ import java.io.IOException;
  * <ul>
  *     <li>本项目的 ES 属于“可选组件”（参考开发指南），因此这里采取“尽量不影响启动”的策略：
  *     如果 ES 没启动或网络不可达，记录 warn 并跳过初始化。</li>
- *     <li>mapping 中使用了 IK 分词器（ik_max_word/ik_smart），你本地 ES 需要安装 IK 插件，否则创建索引会报错。</li>
+ *     <li>mapping 中优先使用 IK 分词器（ik_max_word/ik_smart）；若 ES 未安装 IK，会回退到 standard 分词器创建索引。</li>
  * </ul>
  */
 @Slf4j

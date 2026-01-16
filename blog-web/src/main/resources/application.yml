@@ -1,3 +1,8 @@
+# 博客自定义配置
+blog:
+  elasticsearch:
+    enabled: ${ELASTICSEARCH_ENABLED:true}
+
 spring:
 
   # profile 不建议写在 application.yml 里：
@@ -65,6 +70,7 @@ spring:
   # 说明：
   # - 使用 Spring Boot 自动配置的 ES Java Client（elasticsearch-java）
   # - 默认端口按你本地 ES 设置为 9201；如需调整，用环境变量 ELASTICSEARCH_URIS 覆盖
+  # - blog.elasticsearch.enabled=true 时才加载 ES 相关 Bean
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9201}
     username: ${ELASTICSEARCH_USERNAME:}

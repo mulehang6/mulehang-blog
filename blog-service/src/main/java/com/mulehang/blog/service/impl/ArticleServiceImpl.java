@@ -8,8 +8,8 @@ import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
 import com.mulehang.blog.dto.ArticleUpdateDTO;
 import com.mulehang.blog.entity.*;
-import com.mulehang.blog.es.ArticleIndexService;
 import com.mulehang.blog.mapper.*;
+import com.mulehang.blog.mq.producer.ArticleMessageProducer;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.cache.MultiLevelCache;
 import com.mulehang.blog.redis.RedisKeys;
@@ -59,13 +59,13 @@ public class ArticleServiceImpl implements ArticleService {
     private final MultiLevelCache multiLevelCache;
 
     /**
-     * Elasticsearch 索引服务（可选）。
+     * 文章消息生产者（可选）。
      * <p>
-     * 说明：ES 属于 Milestone 3 的可选组件，因此这里用 {@link ObjectProvider} 做“可选注入”，
-     * 未启用 ES 时不会影响文章主流程。
+     * 说明：MQ 组件属于 Milestone 3 的可选组件，因此这里用 {@link ObjectProvider} 做"可选注入"，
+     * 未启用 RabbitMQ 时不会影响文章主流程。
      * </p>
      */
-    private final ObjectProvider<ArticleIndexService> articleIndexServiceProvider;
+    private final ObjectProvider<ArticleMessageProducer> articleMessageProducerProvider;
 
     /**
      * 构造函数（构造器注入）。
@@ -84,7 +84,7 @@ public class ArticleServiceImpl implements ArticleService {
                               HotArticleService hotArticleService,
                               CacheConsistencyService cacheConsistencyService,
                               MultiLevelCache multiLevelCache,
-                              ObjectProvider<ArticleIndexService> articleIndexServiceProvider) {
+                              ObjectProvider<ArticleMessageProducer> articleMessageProducerProvider) {
         this.articleMapper = articleMapper;
         this.bodyMapper = bodyMapper;
         this.articleTagMapper = articleTagMapper;
@@ -97,7 +97,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.hotArticleService = hotArticleService;
         this.cacheConsistencyService = cacheConsistencyService;
         this.multiLevelCache = multiLevelCache;
-        this.articleIndexServiceProvider = articleIndexServiceProvider;
+        this.articleMessageProducerProvider = articleMessageProducerProvider;
     }
 
     /**
@@ -148,8 +148,8 @@ public class ArticleServiceImpl implements ArticleService {
         // Cache-Aside（旁路缓存）：创建操作写入后应淘汰缓存
         cacheConsistencyService.evictArticleDetail(article.getId());
 
-        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
-        syncEsIndexAfterCommitIfEnabled(article.getId());
+        // MQ 消息：事务提交后发送 UPSERT 消息（MQ 可选组件，未启用则跳过）
+        sendArticleUpsertMqIfEnabled(article.getId(), "create");
         return article.getId();
     }
 
@@ -224,8 +224,8 @@ public class ArticleServiceImpl implements ArticleService {
         // Cache-Aside（旁路缓存）+ 延迟双删（Delayed Double Delete）
         cacheConsistencyService.evictArticleDetail(id);
 
-        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
-        syncEsIndexAfterCommitIfEnabled(id);
+        // MQ 消息：事务提交后发送 UPSERT 消息（MQ 可选组件，未启用则跳过）
+        sendArticleUpsertMqIfEnabled(id, "update");
     }
 
     /**
@@ -258,8 +258,8 @@ public class ArticleServiceImpl implements ArticleService {
         // 发布后应淘汰文章详情缓存
         cacheConsistencyService.evictArticleDetail(id);
 
-        // ES 索引同步：事务提交后异步同步（ES 可选组件，未启用则直接跳过）
-        syncEsIndexAfterCommitIfEnabled(id);
+        // MQ 消息：事务提交后发送 UPSERT 消息（MQ 可选组件，未启用则跳过）
+        sendArticleUpsertMqIfEnabled(id, "publish");
     }
 
     /**
@@ -434,8 +434,8 @@ public class ArticleServiceImpl implements ArticleService {
         // 删除后应淘汰文章详情缓存
         cacheConsistencyService.evictArticleDetail(id);
 
-        // ES 索引删除：事务提交后异步删除（ES 可选组件，未启用则直接跳过）
-        deleteEsIndexAfterCommitIfEnabled(id);
+        // MQ 消息：事务提交后发送 DELETE 消息（MQ 可选组件，未启用则跳过）
+        sendArticleDeleteMqIfEnabled(id);
     }
 
     /**
@@ -615,35 +615,37 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
-     * 如果启用了 Elasticsearch，则在事务提交后异步同步文章索引。
+     * 如果启用了 RabbitMQ，则发送文章 UPSERT 消息到 MQ。
      *
      * <p>说明：</p>
      * <ul>
-     *     <li>ES 作为可选组件：未启用时，该方法会直接返回。</li>
-     *     <li>同步发生在事务提交后：避免事务回滚导致 ES 与 MySQL 不一致。</li>
+     *     <li>MQ 作为可选组件：未启用时，该方法会直接返回。</li>
+     *     <li>消息发送发生在事务提交后：由 {@link ArticleMessageProducer} 内部保证。</li>
+     *     <li>Consumer 收到消息后会查 DB 并同步到 ES。</li>
      * </ul>
      *
      * @param articleId 文章 ID
+     * @param reason    触发原因（create / update / publish）
      */
-    private void syncEsIndexAfterCommitIfEnabled(Long articleId) {
-        ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
-        if (indexService == null) {
+    private void sendArticleUpsertMqIfEnabled(Long articleId, String reason) {
+        ArticleMessageProducer producer = articleMessageProducerProvider.getIfAvailable();
+        if (producer == null) {
             return;
         }
-        indexService.syncArticleAfterCommit(articleId);
+        producer.sendUpsert(articleId, reason);
     }
 
     /**
-     * 如果启用了 Elasticsearch，则在事务提交后异步删除文章索引。
+     * 如果启用了 RabbitMQ，则发送文章 DELETE 消息到 MQ。
      *
      * @param articleId 文章 ID
      */
-    private void deleteEsIndexAfterCommitIfEnabled(Long articleId) {
-        ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
-        if (indexService == null) {
+    private void sendArticleDeleteMqIfEnabled(Long articleId) {
+        ArticleMessageProducer producer = articleMessageProducerProvider.getIfAvailable();
+        if (producer == null) {
             return;
         }
-        indexService.deleteArticleAfterCommit(articleId);
+        producer.sendDelete(articleId);
     }
 
     /**

@@ -178,7 +178,7 @@ public class ArticleIndexService {
      * @param articleId 文章 ID
      * @throws IOException 与 Elasticsearch 通信失败
      */
-    void syncArticle(Long articleId) throws IOException {
+    public void syncArticle(Long articleId) throws IOException {
         BlogArticle article = articleMapper.selectById(articleId);
         if (article == null) {
             // 文章不存在：视为已删除，清理 ES 索引
@@ -209,7 +209,7 @@ public class ArticleIndexService {
      * @param articleId 文章 ID
      * @throws IOException 与 Elasticsearch 通信失败
      */
-    void deleteArticleDoc(Long articleId) throws IOException {
+    public void deleteArticleDoc(Long articleId) throws IOException {
         if (articleId == null) {
             return;
         }

@@ -97,6 +97,16 @@ public class RabbitMqConfig {
         return new TopicExchange(MqConstants.ARTICLE_EXCHANGE, true, false);
     }
 
+    /**
+     * 评论交换机。
+     *
+     * @return DirectExchange
+     */
+    @Bean
+    public DirectExchange commentExchange() {
+        return new DirectExchange(MqConstants.COMMENT_EXCHANGE, true, false);
+    }
+
     // ========================================================================
     // 文章队列（带死信配置）
     // ========================================================================
@@ -137,6 +147,20 @@ public class RabbitMqConfig {
                 .build();
     }
 
+    /**
+     * 评论通知队列（评论发布后通知作者）。
+     *
+     * @return Queue
+     */
+    @Bean
+    public Queue commentNotifyQueue() {
+        return QueueBuilder
+                .durable(MqConstants.COMMENT_NOTIFY_QUEUE)
+                .deadLetterExchange(MqConstants.DLX_EXCHANGE)
+                .deadLetterRoutingKey(MqConstants.DLX_ROUTING_KEY_COMMENT)
+                .build();
+    }
+
     // ========================================================================
     // 绑定（Binding）：告诉 Exchange 如何路由消息到 Queue
     // ========================================================================
@@ -173,6 +197,21 @@ public class RabbitMqConfig {
                 .bind(articleDeleteQueue)
                 .to(articleExchange)
                 .with(MqConstants.ROUTING_KEY_ARTICLE_DELETE);
+    }
+
+    /**
+     * 绑定：comment.notify -> commentNotifyQueue。
+     *
+     * @param commentNotifyQueue 评论通知队列
+     * @param commentExchange    评论交换机
+     * @return Binding
+     */
+    @Bean
+    public Binding commentNotifyBinding(Queue commentNotifyQueue, DirectExchange commentExchange) {
+        return BindingBuilder
+                .bind(commentNotifyQueue)
+                .to(commentExchange)
+                .with(MqConstants.ROUTING_KEY_COMMENT_NOTIFY);
     }
 
     // ========================================================================
@@ -222,5 +261,20 @@ public class RabbitMqConfig {
                 .bind(dlxQueue)
                 .to(dlxExchange)
                 .with(MqConstants.DLX_ROUTING_KEY_ARTICLE);
+    }
+
+    /**
+     * 绑定：dlx.comment -> dlxQueue。
+     *
+     * @param dlxQueue    死信队列
+     * @param dlxExchange 死信交换机
+     * @return Binding
+     */
+    @Bean
+    public Binding dlxCommentBinding(Queue dlxQueue, DirectExchange dlxExchange) {
+        return BindingBuilder
+                .bind(dlxQueue)
+                .to(dlxExchange)
+                .with(MqConstants.DLX_ROUTING_KEY_COMMENT);
     }
 }

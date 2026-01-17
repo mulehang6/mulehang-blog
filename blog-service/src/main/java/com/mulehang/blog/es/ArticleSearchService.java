@@ -22,18 +22,23 @@ import java.util.Map;
 /**
  * 文章搜索服务（Elasticsearch）。
  *
- * <p>职责：</p>
+ * <p>
+ * 职责：
+ * </p>
  * <ul>
- *     <li>构建 ES 查询 DSL：multi_match（title/summary/content） + filter（status/category/author/tag）</li>
- *     <li>分页：from/size</li>
- *     <li>高亮：title/summary</li>
- *     <li>将 ES 命中结果转换为统一分页返回 {@link PageResult}<{@link ArticleSearchVO}></li>
+ * <li>构建 ES 查询 DSL：multi_match（title/summary/content） +
+ * filter（status/category/author/tag）</li>
+ * <li>分页：from/size</li>
+ * <li>高亮：title/summary</li>
+ * <li>将 ES 命中结果转换为统一分页返回 {@link PageResult}<{@link ArticleSearchVO}></li>
  * </ul>
  *
- * <p>容错说明：</p>
+ * <p>
+ * 容错说明：
+ * </p>
  * <ul>
- *     <li>若 ES 不可用，抛出 {@link IllegalStateException} 由上层统一处理。</li>
- *     <li>ES 属于可选组件，因此本服务仅在容器中存在 {@link ElasticsearchClient} 时才会创建。</li>
+ * <li>若 ES 不可用，抛出 {@link IllegalStateException} 由上层统一处理。</li>
+ * <li>ES 属于可选组件，因此本服务仅在容器中存在 {@link ElasticsearchClient} 时才会创建。</li>
  * </ul>
  */
 @Slf4j
@@ -57,10 +62,12 @@ public class ArticleSearchService {
     /**
      * 搜索文章。
      *
-     * <p>查询策略：</p>
+     * <p>
+     * 查询策略：
+     * </p>
      * <ul>
-     *     <li>keyword 非空：multi_match(title^3, summary^2, content)</li>
-     *     <li>keyword 为空：match_all（仅过滤条件生效）</li>
+     * <li>keyword 非空：multi_match(title^3, summary^2, content)</li>
+     * <li>keyword 为空：match_all（仅过滤条件生效）</li>
      * </ul>
      *
      * @param dto 查询条件
@@ -87,60 +94,53 @@ public class ArticleSearchService {
 
         try {
             SearchResponse<ArticleDocument> response = esClient.search(s -> s
-                            .index(EsIndexNames.BLOG_ARTICLE)
-                            .from(from)
-                            .size(pageSize)
-                            // 需要 total 才能正确返回 PageResult.total
-                            .trackTotalHits(t -> t.enabled(true))
-                            // query：bool(must + filter)
-                            .query(q -> q.bool(b -> {
-                                // ===== 过滤：只搜已发布 =====
-                                b.filter(f -> f.term(t -> t
-                                        .field("status")
-                                        .value(v -> v.longValue(STATUS_PUBLISHED))
-                                ));
+                    .index(EsIndexNames.BLOG_ARTICLE)
+                    .from(from)
+                    .size(pageSize)
+                    // 需要 total 才能正确返回 PageResult.total
+                    .trackTotalHits(t -> t.enabled(true))
+                    // query：bool(must + filter)
+                    .query(q -> q.bool(b -> {
+                        // ===== 过滤：只搜已发布 =====
+                        b.filter(f -> f.term(t -> t
+                                .field("status")
+                                .value(v -> v.longValue(STATUS_PUBLISHED))));
 
-                                // ===== 过滤：分类/作者/标签 =====
-                                if (categoryId != null) {
-                                    b.filter(f -> f.term(t -> t
-                                            .field("categoryId")
-                                            .value(v -> v.longValue(categoryId))
-                                    ));
-                                }
-                                if (authorId != null) {
-                                    b.filter(f -> f.term(t -> t
-                                            .field("authorId")
-                                            .value(v -> v.longValue(authorId))
-                                    ));
-                                }
-                                if (hasTag) {
-                                    b.filter(f -> f.term(t -> t
-                                            .field("tags")
-                                            .value(v -> v.stringValue(tag))
-                                    ));
-                                }
+                        // ===== 过滤：分类/作者/标签 =====
+                        if (categoryId != null) {
+                            b.filter(f -> f.term(t -> t
+                                    .field("categoryId")
+                                    .value(v -> v.longValue(categoryId))));
+                        }
+                        if (authorId != null) {
+                            b.filter(f -> f.term(t -> t
+                                    .field("authorId")
+                                    .value(v -> v.longValue(authorId))));
+                        }
+                        if (hasTag) {
+                            b.filter(f -> f.term(t -> t
+                                    .field("tags")
+                                    .value(v -> v.stringValue(tag))));
+                        }
 
-                                // ===== 必须：关键词全文检索或 match_all =====
-                                if (hasKeyword) {
-                                    b.must(m -> m.multiMatch(mm -> mm
-                                            .query(keyword)
-                                            // 权重：title > summary > content
-                                            .fields("title^3", "summary^2", "content")
-                                            .type(TextQueryType.BestFields)
-                                    ));
-                                } else {
-                                    b.must(m -> m.matchAll(ma -> ma));
-                                }
+                        // ===== 必须：关键词全文检索或 match_all =====
+                        if (hasKeyword) {
+                            b.must(m -> m.multiMatch(mm -> mm
+                                    .query(keyword)
+                                    // 权重：title > summary > content
+                                    .fields("title^3", "summary^2", "content")
+                                    .type(TextQueryType.BestFields)));
+                        } else {
+                            b.must(m -> m.matchAll(ma -> ma));
+                        }
 
-                                return b;
-                            }))
-                            // 高亮：title/summary
-                            .highlight(h -> h
-                                    .fields("title", f -> f.preTags("<em>").postTags("</em>"))
-                                    .fields("summary", f -> f.preTags("<em>").postTags("</em>"))
-                            ),
-                    ArticleDocument.class
-            );
+                        return b;
+                    }))
+                    // 高亮：title/summary
+                    .highlight(h -> h
+                            .fields("title", f -> f.preTags("<em>").postTags("</em>"))
+                            .fields("summary", f -> f.preTags("<em>").postTags("</em>"))),
+                    ArticleDocument.class);
 
             return toPageResult(response, pageNo, pageSize);
         } catch (IOException e) {
@@ -158,7 +158,8 @@ public class ArticleSearchService {
      * @param pageSize 每页大小
      * @return {@link PageResult}
      */
-    private PageResult<ArticleSearchVO> toPageResult(SearchResponse<ArticleDocument> response, long pageNo, long pageSize) {
+    private PageResult<ArticleSearchVO> toPageResult(SearchResponse<ArticleDocument> response, long pageNo,
+            long pageSize) {
         List<Hit<ArticleDocument>> hits = response.hits().hits();
         List<ArticleSearchVO> list = new ArrayList<>(hits.size());
 
@@ -198,7 +199,8 @@ public class ArticleSearchService {
             list.add(vo);
         }
 
-        long total = response.hits().total() == null ? list.size() : response.hits().total().value();
+        var totalHits = response.hits().total();
+        long total = totalHits == null ? list.size() : totalHits.value();
 
         PageResult<ArticleSearchVO> pr = new PageResult<>();
         pr.setList(list);
@@ -211,7 +213,9 @@ public class ArticleSearchService {
     /**
      * 拼接高亮片段。
      *
-     * <p>ES 高亮可能返回多个片段；这里简单拼接成一个字符串返回。</p>
+     * <p>
+     * ES 高亮可能返回多个片段；这里简单拼接成一个字符串返回。
+     * </p>
      *
      * @param fragments 高亮片段列表
      * @return 拼接后的高亮字符串（片段为空则返回 null）
@@ -235,7 +239,9 @@ public class ArticleSearchService {
     /**
      * 清洗高亮 HTML，限制为安全白名单。
      *
-     * <p>避免前端直接渲染高亮字段时出现 XSS。</p>
+     * <p>
+     * 避免前端直接渲染高亮字段时出现 XSS。
+     * </p>
      *
      * @param highlight 高亮字符串
      * @return 清洗后的高亮字符串

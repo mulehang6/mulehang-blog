@@ -17,4 +17,10 @@ public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
      */
     @Update("UPDATE blog_article SET like_count = like_count + 1 WHERE id = #{articleId}")
     int incrementLikeCount(@Param("articleId") Long articleId);
+
+    /**
+     * 评论数 +1。
+     */
+    @Update("UPDATE blog_article SET comment_count = comment_count + 1 WHERE id = #{articleId}")
+    int incrementCommentCount(@Param("articleId") Long articleId);
 }

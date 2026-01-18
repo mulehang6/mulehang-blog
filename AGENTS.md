@@ -14,7 +14,6 @@
 - **Milestone 2（缓存与热点数据）**：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略。
 
 ## 构建、测试和开发命令
-- `docker compose up -d`：从 `compose.yaml` 启动 MySQL、Redis、RabbitMQ。
 - `mvn clean verify`：完整构建和测试所有模块。
 - `mvn clean install -DskipTests`：不运行测试的构建。
 - `mvn -pl blog-web -am spring-boot:run`：本地运行应用。
@@ -39,7 +38,7 @@
 ## 配置与安全说明
 - 主配置位于 `blog-web/src/main/resources/application.yml`。
 - 不要提交真实密钥；使用环境变量（如 `SPRING_DATASOURCE_PASSWORD`、`SPRING_DATA_REDIS_PASSWORD`、`SPRING_MAIL_PASSWORD`）。
-- Liquibase 主变更日志：`blog-web/src/main/resources/db/changelog/master.xml`。
+- Liquibase 主变更日志：`blog-service/src/main/resources/db/changelog/master.xml`。
 
 ## 注意事项
 - ![设计文档](./docs/DEVELOPMENT_GUIDE.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但

@@ -13,6 +13,7 @@ import com.mulehang.blog.service.LikeService;
 import com.mulehang.blog.task.EmailTask;
 import com.mulehang.blog.vo.ArticleDetailVO;
 import com.mulehang.blog.vo.ArticleListVO;
+import com.mulehang.blog.vo.ArticlePublicVO;
 import com.mulehang.blog.vo.ArticleSearchVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -111,12 +112,12 @@ public class ArticleController {
      * 通过 slug 获取文章（前台展示）。
      *
      * @param slug 文章 slug
-     * @return 文章详情
+     * @return 文章详情（不含 contentMd）
      */
     @GetMapping("/slug/{slug}")
     @Operation(summary = "通过 slug 获取文章（前台展示）")
-    public Result<ArticleDetailVO> getBySlug(@PathVariable String slug) {
-        return Result.ok(articleService.getArticleBySlug(slug));
+    public Result<ArticlePublicVO> getBySlug(@PathVariable String slug) {
+        return Result.ok(articleService.getPublicArticleBySlug(slug));
     }
 
     /**

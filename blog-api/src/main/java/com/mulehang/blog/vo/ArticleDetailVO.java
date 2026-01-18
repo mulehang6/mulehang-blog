@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class ArticleDetailVO {
-    private Long id;// 文章ID
+    private Long id;// 文章 ID
 
     private String title;// 标题
 
@@ -38,7 +38,7 @@ public class ArticleDetailVO {
 
     private Integer wordCount;// 字数
 
-    private Integer readCount;// 阅读量
+    private Long readCount;// 阅读量
 
     private Integer likeCount;// 点赞数
 
@@ -50,7 +50,7 @@ public class ArticleDetailVO {
 
     private LocalDateTime updateTime;// 更新时间
 
-    private String contentMd;// 原文Markdown内容
+    private String contentMd;// 原文 Markdown 内容
 
-    private String contentHtml;// 渲染后的HTML内容
+    private String contentHtml;// 渲染后的 HTML 内容
 }

@@ -325,6 +325,30 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
+     * 根据 slug 获取前台文章详情（不含 contentMd）。
+     */
+    @Override
+    public ArticlePublicVO getPublicArticleBySlug(String slug) {
+        if (slug == null || slug.isBlank()) {
+            throw new IllegalArgumentException("slug 为空");
+        }
+        BlogArticle article = articleMapper.selectOne(new LambdaQueryWrapper<BlogArticle>()
+                .eq(BlogArticle::getSlug, slug)
+                .eq(BlogArticle::getStatus, STATUS_PUBLISHED));
+        if (article == null) {
+            throw new IllegalArgumentException("通过 slug 找不到文章: " + slug);
+        }
+        Long id = article.getId();
+        String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + id;
+        ArticleDetailVO detailVO = multiLevelCache.get(cacheKey, ArticleDetailVO.class, () -> buildDetail(article));
+
+        ArticlePublicVO vo = convertToPublicVO(detailVO);
+
+        hotArticleService.incrementReadCount(id);
+        return vo;
+    }
+
+    /**
      * 获取热榜文章列表。
      *
      * <p>先从 Redis 热榜中获取文章 ID，再按 ID 查询文章并按热榜顺序返回。</p>
@@ -482,7 +506,7 @@ public class ArticleServiceImpl implements ArticleService {
         vo.setAllowComment(article.getAllowComment());
         vo.setIsPinned(article.getIsPinned());
         vo.setWordCount(article.getWordCount());
-        vo.setReadCount(safeInt(article.getReadCount()));
+        vo.setReadCount(article.getReadCount());
         vo.setLikeCount(article.getLikeCount());
         vo.setCommentCount(article.getCommentCount());
         vo.setPublishTime(article.getPublishTime());
@@ -690,21 +714,6 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
-     * 将 Long 安全转换为 int。
-     *
-     * <p>当值超过 int 最大值时进行截断，避免溢出。</p>
-     *
-     * @param v 数值
-     * @return int 值
-     */
-    private int safeInt(Long v) {
-        if (v == null) {
-            return 0;
-        }
-        return v > Integer.MAX_VALUE ? Integer.MAX_VALUE : v.intValue();
-    }
-
-    /**
      * 将用户实体转换为用户 VO。
      *
      * @param u 用户实体
@@ -781,6 +790,38 @@ public class ArticleServiceImpl implements ArticleService {
         vo.setSlug(t.getSlug());
         vo.setColor(t.getColor());
         vo.setDescription(t.getDescription());
+        return vo;
+    }
+
+    /**
+     * 将 ArticleDetailVO 转换为 ArticlePublicVO（不含 contentMd）。
+     */
+    private ArticlePublicVO convertToPublicVO(ArticleDetailVO detail) {
+        if (detail == null) {
+            return null;
+        }
+        ArticlePublicVO vo = new ArticlePublicVO();
+        vo.setId(detail.getId());
+        vo.setTitle(detail.getTitle());
+        vo.setSlug(detail.getSlug());
+        vo.setSummary(detail.getSummary());
+        vo.setCoverUrl(detail.getCoverUrl());
+        vo.setStatus(detail.getStatus());
+        vo.setSourceType(detail.getSourceType());
+        vo.setAllowComment(detail.getAllowComment());
+        vo.setIsPinned(detail.getIsPinned());
+        vo.setAuthor(detail.getAuthor());
+        vo.setCategory(detail.getCategory());
+        vo.setColumn(detail.getColumn());
+        vo.setTags(detail.getTags());
+        vo.setWordCount(detail.getWordCount());
+        vo.setReadCount(detail.getReadCount());
+        vo.setLikeCount(detail.getLikeCount());
+        vo.setCommentCount(detail.getCommentCount());
+        vo.setPublishTime(detail.getPublishTime());
+        vo.setCreateTime(detail.getCreateTime());
+        vo.setUpdateTime(detail.getUpdateTime());
+        vo.setContentHtml(detail.getContentHtml());
         return vo;
     }
 }

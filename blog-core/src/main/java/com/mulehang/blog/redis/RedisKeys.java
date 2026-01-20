@@ -29,7 +29,7 @@ public final class RedisKeys {
     public static final String LOCK_LIKE_PREFIX = "lock:like:";
 
     /**
-     * Redisson 延迟队列：邮件通知。
+     * Redisson RDelayedQueue：邮件通知（配合 RBlockingQueue 使用）。
      */
     public static final String DELAYED_EMAIL_QUEUE = "delayed:email:queue";
 }

@@ -131,6 +131,17 @@
             <artifactId>elasticsearch-rest-client</artifactId>
         </dependency>
 
+        <!-- Spring Boot Mail (Milestone 3: 异步邮件通知)
+             说明：
+             - 用于实现真实的邮件发送功能
+             - 支持 QQ 邮箱、163 邮箱、阿里云邮件推送等 SMTP 服务
+             - 通过 spring.mail.enabled=true 激活
+         -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -59,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/tags/**").permitAll()
 
+                        // 公开接口：测试接口（仅开发环境，生产环境应移除）
+                        .requestMatchers("/api/v1/articles/email/test").permitAll()
+
                         // Swagger 文档
                         .requestMatchers("/doc.html", "/swagger-ui.html", "/swagger-ui/**",
                                 "/webjars/**", "/v3/api-docs/**").permitAll()

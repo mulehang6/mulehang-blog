@@ -105,6 +105,12 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!-- Spring Security (for UserDetailsService) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- WebSocket Support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

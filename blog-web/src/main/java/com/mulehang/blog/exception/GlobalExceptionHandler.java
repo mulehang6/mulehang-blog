@@ -3,6 +3,7 @@ package com.mulehang.blog.exception;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.model.ResultCodeEnum;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -47,6 +48,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<?> handleConstraintViolationException(ConstraintViolationException e) {
         return Result.fail(ResultCodeEnum.BAD_REQUEST, e.getMessage());
+    }
+
+    /**
+     * 处理权限不足异常（Spring Security）
+     *
+     * @param e 异常
+     * @return 错误响应
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<?> handleAccessDeniedException(AccessDeniedException e) {
+        return Result.fail(ResultCodeEnum.FORBIDDEN, "权限不足");
     }
 
     /**

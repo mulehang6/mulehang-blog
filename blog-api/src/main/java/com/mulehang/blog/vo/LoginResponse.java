@@ -22,6 +22,7 @@ public class LoginResponse {
     /**
      * Token 类型（默认 Bearer）
      */
+    @Builder.Default
     private String tokenType = "Bearer";
 
     /**

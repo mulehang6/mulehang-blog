@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-这是一个基于 Spring Boot 3.3.7 + Java 21 的个人博客系统，采用 Maven 多模块架构。项目参考了 paicoding 的技术栈设计，但升级到了 Spring Boot 3.x 生态（使用 Jakarta EE 规范）。
+这是一个基于 Spring Boot 3.5.9 + Java 21 的个人博客系统，采用 Maven 多模块架构。项目参考了 paicoding 的技术栈设计，但升级到了 Spring Boot 3.x 生态（使用 Jakarta EE 规范）。
 
 **核心技术栈**：MyBatis-Plus + MySQL, Redis (多级缓存), RabbitMQ (异步解耦), Redisson (分布式锁/延迟队列), Liquibase (数据库版本管理), Thymeleaf (模板引擎), SpringDoc OpenAPI 3 (API 文档), Micrometer + Prometheus (可观测性)。
 

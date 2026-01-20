@@ -3,6 +3,7 @@ package com.mulehang.blog.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mulehang.blog.cache.MultiLevelCache;
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.converter.ArticleConverter;
 import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
@@ -20,6 +21,7 @@ import com.mulehang.blog.mapper.BlogCategoryMapper;
 import com.mulehang.blog.mapper.BlogColumnMapper;
 import com.mulehang.blog.mapper.BlogTagMapper;
 import com.mulehang.blog.mapper.SysUserMapper;
+import com.mulehang.blog.metrics.BlogMetrics;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.redis.RedisKeys;
 import com.mulehang.blog.service.CacheConsistencyService;
@@ -27,6 +29,8 @@ import com.mulehang.blog.service.HotArticleService;
 import com.mulehang.blog.util.MarkdownRenderer;
 import com.mulehang.blog.vo.ArticleDetailVO;
 import com.mulehang.blog.vo.ArticleListVO;
+import com.mulehang.blog.vo.UserInfoVO;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -53,301 +57,320 @@ import static org.mockito.Mockito.when;
  */
 class ArticleServiceImplTest {
 
-    private BlogArticleMapper articleMapper;
+        private static final Long CURRENT_USER_ID = 99L;
 
-    private BlogArticleBodyMapper bodyMapper;
+        private BlogArticleMapper articleMapper;
 
-    private BlogArticleTagMapper articleTagMapper;
+        private BlogArticleBodyMapper bodyMapper;
 
-    private BlogCategoryMapper categoryMapper;
+        private BlogArticleTagMapper articleTagMapper;
 
-    private BlogColumnMapper columnMapper;
+        private BlogCategoryMapper categoryMapper;
 
-    private BlogTagMapper tagMapper;
+        private BlogColumnMapper columnMapper;
 
-    private SysUserMapper userMapper;
+        private BlogTagMapper tagMapper;
 
-    private ArticleConverter articleConverter;
+        private SysUserMapper userMapper;
 
-    private MarkdownRenderer markdownRenderer;
+        private ArticleConverter articleConverter;
 
-    private HotArticleService hotArticleService;
+        private MarkdownRenderer markdownRenderer;
 
-    private CacheConsistencyService cacheConsistencyService;
+        private HotArticleService hotArticleService;
 
-    private MultiLevelCache multiLevelCache;
+        private CacheConsistencyService cacheConsistencyService;
 
-    private ObjectProvider<com.mulehang.blog.mq.producer.ArticleMessageProducer> articleMessageProducerProvider;
+        private MultiLevelCache multiLevelCache;
 
-    private ArticleServiceImpl articleService;
+        private BlogMetrics blogMetrics;
 
-    /**
-     * 初始化测试依赖。
-     */
-    @SuppressWarnings("unchecked")
-    @BeforeEach
-    void setUp() {
-        articleMapper = Mockito.mock(BlogArticleMapper.class);
-        bodyMapper = Mockito.mock(BlogArticleBodyMapper.class);
-        articleTagMapper = Mockito.mock(BlogArticleTagMapper.class);
-        categoryMapper = Mockito.mock(BlogCategoryMapper.class);
-        columnMapper = Mockito.mock(BlogColumnMapper.class);
-        tagMapper = Mockito.mock(BlogTagMapper.class);
-        userMapper = Mockito.mock(SysUserMapper.class);
-        articleConverter = Mockito.mock(ArticleConverter.class);
-        markdownRenderer = Mockito.mock(MarkdownRenderer.class);
-        hotArticleService = Mockito.mock(HotArticleService.class);
-        cacheConsistencyService = Mockito.mock(CacheConsistencyService.class);
-        multiLevelCache = Mockito.mock(MultiLevelCache.class);
-        articleMessageProducerProvider =
-                (ObjectProvider<com.mulehang.blog.mq.producer.ArticleMessageProducer>)
-                        Mockito.mock(ObjectProvider.class);
-        when(articleMessageProducerProvider.getIfAvailable()).thenReturn(null);
-        articleService = new ArticleServiceImpl(articleMapper, bodyMapper, articleTagMapper, categoryMapper,
-                columnMapper, tagMapper, userMapper, articleConverter, markdownRenderer, hotArticleService,
-                cacheConsistencyService, multiLevelCache, articleMessageProducerProvider);
-    }
+        private ObjectProvider<com.mulehang.blog.mq.producer.ArticleMessageProducer> articleMessageProducerProvider;
 
-    /**
-     * 验证创建文章时会写入基础表/正文/标签并执行缓存淘汰。
-     */
-    @Test
-    void createArticle_shouldPersistAndEvictCache() {
-        ArticleCreateDTO dto = new ArticleCreateDTO();
-        dto.setTitle("Test Title");
-        dto.setContentMd("a b");
-        dto.setTagIds(List.of(1L, 2L));
+        private ArticleServiceImpl articleService;
 
-        BlogArticle article = new BlogArticle();
-        article.setId(100L);
-        article.setSlug("test-title");
-        when(articleConverter.toArticleEntity(dto)).thenReturn(article);
+        /**
+         * 初始化测试依赖。
+         */
+        @SuppressWarnings("unchecked")
+        @BeforeEach
+        void setUp() {
+                articleMapper = Mockito.mock(BlogArticleMapper.class);
+                bodyMapper = Mockito.mock(BlogArticleBodyMapper.class);
+                articleTagMapper = Mockito.mock(BlogArticleTagMapper.class);
+                categoryMapper = Mockito.mock(BlogCategoryMapper.class);
+                columnMapper = Mockito.mock(BlogColumnMapper.class);
+                tagMapper = Mockito.mock(BlogTagMapper.class);
+                userMapper = Mockito.mock(SysUserMapper.class);
+                articleConverter = Mockito.mock(ArticleConverter.class);
+                markdownRenderer = Mockito.mock(MarkdownRenderer.class);
+                hotArticleService = Mockito.mock(HotArticleService.class);
+                cacheConsistencyService = Mockito.mock(CacheConsistencyService.class);
+                multiLevelCache = Mockito.mock(MultiLevelCache.class);
+                blogMetrics = Mockito.mock(BlogMetrics.class);
+                articleMessageProducerProvider = (ObjectProvider<com.mulehang.blog.mq.producer.ArticleMessageProducer>) Mockito
+                                .mock(ObjectProvider.class);
+                when(articleMessageProducerProvider.getIfAvailable()).thenReturn(null);
+                articleService = new ArticleServiceImpl(articleMapper, bodyMapper, articleTagMapper, categoryMapper,
+                                columnMapper, tagMapper, userMapper, articleConverter, markdownRenderer,
+                                hotArticleService,
+                                cacheConsistencyService, multiLevelCache, blogMetrics, articleMessageProducerProvider);
 
-        BlogArticleBody body = new BlogArticleBody();
-        when(articleConverter.toArticleBodyEntity(dto)).thenReturn(body);
-        when(markdownRenderer.renderToHtml("a b")).thenReturn("<p>a b</p>");
-
-        BlogArticleTag rel1 = new BlogArticleTag();
-        rel1.setTagId(1L);
-        BlogArticleTag rel2 = new BlogArticleTag();
-        rel2.setTagId(2L);
-        when(articleConverter.tagIdsToArticleTags(dto.getTagIds())).thenReturn(List.of(rel1, rel2));
-
-        Long id = articleService.createArticle(dto);
-
-        assertEquals(100L, id);
-
-        ArgumentCaptor<BlogArticle> articleCaptor = ArgumentCaptor.forClass(BlogArticle.class);
-        verify(articleMapper).insert(articleCaptor.capture());
-        BlogArticle inserted = articleCaptor.getValue();
-        assertEquals(1L, inserted.getAuthorId());
-        assertEquals(0, inserted.getStatus());
-        assertEquals(1, inserted.getSourceType());
-        assertEquals(1, inserted.getAllowComment());
-        assertEquals(0, inserted.getIsPinned());
-        assertEquals(2, inserted.getWordCount());
-        assertEquals(0L, inserted.getReadCount());
-        assertEquals(0, inserted.getLikeCount());
-        assertEquals(0, inserted.getCommentCount());
-        assertNull(inserted.getPublishTime());
-
-        ArgumentCaptor<BlogArticleBody> bodyCaptor = ArgumentCaptor.forClass(BlogArticleBody.class);
-        verify(bodyMapper).insert(bodyCaptor.capture());
-        BlogArticleBody insertedBody = bodyCaptor.getValue();
-        assertEquals(100L, insertedBody.getArticleId());
-        assertEquals("a b", insertedBody.getContentMd());
-        assertEquals("<p>a b</p>", insertedBody.getContentHtml());
-
-        ArgumentCaptor<BlogArticleTag> tagCaptor = ArgumentCaptor.forClass(BlogArticleTag.class);
-        verify(articleTagMapper, atLeastOnce()).insert(tagCaptor.capture());
-        for (BlogArticleTag rel : tagCaptor.getAllValues()) {
-            assertEquals(100L, rel.getArticleId());
-            assertNotNull(rel.getTagId());
+                UserContext.setCurrentUser(UserInfoVO.builder()
+                                .id(CURRENT_USER_ID)
+                                .username("tester")
+                                .roles(List.of("ADMIN"))
+                                .build());
         }
 
-        verify(cacheConsistencyService).evictArticleDetail(100L);
-    }
+        /**
+         * 清理用户上下文。
+         */
+        @AfterEach
+        void tearDown() {
+                UserContext.clear();
+        }
 
-    /**
-     * 验证更新文章时正文、标签与缓存一致性逻辑被触发。
-     */
-    @Test
-    void updateArticle_shouldUpdateBodyAndEvictCache() {
-        BlogArticle existing = new BlogArticle();
-        existing.setId(10L);
-        existing.setStatus(0);
-        when(articleMapper.selectById(10L)).thenReturn(existing);
+        /**
+         * 验证创建文章时会写入基础表/正文/标签并执行缓存淘汰。
+         */
+        @Test
+        void createArticle_shouldPersistAndEvictCache() {
+                ArticleCreateDTO dto = new ArticleCreateDTO();
+                dto.setTitle("Test Title");
+                dto.setContentMd("a b");
+                dto.setTagIds(List.of(1L, 2L));
 
-        ArticleUpdateDTO dto = new ArticleUpdateDTO();
-        dto.setTitle("new title");
-        dto.setContentMd("new content");
-        dto.setStatus(1);
-        dto.setTagIds(List.of(9L));
+                BlogArticle article = new BlogArticle();
+                article.setId(100L);
+                article.setSlug("test-title");
+                when(articleConverter.toArticleEntity(dto)).thenReturn(article);
 
-        BlogArticleBody existingBody = new BlogArticleBody();
-        existingBody.setId(3L);
-        when(bodyMapper.selectOne(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleBody>>any()))
-                .thenReturn(existingBody);
-        when(markdownRenderer.renderToHtml("new content")).thenReturn("<p>new</p>");
+                BlogArticleBody body = new BlogArticleBody();
+                when(articleConverter.toArticleBodyEntity(dto)).thenReturn(body);
+                when(markdownRenderer.renderToHtml("a b")).thenReturn("<p>a b</p>");
 
-        BlogArticleTag rel = new BlogArticleTag();
-        rel.setTagId(9L);
-        when(articleConverter.tagIdsToArticleTags(dto.getTagIds())).thenReturn(List.of(rel));
+                BlogArticleTag rel1 = new BlogArticleTag();
+                rel1.setTagId(1L);
+                BlogArticleTag rel2 = new BlogArticleTag();
+                rel2.setTagId(2L);
+                when(articleConverter.tagIdsToArticleTags(dto.getTagIds())).thenReturn(List.of(rel1, rel2));
 
-        articleService.updateArticle(10L, dto);
+                Long id = articleService.createArticle(dto);
 
-        ArgumentCaptor<BlogArticle> patchCaptor = ArgumentCaptor.forClass(BlogArticle.class);
-        verify(articleMapper, atLeastOnce()).updateById(patchCaptor.capture());
-        assertTrue(patchCaptor.getAllValues().stream().anyMatch(p -> p.getPublishTime() != null));
+                assertEquals(100L, id);
 
-        ArgumentCaptor<BlogArticleBody> bodyCaptor = ArgumentCaptor.forClass(BlogArticleBody.class);
-        verify(bodyMapper).updateById(bodyCaptor.capture());
-        BlogArticleBody patchedBody = bodyCaptor.getValue();
-        assertEquals(3L, patchedBody.getId());
-        assertEquals("new content", patchedBody.getContentMd());
-        assertEquals("<p>new</p>", patchedBody.getContentHtml());
+                ArgumentCaptor<BlogArticle> articleCaptor = ArgumentCaptor.forClass(BlogArticle.class);
+                verify(articleMapper).insert(articleCaptor.capture());
+                BlogArticle inserted = articleCaptor.getValue();
+                assertEquals(CURRENT_USER_ID, inserted.getAuthorId());
+                assertEquals(0, inserted.getStatus());
+                assertEquals(1, inserted.getSourceType());
+                assertEquals(1, inserted.getAllowComment());
+                assertEquals(0, inserted.getIsPinned());
+                assertEquals(2, inserted.getWordCount());
+                assertEquals(0L, inserted.getReadCount());
+                assertEquals(0, inserted.getLikeCount());
+                assertEquals(0, inserted.getCommentCount());
+                assertNull(inserted.getPublishTime());
 
-        verify(articleTagMapper)
-                .delete(ArgumentMatchers.any());
-        verify(articleTagMapper).insert(rel);
-        verify(cacheConsistencyService).evictArticleDetail(10L);
-    }
+                ArgumentCaptor<BlogArticleBody> bodyCaptor = ArgumentCaptor.forClass(BlogArticleBody.class);
+                verify(bodyMapper).insert(bodyCaptor.capture());
+                BlogArticleBody insertedBody = bodyCaptor.getValue();
+                assertEquals(100L, insertedBody.getArticleId());
+                assertEquals("a b", insertedBody.getContentMd());
+                assertEquals("<p>a b</p>", insertedBody.getContentHtml());
 
-    /**
-     * 验证发布文章会更新状态并触发缓存淘汰。
-     */
-    @Test
-    void publishArticle_shouldUpdateStatusAndEvictCache() {
-        BlogArticle existing = new BlogArticle();
-        existing.setId(20L);
-        existing.setStatus(0);
-        when(articleMapper.selectById(20L)).thenReturn(existing);
+                ArgumentCaptor<BlogArticleTag> tagCaptor = ArgumentCaptor.forClass(BlogArticleTag.class);
+                verify(articleTagMapper, atLeastOnce()).insert(tagCaptor.capture());
+                for (BlogArticleTag rel : tagCaptor.getAllValues()) {
+                        assertEquals(100L, rel.getArticleId());
+                        assertNotNull(rel.getTagId());
+                }
 
-        articleService.publishArticle(20L);
+                verify(cacheConsistencyService).evictArticleDetail(100L);
+        }
 
-        ArgumentCaptor<BlogArticle> patchCaptor = ArgumentCaptor.forClass(BlogArticle.class);
-        verify(articleMapper).updateById(patchCaptor.capture());
-        BlogArticle patch = patchCaptor.getValue();
-        assertEquals(20L, patch.getId());
-        assertEquals(1, patch.getStatus());
-        assertNotNull(patch.getPublishTime());
+        /**
+         * 验证更新文章时正文、标签与缓存一致性逻辑被触发。
+         */
+        @Test
+        void updateArticle_shouldUpdateBodyAndEvictCache() {
+                BlogArticle existing = new BlogArticle();
+                existing.setId(10L);
+                existing.setStatus(0);
+                when(articleMapper.selectById(10L)).thenReturn(existing);
 
-        verify(cacheConsistencyService).evictArticleDetail(20L);
-    }
+                ArticleUpdateDTO dto = new ArticleUpdateDTO();
+                dto.setTitle("new title");
+                dto.setContentMd("new content");
+                dto.setStatus(1);
+                dto.setTagIds(List.of(9L));
 
-    /**
-     * 验证详情查询会走多级缓存并累计热榜阅读量。
-     */
-    @Test
-    void getArticleDetail_shouldUseCacheAndIncrementHot() {
-        ArticleDetailVO detail = new ArticleDetailVO();
-        detail.setId(30L);
+                BlogArticleBody existingBody = new BlogArticleBody();
+                existingBody.setId(3L);
+                when(bodyMapper.selectOne(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleBody>>any()))
+                                .thenReturn(existingBody);
+                when(markdownRenderer.renderToHtml("new content")).thenReturn("<p>new</p>");
 
-        String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + 30L;
-        when(multiLevelCache.get(eq(cacheKey), eq(ArticleDetailVO.class),
-                ArgumentMatchers.any())).thenReturn(detail);
+                BlogArticleTag rel = new BlogArticleTag();
+                rel.setTagId(9L);
+                when(articleConverter.tagIdsToArticleTags(dto.getTagIds())).thenReturn(List.of(rel));
 
-        ArticleDetailVO result = articleService.getArticleDetail(30L);
+                articleService.updateArticle(10L, dto);
 
-        assertSame(detail, result);
-        verify(hotArticleService).incrementReadCount(30L);
-    }
+                ArgumentCaptor<BlogArticle> patchCaptor = ArgumentCaptor.forClass(BlogArticle.class);
+                verify(articleMapper, atLeastOnce()).updateById(patchCaptor.capture());
+                assertTrue(patchCaptor.getAllValues().stream().anyMatch(p -> p.getPublishTime() != null));
 
-    /**
-     * 验证列表查询在标签过滤无命中时直接返回空结果。
-     */
-    @Test
-    void listArticles_shouldReturnEmptyWhenTagFilterNoMatch() {
-        ArticleQueryDTO query = new ArticleQueryDTO();
-        query.setTagId(99L);
+                ArgumentCaptor<BlogArticleBody> bodyCaptor = ArgumentCaptor.forClass(BlogArticleBody.class);
+                verify(bodyMapper).updateById(bodyCaptor.capture());
+                BlogArticleBody patchedBody = bodyCaptor.getValue();
+                assertEquals(3L, patchedBody.getId());
+                assertEquals("new content", patchedBody.getContentMd());
+                assertEquals("<p>new</p>", patchedBody.getContentHtml());
 
-        when(articleTagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleTag>>any()))
-                .thenReturn(Collections.emptyList());
+                verify(articleTagMapper)
+                                .delete(ArgumentMatchers.any());
+                verify(articleTagMapper).insert(rel);
+                verify(cacheConsistencyService).evictArticleDetail(10L);
+        }
 
-        PageResult<ArticleListVO> result = articleService.listArticles(query);
+        /**
+         * 验证发布文章会更新状态并触发缓存淘汰。
+         */
+        @Test
+        void publishArticle_shouldUpdateStatusAndEvictCache() {
+                BlogArticle existing = new BlogArticle();
+                existing.setId(20L);
+                existing.setStatus(0);
+                when(articleMapper.selectById(20L)).thenReturn(existing);
 
-        assertEquals(0, result.getTotal());
-        assertEquals(1L, result.getPageNo());
-        assertEquals(10L, result.getPageSize());
-        assertTrue(result.getList().isEmpty());
-        verify(articleMapper, never())
-                .selectPage(ArgumentMatchers.<Page<BlogArticle>>any(),
-                        ArgumentMatchers.<LambdaQueryWrapper<BlogArticle>>any());
-    }
+                articleService.publishArticle(20L);
 
-    /**
-     * 验证分页列表查询会组装作者、分类与标签信息。
-     */
-    @Test
-    void listArticles_shouldReturnPageWithMappedData() {
-        ArticleQueryDTO query = new ArticleQueryDTO();
-        query.setPageNo(1);
-        query.setPageSize(10);
+                ArgumentCaptor<BlogArticle> patchCaptor = ArgumentCaptor.forClass(BlogArticle.class);
+                verify(articleMapper).updateById(patchCaptor.capture());
+                BlogArticle patch = patchCaptor.getValue();
+                assertEquals(20L, patch.getId());
+                assertEquals(1, patch.getStatus());
+                assertNotNull(patch.getPublishTime());
 
-        BlogArticle article = new BlogArticle();
-        article.setId(100L);
-        article.setTitle("Title A");
-        article.setAuthorId(1L);
-        article.setCategoryId(10L);
-        article.setReadCount(5L);
-        article.setLikeCount(1);
-        article.setCommentCount(2);
+                verify(cacheConsistencyService).evictArticleDetail(20L);
+        }
 
-        Page<BlogArticle> page = new Page<>(1L, 10L);
-        page.setRecords(List.of(article));
-        page.setTotal(1);
-        when(articleMapper.selectPage(ArgumentMatchers.<Page<BlogArticle>>any(),
-                ArgumentMatchers.<LambdaQueryWrapper<BlogArticle>>any()))
-                .thenReturn(page);
+        /**
+         * 验证详情查询会走多级缓存并累计热榜阅读量。
+         */
+        @Test
+        void getArticleDetail_shouldUseCacheAndIncrementHot() {
+                ArticleDetailVO detail = new ArticleDetailVO();
+                detail.setId(30L);
 
-        SysUser user = new SysUser();
-        user.setId(1L);
-        user.setUsername("tester");
-        when(userMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<SysUser>>any()))
-                .thenReturn(List.of(user));
+                String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + 30L;
+                when(multiLevelCache.get(eq(cacheKey), eq(ArticleDetailVO.class),
+                                ArgumentMatchers.any())).thenReturn(detail);
 
-        BlogCategory category = new BlogCategory();
-        category.setId(10L);
-        category.setName("Java");
-        when(categoryMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogCategory>>any()))
-                .thenReturn(List.of(category));
+                ArticleDetailVO result = articleService.getArticleDetail(30L);
 
-        BlogArticleTag rel = new BlogArticleTag();
-        rel.setArticleId(100L);
-        rel.setTagId(7L);
-        when(articleTagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleTag>>any()))
-                .thenReturn(List.of(rel));
+                assertSame(detail, result);
+                verify(hotArticleService).incrementReadCount(30L);
+        }
 
-        BlogTag tag = new BlogTag();
-        tag.setId(7L);
-        tag.setName("Spring");
-        when(tagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogTag>>any()))
-                .thenReturn(List.of(tag));
+        /**
+         * 验证列表查询在标签过滤无命中时直接返回空结果。
+         */
+        @Test
+        void listArticles_shouldReturnEmptyWhenTagFilterNoMatch() {
+                ArticleQueryDTO query = new ArticleQueryDTO();
+                query.setTagId(99L);
 
-        PageResult<ArticleListVO> result = articleService.listArticles(query);
+                when(articleTagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleTag>>any()))
+                                .thenReturn(Collections.emptyList());
 
-        assertEquals(1L, result.getTotal());
-        assertEquals(1, result.getList().size());
-        ArticleListVO vo = result.getList().getFirst();
-        assertEquals(100L, vo.getId());
-        assertEquals("Title A", vo.getTitle());
-        assertNotNull(vo.getAuthor());
-        assertEquals(1L, vo.getAuthor().getId());
-        assertNotNull(vo.getCategory());
-        assertEquals(10L, vo.getCategory().getId());
-        assertEquals(1, vo.getTags().size());
-        assertEquals(7L, vo.getTags().getFirst().getId());
-    }
+                PageResult<ArticleListVO> result = articleService.listArticles(query);
 
-    /**
-     * 验证删除文章时会执行逻辑删除与缓存淘汰。
-     */
-    @Test
-    void deleteArticle_shouldDeleteAndEvictCache() {
-        articleService.deleteArticle(40L);
+                assertEquals(0, result.getTotal());
+                assertEquals(1L, result.getPageNo());
+                assertEquals(10L, result.getPageSize());
+                assertTrue(result.getList().isEmpty());
+                verify(articleMapper, never())
+                                .selectPage(ArgumentMatchers.<Page<BlogArticle>>any(),
+                                                ArgumentMatchers.<LambdaQueryWrapper<BlogArticle>>any());
+        }
 
-        verify(articleMapper).deleteById(40L);
-        verify(cacheConsistencyService).evictArticleDetail(40L);
-    }
+        /**
+         * 验证分页列表查询会组装作者、分类与标签信息。
+         */
+        @Test
+        void listArticles_shouldReturnPageWithMappedData() {
+                ArticleQueryDTO query = new ArticleQueryDTO();
+                query.setPageNo(1);
+                query.setPageSize(10);
+
+                BlogArticle article = new BlogArticle();
+                article.setId(100L);
+                article.setTitle("Title A");
+                article.setAuthorId(1L);
+                article.setCategoryId(10L);
+                article.setReadCount(5L);
+                article.setLikeCount(1);
+                article.setCommentCount(2);
+
+                Page<BlogArticle> page = new Page<>(1L, 10L);
+                page.setRecords(List.of(article));
+                page.setTotal(1);
+                when(articleMapper.selectPage(ArgumentMatchers.<Page<BlogArticle>>any(),
+                                ArgumentMatchers.<LambdaQueryWrapper<BlogArticle>>any()))
+                                .thenReturn(page);
+
+                SysUser user = new SysUser();
+                user.setId(1L);
+                user.setUsername("tester");
+                when(userMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<SysUser>>any()))
+                                .thenReturn(List.of(user));
+
+                BlogCategory category = new BlogCategory();
+                category.setId(10L);
+                category.setName("Java");
+                when(categoryMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogCategory>>any()))
+                                .thenReturn(List.of(category));
+
+                BlogArticleTag rel = new BlogArticleTag();
+                rel.setArticleId(100L);
+                rel.setTagId(7L);
+                when(articleTagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleTag>>any()))
+                                .thenReturn(List.of(rel));
+
+                BlogTag tag = new BlogTag();
+                tag.setId(7L);
+                tag.setName("Spring");
+                when(tagMapper.selectList(ArgumentMatchers.<LambdaQueryWrapper<BlogTag>>any()))
+                                .thenReturn(List.of(tag));
+
+                PageResult<ArticleListVO> result = articleService.listArticles(query);
+
+                assertEquals(1L, result.getTotal());
+                assertEquals(1, result.getList().size());
+                ArticleListVO vo = result.getList().getFirst();
+                assertEquals(100L, vo.getId());
+                assertEquals("Title A", vo.getTitle());
+                assertNotNull(vo.getAuthor());
+                assertEquals(1L, vo.getAuthor().getId());
+                assertNotNull(vo.getCategory());
+                assertEquals(10L, vo.getCategory().getId());
+                assertEquals(1, vo.getTags().size());
+                assertEquals(7L, vo.getTags().getFirst().getId());
+        }
+
+        /**
+         * 验证删除文章时会执行逻辑删除与缓存淘汰。
+         */
+        @Test
+        void deleteArticle_shouldDeleteAndEvictCache() {
+                articleService.deleteArticle(40L);
+
+                verify(articleMapper).deleteById(40L);
+                verify(cacheConsistencyService).evictArticleDetail(40L);
+        }
 
 }

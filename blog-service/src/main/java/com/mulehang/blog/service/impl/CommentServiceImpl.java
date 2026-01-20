@@ -2,15 +2,19 @@ package com.mulehang.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
 import com.mulehang.blog.entity.BlogArticle;
 import com.mulehang.blog.entity.BlogComment;
 import com.mulehang.blog.enums.CommentStatusEnum;
 import com.mulehang.blog.mapper.BlogArticleMapper;
 import com.mulehang.blog.mapper.BlogCommentMapper;
+import com.mulehang.blog.metrics.BlogMetrics;
 import com.mulehang.blog.mq.producer.CommentNotifyProducer;
 import com.mulehang.blog.model.PageResult;
+import com.mulehang.blog.security.SensitiveWordService;
 import com.mulehang.blog.service.CommentService;
+import com.mulehang.blog.util.IpRegionService;
 import com.mulehang.blog.vo.CommentVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,9 @@ public class CommentServiceImpl implements CommentService {
     private final BlogCommentMapper commentMapper;
     private final BlogArticleMapper articleMapper;
     private final CommentNotifyProducer commentNotifyProducer;
+    private final SensitiveWordService sensitiveWordService;
+    private final IpRegionService ipRegionService;
+    private final BlogMetrics blogMetrics;
 
     /**
      * 构造函数。
@@ -37,13 +44,22 @@ public class CommentServiceImpl implements CommentService {
      * @param commentMapper         评论 Mapper
      * @param articleMapper         文章 Mapper
      * @param commentNotifyProducer 评论通知 Producer
+     * @param sensitiveWordService  敏感词服务
+     * @param ipRegionService       IP 归属地服务
+     * @param blogMetrics           业务指标
      */
     public CommentServiceImpl(BlogCommentMapper commentMapper,
             BlogArticleMapper articleMapper,
-            CommentNotifyProducer commentNotifyProducer) {
+            CommentNotifyProducer commentNotifyProducer,
+            SensitiveWordService sensitiveWordService,
+            IpRegionService ipRegionService,
+            BlogMetrics blogMetrics) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
         this.commentNotifyProducer = commentNotifyProducer;
+        this.sensitiveWordService = sensitiveWordService;
+        this.ipRegionService = ipRegionService;
+        this.blogMetrics = blogMetrics;
     }
 
     /**
@@ -72,16 +88,23 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("文章未找到: " + dto.getArticleId());
         }
 
+        String content = dto.getContent().trim();
+        if (sensitiveWordService.contains(content)) {
+            content = sensitiveWordService.replace(content);
+        }
+
         BlogComment comment = new BlogComment();
         comment.setArticleId(dto.getArticleId());
         comment.setParentId(normalizeId(dto.getParentId()));
         comment.setReplyToUser(dto.getReplyToUser());
-        comment.setContent(dto.getContent());
+        comment.setContent(content);
         comment.setStatus(CommentStatusEnum.APPROVED.getCode());
         comment.setLikeCount(0);
         comment.setIsTop(0);
+        comment.setUserId(UserContext.getCurrentUserId());
         comment.setIpAddress(ipAddress);
         comment.setUserAgent(userAgent);
+        comment.setLocation(resolveLocation(ipAddress));
 
         if (!Objects.equals(comment.getParentId(), 0L)) {
             BlogComment parent = commentMapper.selectById(comment.getParentId());
@@ -104,6 +127,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         articleMapper.incrementCommentCount(dto.getArticleId());
+
+        blogMetrics.incrementComment();
 
         commentNotifyProducer.sendNotify(dto.getArticleId(), commentId);
         return commentId;
@@ -162,6 +187,19 @@ public class CommentServiceImpl implements CommentService {
         vo.setIsTop(comment.getIsTop());
         vo.setCreateTime(comment.getCreateTime());
         return vo;
+    }
+
+    /**
+     * 解析 IP 归属地。
+     *
+     * @param ipAddress IP 地址
+     * @return 归属地字符串（可能为 null）
+     */
+    private String resolveLocation(String ipAddress) {
+        if (ipAddress == null || ipAddress.isBlank()) {
+            return null;
+        }
+        return ipRegionService.getShortRegion(ipAddress);
     }
 
     /**

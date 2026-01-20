@@ -3,12 +3,13 @@ package com.mulehang.blog.metrics;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 博客自定义业务指标
+ * 博客自定义业务指标。
  */
 @Component
 public class BlogMetrics {
@@ -18,11 +19,24 @@ public class BlogMetrics {
     private final AtomicLong activeUsers;
 
     /**
-     * 初始化自定义指标
+     * 初始化自定义指标。
      *
-     * @param registry Micrometer 指标注册表
+     * <p>
+     * 说明：在测试或非监控环境中可能没有 {@link MeterRegistry}，
+     * 此时指标将进入“空实现”模式，不影响业务流程。
+     * </p>
+     *
+     * @param registryProvider Micrometer 指标注册表提供者
      */
-    public BlogMetrics(MeterRegistry registry) {
+    public BlogMetrics(ObjectProvider<MeterRegistry> registryProvider) {
+        MeterRegistry registry = registryProvider.getIfAvailable();
+        if (registry == null) {
+            this.articlePublishCounter = null;
+            this.commentCounter = null;
+            this.activeUsers = new AtomicLong(0);
+            return;
+        }
+
         // 文章发布计数器
         this.articlePublishCounter = Counter.builder("blog.article.publish.total")
                 .description("Total number of articles published")
@@ -41,21 +55,25 @@ public class BlogMetrics {
     }
 
     /**
-     * 增加文章发布计数
+     * 增加文章发布计数。
      */
     public void incrementArticlePublish() {
-        articlePublishCounter.increment();
+        if (articlePublishCounter != null) {
+            articlePublishCounter.increment();
+        }
     }
 
     /**
-     * 增加评论计数
+     * 增加评论计数。
      */
     public void incrementComment() {
-        commentCounter.increment();
+        if (commentCounter != null) {
+            commentCounter.increment();
+        }
     }
 
     /**
-     * 设置活跃用户数
+     * 设置活跃用户数。
      *
      * @param count 活跃用户数
      */

@@ -3,12 +3,14 @@ package com.mulehang.blog.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.converter.ArticleConverter;
 import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
 import com.mulehang.blog.dto.ArticleUpdateDTO;
 import com.mulehang.blog.entity.*;
 import com.mulehang.blog.mapper.*;
+import com.mulehang.blog.metrics.BlogMetrics;
 import com.mulehang.blog.mq.producer.ArticleMessageProducer;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.cache.MultiLevelCache;
@@ -38,12 +40,9 @@ public class ArticleServiceImpl implements ArticleService {
     private static final int SOURCE_ORIGINAL = 1;
 
     /**
-     * TODO: Milestone 4 
-     * 
-     * 
-     * 
+     * 用户角色：管理员。
      */
-    private static final long DEFAULT_AUTHOR_ID = 1L;
+    private static final String ROLE_ADMIN = "ADMIN";
 
     private final BlogArticleMapper articleMapper;
     private final BlogArticleBodyMapper bodyMapper;
@@ -57,6 +56,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final HotArticleService hotArticleService;
     private final CacheConsistencyService cacheConsistencyService;
     private final MultiLevelCache multiLevelCache;
+    private final BlogMetrics blogMetrics;
 
     /**
      * 文章消息生产者（可选）。
@@ -70,21 +70,24 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 构造函数（构造器注入）。
      *
-     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     * <p>
+     * 通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。
+     * </p>
      */
     public ArticleServiceImpl(BlogArticleMapper articleMapper,
-                              BlogArticleBodyMapper bodyMapper,
-                              BlogArticleTagMapper articleTagMapper,
-                              BlogCategoryMapper categoryMapper,
-                              BlogColumnMapper columnMapper,
-                              BlogTagMapper tagMapper,
-                              SysUserMapper userMapper,
-                              ArticleConverter articleConverter,
-                              MarkdownRenderer markdownRenderer,
-                              HotArticleService hotArticleService,
-                              CacheConsistencyService cacheConsistencyService,
-                              MultiLevelCache multiLevelCache,
-                              ObjectProvider<ArticleMessageProducer> articleMessageProducerProvider) {
+            BlogArticleBodyMapper bodyMapper,
+            BlogArticleTagMapper articleTagMapper,
+            BlogCategoryMapper categoryMapper,
+            BlogColumnMapper columnMapper,
+            BlogTagMapper tagMapper,
+            SysUserMapper userMapper,
+            ArticleConverter articleConverter,
+            MarkdownRenderer markdownRenderer,
+            HotArticleService hotArticleService,
+            CacheConsistencyService cacheConsistencyService,
+            MultiLevelCache multiLevelCache,
+            BlogMetrics blogMetrics,
+            ObjectProvider<ArticleMessageProducer> articleMessageProducerProvider) {
         this.articleMapper = articleMapper;
         this.bodyMapper = bodyMapper;
         this.articleTagMapper = articleTagMapper;
@@ -97,6 +100,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.hotArticleService = hotArticleService;
         this.cacheConsistencyService = cacheConsistencyService;
         this.multiLevelCache = multiLevelCache;
+        this.blogMetrics = blogMetrics;
         this.articleMessageProducerProvider = articleMessageProducerProvider;
     }
 
@@ -116,8 +120,9 @@ public class ArticleServiceImpl implements ArticleService {
             throw new IllegalArgumentException("内容为空");
         }
 
+        Long currentUserId = requireCurrentUserId();
         BlogArticle article = articleConverter.toArticleEntity(dto);
-        article.setAuthorId(DEFAULT_AUTHOR_ID);
+        article.setAuthorId(currentUserId);
         article.setStatus(dto.getStatus() == null ? STATUS_DRAFT : dto.getStatus());
         article.setSourceType(dto.getSourceType() == null ? SOURCE_ORIGINAL : dto.getSourceType());
         article.setAllowComment(dto.getAllowComment() == null ? 1 : dto.getAllowComment());
@@ -145,6 +150,10 @@ public class ArticleServiceImpl implements ArticleService {
 
         saveArticleTags(article.getId(), dto.getTagIds());
 
+        if (Objects.equals(article.getStatus(), STATUS_PUBLISHED)) {
+            blogMetrics.incrementArticlePublish();
+        }
+
         // Cache-Aside（旁路缓存）：创建操作写入后应淘汰缓存
         cacheConsistencyService.evictArticleDetail(article.getId());
 
@@ -170,21 +179,33 @@ public class ArticleServiceImpl implements ArticleService {
         if (existing == null) {
             throw new IllegalArgumentException("找不到文章: " + id);
         }
+        assertCanOperate(existing);
 
         BlogArticle patch = new BlogArticle();
         patch.setId(id);
 
-        if (dto.getTitle() != null) patch.setTitle(dto.getTitle());
-        if (dto.getSlug() != null) patch.setSlug(dto.getSlug());
-        if (dto.getSummary() != null) patch.setSummary(dto.getSummary());
-        if (dto.getCoverUrl() != null) patch.setCoverUrl(dto.getCoverUrl());
-        if (dto.getStatus() != null) patch.setStatus(dto.getStatus());
-        if (dto.getSourceType() != null) patch.setSourceType(dto.getSourceType());
-        if (dto.getAllowComment() != null) patch.setAllowComment(dto.getAllowComment());
-        if (dto.getIsPinned() != null) patch.setIsPinned(dto.getIsPinned());
-        if (dto.getCategoryId() != null) patch.setCategoryId(dto.getCategoryId());
-        if (dto.getColumnId() != null) patch.setColumnId(dto.getColumnId());
-        if (dto.getContentMd() != null) patch.setWordCount(countWords(dto.getContentMd()));
+        if (dto.getTitle() != null)
+            patch.setTitle(dto.getTitle());
+        if (dto.getSlug() != null)
+            patch.setSlug(dto.getSlug());
+        if (dto.getSummary() != null)
+            patch.setSummary(dto.getSummary());
+        if (dto.getCoverUrl() != null)
+            patch.setCoverUrl(dto.getCoverUrl());
+        if (dto.getStatus() != null)
+            patch.setStatus(dto.getStatus());
+        if (dto.getSourceType() != null)
+            patch.setSourceType(dto.getSourceType());
+        if (dto.getAllowComment() != null)
+            patch.setAllowComment(dto.getAllowComment());
+        if (dto.getIsPinned() != null)
+            patch.setIsPinned(dto.getIsPinned());
+        if (dto.getCategoryId() != null)
+            patch.setCategoryId(dto.getCategoryId());
+        if (dto.getColumnId() != null)
+            patch.setColumnId(dto.getColumnId());
+        if (dto.getContentMd() != null)
+            patch.setWordCount(countWords(dto.getContentMd()));
 
         articleMapper.updateById(patch);
 
@@ -231,7 +252,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 发布文章。
      *
-     * <p>将文章状态设置为已发布，并在首次发布时写入发布时间。</p>
+     * <p>
+     * 将文章状态设置为已发布，并在首次发布时写入发布时间。
+     * </p>
      *
      * @param id 文章 ID
      * @throws IllegalArgumentException 当 id 为空或文章不存在时抛出
@@ -246,6 +269,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (existing == null) {
             throw new IllegalArgumentException("文章未找到: " + id);
         }
+        assertCanOperate(existing);
         if (Objects.equals(existing.getStatus(), STATUS_PUBLISHED) && existing.getPublishTime() != null) {
             return;
         }
@@ -258,6 +282,8 @@ public class ArticleServiceImpl implements ArticleService {
         // 发布后应淘汰文章详情缓存
         cacheConsistencyService.evictArticleDetail(id);
 
+        blogMetrics.incrementArticlePublish();
+
         // MQ 消息：事务提交后发送 UPSERT 消息（MQ 可选组件，未启用则跳过）
         sendArticleUpsertMqIfEnabled(id, "publish");
     }
@@ -265,7 +291,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 根据文章 ID 获取文章详情。
      *
-     * <p>使用多级缓存读取详情（Cache-Aside），读取成功后会对热榜阅读计数进行累加。</p>
+     * <p>
+     * 使用多级缓存读取详情（Cache-Aside），读取成功后会对热榜阅读计数进行累加。
+     * </p>
      *
      * @param id 文章 ID
      * @return 文章详情
@@ -297,7 +325,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 根据 slug 获取文章详情。
      *
-     * <p>仅查询已发布文章，并复用与 {@link #getArticleDetail(Long)} 相同的缓存 Key。</p>
+     * <p>
+     * 仅查询已发布文章，并复用与 {@link #getArticleDetail(Long)} 相同的缓存 Key。
+     * </p>
      *
      * @param slug 文章 slug
      * @return 文章详情
@@ -351,7 +381,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 获取热榜文章列表。
      *
-     * <p>先从 Redis 热榜中获取文章 ID，再按 ID 查询文章并按热榜顺序返回。</p>
+     * <p>
+     * 先从 Redis 热榜中获取文章 ID，再按 ID 查询文章并按热榜顺序返回。
+     * </p>
      *
      * @param topN 返回数量（TopN）
      * @return 热榜文章列表
@@ -381,7 +413,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 分页查询文章列表。
      *
-     * <p>支持按状态/分类/专栏/作者/标签/关键词过滤，并支持排序字段与顺序。</p>
+     * <p>
+     * 支持按状态/分类/专栏/作者/标签/关键词过滤，并支持排序字段与顺序。
+     * </p>
      *
      * @param query 查询条件（允许为空，空则使用默认分页参数）
      * @return 分页结果
@@ -397,10 +431,14 @@ public class ArticleServiceImpl implements ArticleService {
         Page<BlogArticle> page = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<BlogArticle> qw = new LambdaQueryWrapper<>();
 
-        if (query.getStatus() != null) qw.eq(BlogArticle::getStatus, query.getStatus());
-        if (query.getCategoryId() != null) qw.eq(BlogArticle::getCategoryId, query.getCategoryId());
-        if (query.getColumnId() != null) qw.eq(BlogArticle::getColumnId, query.getColumnId());
-        if (query.getAuthorId() != null) qw.eq(BlogArticle::getAuthorId, query.getAuthorId());
+        if (query.getStatus() != null)
+            qw.eq(BlogArticle::getStatus, query.getStatus());
+        if (query.getCategoryId() != null)
+            qw.eq(BlogArticle::getCategoryId, query.getCategoryId());
+        if (query.getColumnId() != null)
+            qw.eq(BlogArticle::getColumnId, query.getColumnId());
+        if (query.getAuthorId() != null)
+            qw.eq(BlogArticle::getAuthorId, query.getAuthorId());
         String keyword = query.getKeyword();
         if (keyword != null && !keyword.isBlank()) {
             final String kw = keyword;
@@ -410,7 +448,7 @@ public class ArticleServiceImpl implements ArticleService {
 
         if (query.getTagId() != null) {
             List<Long> articleIds = articleTagMapper.selectList(new LambdaQueryWrapper<BlogArticleTag>()
-                            .eq(BlogArticleTag::getTagId, query.getTagId()))
+                    .eq(BlogArticleTag::getTagId, query.getTagId()))
                     .stream()
                     .map(BlogArticleTag::getArticleId)
                     .distinct()
@@ -441,7 +479,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 删除文章。
      *
-     * <p>当前采用逻辑删除（由 MyBatis-Plus 逻辑删除机制处理），并淘汰文章详情缓存。</p>
+     * <p>
+     * 当前采用逻辑删除（由 MyBatis-Plus 逻辑删除机制处理），并淘汰文章详情缓存。
+     * </p>
      *
      * @param id 文章 ID
      * @throws IllegalArgumentException 当 id 为空时抛出
@@ -452,6 +492,11 @@ public class ArticleServiceImpl implements ArticleService {
         if (id == null) {
             throw new IllegalArgumentException("id 为空");
         }
+        BlogArticle existing = articleMapper.selectById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("文章未找到: " + id);
+        }
+        assertCanOperate(existing);
         // 逻辑删除即可（MyBatis-Plus 逻辑删除：@TableLogic）。
         articleMapper.deleteById(id);
 
@@ -460,6 +505,52 @@ public class ArticleServiceImpl implements ArticleService {
 
         // MQ 消息：事务提交后发送 DELETE 消息（MQ 可选组件，未启用则跳过）
         sendArticleDeleteMqIfEnabled(id);
+    }
+
+    /**
+     * 获取当前登录用户 ID（强制要求已登录）。
+     *
+     * @return 当前用户 ID
+     * @throws IllegalStateException 当未登录时抛出
+     */
+    private Long requireCurrentUserId() {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("未登录或登录已过期");
+        }
+        return userId;
+    }
+
+    /**
+     * 判断当前用户是否为管理员。
+     *
+     * @return true-管理员，false-非管理员
+     */
+    private boolean isAdmin() {
+        UserInfoVO user = UserContext.getCurrentUser();
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        return user.getRoles().stream().anyMatch(role -> ROLE_ADMIN.equalsIgnoreCase(role));
+    }
+
+    /**
+     * 权限校验：仅作者本人或管理员可操作文章。
+     *
+     * @param article 文章实体
+     * @throws IllegalArgumentException 当无权限操作时抛出
+     */
+    private void assertCanOperate(BlogArticle article) {
+        if (article == null) {
+            throw new IllegalArgumentException("文章不存在");
+        }
+        if (isAdmin()) {
+            return;
+        }
+        Long currentUserId = requireCurrentUserId();
+        if (!Objects.equals(article.getAuthorId(), currentUserId)) {
+            throw new IllegalArgumentException("无权限操作该文章");
+        }
     }
 
     /**
@@ -486,7 +577,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 组装文章详情 VO。
      *
-     * <p>包含正文、作者、分类、专栏、标签等关联信息。</p>
+     * <p>
+     * 包含正文、作者、分类、专栏、标签等关联信息。
+     * </p>
      *
      * @param article 文章实体
      * @return 详情 VO
@@ -522,7 +615,8 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         vo.setAuthor(toUserVO(userMapper.selectById(article.getAuthorId())));
-        vo.setCategory(toCategoryVO(article.getCategoryId() == null ? null : categoryMapper.selectById(article.getCategoryId())));
+        vo.setCategory(toCategoryVO(
+                article.getCategoryId() == null ? null : categoryMapper.selectById(article.getCategoryId())));
         vo.setColumn(toColumnVO(article.getColumnId() == null ? null : columnMapper.selectById(article.getColumnId())));
         vo.setTags(loadTagsByArticleId(article.getId()));
         return vo;
@@ -531,27 +625,31 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 将文章实体列表转换为列表页 VO。
      *
-     * <p>为减少 N+1 查询，会批量加载作者/分类/标签等数据后再组装。</p>
+     * <p>
+     * 为减少 N+1 查询，会批量加载作者/分类/标签等数据后再组装。
+     * </p>
      *
      * @param articles 文章实体列表
      * @return 列表页 VO
      */
     private List<ArticleListVO> buildListVO(List<BlogArticle> articles) {
-        Set<Long> authorIds = articles.stream().map(BlogArticle::getAuthorId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Set<Long> categoryIds = articles.stream().map(BlogArticle::getCategoryId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<Long> authorIds = articles.stream().map(BlogArticle::getAuthorId).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Long> categoryIds = articles.stream().map(BlogArticle::getCategoryId).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         List<Long> articleIds = articles.stream().map(BlogArticle::getId).toList();
 
         Map<Long, SysUser> userMap = authorIds.isEmpty()
                 ? Map.of()
                 : userMapper.selectList(new LambdaQueryWrapper<SysUser>().in(SysUser::getId, authorIds))
-                .stream()
-                .collect(Collectors.toMap(SysUser::getId, Function.identity(), (a, b) -> a));
+                        .stream()
+                        .collect(Collectors.toMap(SysUser::getId, Function.identity(), (a, b) -> a));
 
         Map<Long, BlogCategory> categoryMap = categoryIds.isEmpty()
                 ? Map.of()
                 : categoryMapper.selectList(new LambdaQueryWrapper<BlogCategory>().in(BlogCategory::getId, categoryIds))
-                .stream()
-                .collect(Collectors.toMap(BlogCategory::getId, Function.identity(), (a, b) -> a));
+                        .stream()
+                        .collect(Collectors.toMap(BlogCategory::getId, Function.identity(), (a, b) -> a));
 
         Map<Long, List<Long>> articleTagIds = new HashMap<>();
         if (!articleIds.isEmpty()) {
@@ -567,8 +665,8 @@ public class ArticleServiceImpl implements ArticleService {
         Map<Long, BlogTag> tagMap = allTagIds.isEmpty()
                 ? Map.of()
                 : tagMapper.selectList(new LambdaQueryWrapper<BlogTag>().in(BlogTag::getId, allTagIds))
-                .stream()
-                .collect(Collectors.toMap(BlogTag::getId, Function.identity(), (a, b) -> a));
+                        .stream()
+                        .collect(Collectors.toMap(BlogTag::getId, Function.identity(), (a, b) -> a));
 
         List<ArticleListVO> list = new ArrayList<>(articles.size());
         for (BlogArticle a : articles) {
@@ -641,11 +739,13 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 如果启用了 RabbitMQ，则发送文章 UPSERT 消息到 MQ。
      *
-     * <p>说明：</p>
+     * <p>
+     * 说明：
+     * </p>
      * <ul>
-     *     <li>MQ 作为可选组件：未启用时，该方法会直接返回。</li>
-     *     <li>消息发送发生在事务提交后：由 {@link ArticleMessageProducer} 内部保证。</li>
-     *     <li>Consumer 收到消息后会查 DB 并同步到 ES。</li>
+     * <li>MQ 作为可选组件：未启用时，该方法会直接返回。</li>
+     * <li>消息发送发生在事务提交后：由 {@link ArticleMessageProducer} 内部保证。</li>
+     * <li>Consumer 收到消息后会查 DB 并同步到 ES。</li>
      * </ul>
      *
      * @param articleId 文章 ID
@@ -675,7 +775,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 统计 Markdown 内容的“字数”。
      *
-     * <p>这里采用简单策略：统计非空白字符数量。</p>
+     * <p>
+     * 这里采用简单策略：统计非空白字符数量。
+     * </p>
      *
      * @param contentMd Markdown 内容
      * @return 字数（非空白字符数）
@@ -696,7 +798,9 @@ public class ArticleServiceImpl implements ArticleService {
     /**
      * 根据标题生成文章 slug。
      *
-     * <p>会将标题规整为小写、去除非法字符、空格替换为连字符，并追加随机后缀避免冲突。</p>
+     * <p>
+     * 会将标题规整为小写、去除非法字符、空格替换为连字符，并追加随机后缀避免冲突。
+     * </p>
      *
      * @param title 文章标题
      * @return slug

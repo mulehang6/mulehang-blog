@@ -1,6 +1,6 @@
 # mulehang-blog
 
-> 基于 Spring Boot 3.3.7 + Java 21 的全栈博客系统学习实践项目。
+> 基于 Spring Boot 3.5.9 + Java 21 的全栈博客系统学习实践项目。
 
 ## 🚀 项目简介
 
@@ -9,7 +9,7 @@
 
 ## 🛠 技术栈
 
-- **核心框架**: Java 21, Spring Boot 3.3.7
+- **核心框架**: Java 21, Spring Boot 3.5.9
 - **持久层**: MySQL 8.0, MyBatis-Plus, Liquibase (数据库版本管理)
 - **缓存/中间件**: Redis, RabbitMQ
 - **前端/视图**: Thymeleaf, Flexmark (Markdown 渲染)

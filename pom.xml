@@ -42,7 +42,7 @@
         <redisson.version>3.50.0</redisson.version>
         <java-jwt.version>4.5.0</java-jwt.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>2.7.0</springdoc.version>
         <!-- Markdown & Content Processing -->
         <flexmark.version>0.64.8</flexmark.version>
         <!-- Utilities -->

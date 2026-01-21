@@ -43,6 +43,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- WebFlux (for AI API calls) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!-- Cache (Caffeine) + Redis + Redisson -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,6 +1,7 @@
 package com.mulehang.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mulehang.blog.dto.GuestLoginRequest;
 import com.mulehang.blog.dto.LoginRequest;
 import com.mulehang.blog.dto.RegisterRequest;
 import com.mulehang.blog.entity.SysUser;
@@ -18,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 认证服务实现类
@@ -150,6 +153,44 @@ public class AuthServiceImpl implements AuthService {
     public void logout(Long userId) {
         // JWT 是无状态的，这里可以用于清理缓存等操作
         log.info("用户 {} 退出登录", userId);
+    }
+
+    /**
+     * 访客登录（生成临时访问令牌，用于测试）
+     *
+     * @param request 访客登录请求
+     * @return 登录响应
+     */
+    @Override
+    public LoginResponse guestLogin(GuestLoginRequest request) {
+        // 1. 生成访客标识
+        String guestId = "guest_" + UUID.randomUUID().toString().substring(0, 8);
+        String nickname = request.getNickname() != null && !request.getNickname().isEmpty()
+                ? request.getNickname()
+                : "访客_" + guestId.substring(6);
+
+        // 2. 构建访客用户信息（不存储到数据库）
+        UserInfoVO guestInfo = UserInfoVO.builder()
+                .id(-1L) // 使用负数 ID 表示访客
+                .username(guestId)
+                .nickname(nickname)
+                .avatar("https://api.dicebear.com/7.x/avataaars/svg?seed=" + guestId)
+                .profile("临时访客用户")
+                .roles(Collections.singletonList("GUEST"))
+                .build();
+
+        // 3. 生成临时 JWT Token（使用自定义过期时间）
+        Long expiresIn = request.getExpiresIn() != null ? request.getExpiresIn() : 3600L;
+        String token = jwtUtil.generateToken(-1L, guestId, Collections.singletonList("GUEST"), expiresIn);
+
+        // 4. 构建响应
+        log.info("访客登录成功: {}, 昵称: {}, 有效期: {}秒", guestId, nickname, expiresIn);
+        return LoginResponse.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(expiresIn)
+                .userInfo(guestInfo)
+                .build();
     }
 }
 

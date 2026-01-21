@@ -42,8 +42,21 @@ public class JwtUtil {
      * @return JWT Token
      */
     public String generateToken(Long userId, String username, List<String> roles) {
+        return generateToken(userId, username, roles, expiration);
+    }
+
+    /**
+     * 生成 JWT Token（自定义过期时间）
+     *
+     * @param userId         用户 ID
+     * @param username       用户名
+     * @param roles          角色列表
+     * @param expirationSecs 过期时间（秒）
+     * @return JWT Token
+     */
+    public String generateToken(Long userId, String username, List<String> roles, Long expirationSecs) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration * 1000);
+        Date expiryDate = new Date(now.getTime() + expirationSecs * 1000);
 
         return JWT.create()
                 .withIssuer(issuer)

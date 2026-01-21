@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * JWT 认证过滤器（Spring Security Filter）
+ * JWT 认证过滤器
+ * 从请求头中提取 JWT Token,验证并设置 Spring Security 上下文
+ * 支持异步dispatch(如SSE流式传输),确保异步响应时也能正确认证
  */
 @Slf4j
 @Component
@@ -67,6 +69,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserContext.clear();
             }
         }
+    }
+
+    /**
+     * 重写此方法以支持异步dispatch
+     * 默认OncePerRequestFilter会跳过异步dispatch,导致SSE流式响应完成后的异步dispatch无法通过JWT认证
+     * 返回false表示在异步dispatch时也需要执行此过滤器
+     *
+     * @return false - 在异步dispatch时也执行过滤器
+     */
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
     }
 
     /**

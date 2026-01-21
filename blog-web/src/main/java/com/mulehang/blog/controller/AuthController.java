@@ -1,6 +1,7 @@
 package com.mulehang.blog.controller;
 
 import com.mulehang.blog.context.UserContext;
+import com.mulehang.blog.dto.GuestLoginRequest;
 import com.mulehang.blog.dto.LoginRequest;
 import com.mulehang.blog.dto.RegisterRequest;
 import com.mulehang.blog.model.Result;
@@ -60,6 +61,23 @@ public class AuthController {
         Long userId = UserContext.getCurrentUserId();
         authService.logout(userId);
         return Result.ok();
+    }
+
+    /**
+     * 访客登录
+     *
+     * @param request 访客登录请求
+     * @return 登录响应（包含临时 Token）
+     */
+    @Operation(summary = "访客登录", description = "生成临时访问令牌，无需注册即可测试接口")
+    @PostMapping("/guest")
+    public Result<LoginResponse> guestLogin(@RequestBody(required = false) GuestLoginRequest request) {
+        // 如果没有传递请求体，使用默认配置
+        if (request == null) {
+            request = new GuestLoginRequest();
+        }
+        LoginResponse response = authService.guestLogin(request);
+        return Result.ok(response);
     }
 }
 

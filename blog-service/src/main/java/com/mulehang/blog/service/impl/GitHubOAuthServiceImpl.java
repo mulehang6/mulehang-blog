@@ -65,10 +65,10 @@ public class GitHubOAuthServiceImpl implements GitHubOAuthService {
      */
     @Override
     public String getAuthorizeUrl(String state) {
-        // 注意：不显式指定 redirect_uri，使用 GitHub 默认的第一个回调 URL
         return UriComponentsBuilder.fromUriString(authorizeUrl)
                 .queryParam("client_id", clientId)
                 .queryParam("scope", "user:email")
+                .queryParam("redirect_uri", redirectUri)
                 .queryParam("state", state)
                 .toUriString();
     }
@@ -98,8 +98,18 @@ public class GitHubOAuthServiceImpl implements GitHubOAuthService {
             );
             
             GitHubAccessTokenDTO tokenDTO = response.getBody();
-            if (tokenDTO == null || tokenDTO.getAccessToken() == null) {
+            if (tokenDTO == null) {
                 throw new RuntimeException("获取 GitHub Access Token 失败");
+            }
+            if (tokenDTO.getAccessToken() == null) {
+                String errorDetail = tokenDTO.getErrorDescription();
+                if (errorDetail == null || errorDetail.isBlank()) {
+                    errorDetail = tokenDTO.getError();
+                }
+                if (errorDetail == null || errorDetail.isBlank()) {
+                    throw new RuntimeException("获取 GitHub Access Token 失败");
+                }
+                throw new RuntimeException("获取 GitHub Access Token 失败: " + errorDetail);
             }
             
             return tokenDTO.getAccessToken();

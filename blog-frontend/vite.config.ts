@@ -11,4 +11,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: '0.0.0.0', // 允许外部访问
+    port: 5173,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '.cpolar.top', // 允许所有 cpolar.top 子域名
+    ],
+  },
 })

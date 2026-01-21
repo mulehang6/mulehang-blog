@@ -25,11 +25,11 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 允许的来源（Vue 开发服务器）
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",  // Vite 默认端口
-            "http://localhost:5174",  // Vite 备用端口
-            "http://127.0.0.1:5173"
+        // 允许的来源（Vue 开发服务器 + 内网穿透）
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",      // 本地开发
+            "http://127.0.0.1:*",      // 本地开发
+            "https://*.cpolar.top"      // cpolar 内网穿透域名
         ));
         
         // 允许的 HTTP 方法

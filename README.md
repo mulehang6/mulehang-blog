@@ -37,10 +37,7 @@ mulehang-blog
 
 ## 📈 当前进度
 
-目前已完成刚把mapper新建完。。尽量2月份之前学完
-- 1.14：本地配置好了 ES
-- 1.16：完成 RabbitMQ 消息队列集成（Exchange/Queue/Binding 配置、Producer、Consumer、死信队列）
-- 1.16：完成文章同步 ES 的定时补偿任务
+目前后端已经完成，前端完成了大部分
 
 ## 🛠️ 环境要求
 

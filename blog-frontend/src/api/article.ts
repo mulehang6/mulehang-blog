@@ -13,6 +13,7 @@ export const articleApi = {
     pageSize?: number
     categoryId?: number
     tagId?: number
+    authorId?: number
     keyword?: string
   }): Promise<PageResult<ArticleListItem>> {
     return request.get('/api/v1/articles', { params })

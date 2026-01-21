@@ -21,18 +21,19 @@ const props = defineProps<{
 const md = new MarkdownIt({
   html: true,
   linkify: true,
-  typographer: true,
-  highlight: (str, lang) => {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
-      } catch (error) {
-        console.error('代码高亮失败:', error)
-      }
-    }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
-  }
+  typographer: true
 })
+
+md.options.highlight = (str: string, lang?: string): string => {
+  if (lang && hljs.getLanguage(lang)) {
+    try {
+      return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
+    } catch (error) {
+      console.error('代码高亮失败:', error)
+    }
+  }
+  return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+}
 
 /**
  * 渲染 Markdown 内容

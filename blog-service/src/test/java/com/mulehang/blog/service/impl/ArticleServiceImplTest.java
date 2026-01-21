@@ -265,6 +265,7 @@ class ArticleServiceImplTest {
         void getArticleDetail_shouldUseCacheAndIncrementHot() {
                 ArticleDetailVO detail = new ArticleDetailVO();
                 detail.setId(30L);
+                detail.setReadCount(0L);
 
                 String cacheKey = RedisKeys.ARTICLE_DETAIL_PREFIX + 30L;
                 when(multiLevelCache.get(eq(cacheKey), eq(ArticleDetailVO.class),
@@ -367,6 +368,11 @@ class ArticleServiceImplTest {
          */
         @Test
         void deleteArticle_shouldDeleteAndEvictCache() {
+                BlogArticle existing = new BlogArticle();
+                existing.setId(40L);
+                existing.setAuthorId(CURRENT_USER_ID);
+                when(articleMapper.selectById(40L)).thenReturn(existing);
+
                 articleService.deleteArticle(40L);
 
                 verify(articleMapper).deleteById(40L);

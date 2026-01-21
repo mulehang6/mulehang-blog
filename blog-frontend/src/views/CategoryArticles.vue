@@ -1,25 +1,34 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+    <AppNavbar />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 面包屑导航 -->
       <nav class="mb-6 flex items-center text-sm text-gray-600">
         <router-link to="/" class="hover:text-gray-900">首页</router-link>
         <span class="mx-2">/</span>
-        <router-link to="/categories" class="hover:text-gray-900">分类</router-link>
+        <router-link to="/categories" class="hover:text-gray-900"
+          >分类</router-link
+        >
         <span class="mx-2">/</span>
-        <span class="text-gray-900">{{ category?.name || '加载中...' }}</span>
+        <span class="text-gray-900">{{ category?.name || "加载中..." }}</span>
       </nav>
 
       <!-- 分类信息 -->
       <div v-if="category" class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ category.name }}</h1>
-        <p class="text-gray-600">{{ category.description || '暂无描述' }}</p>
-        <p class="mt-2 text-sm text-gray-500">共 {{ category.articleCount }} 篇文章</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          {{ category.name }}
+        </h1>
+        <p class="text-gray-600">{{ category.description || "暂无描述" }}</p>
+        <p class="mt-2 text-sm text-gray-500">
+          共 {{ category.articleCount }} 篇文章
+        </p>
       </div>
 
       <!-- 文章列表 -->
       <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"
+        ></div>
       </div>
 
       <div v-else-if="articles.length > 0" class="space-y-6">
@@ -29,14 +38,22 @@
           class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6 cursor-pointer"
           @click="goToArticle(article.slug)"
         >
-          <h2 class="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600">
+          <h2
+            class="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600"
+          >
             {{ article.title }}
           </h2>
-          <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ article.summary }}</p>
+          <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+            {{ article.summary }}
+          </p>
           <div class="flex items-center justify-between text-sm text-gray-500">
             <div class="flex items-center space-x-4">
-              <span>{{ article.author }}</span>
-              <span>{{ formatDate(article.createdAt) }}</span>
+              <span>{{
+                article.author?.nickname || article.author?.username || "匿名"
+              }}</span>
+              <span>{{
+                formatDate(article.publishTime || article.createTime)
+              }}</span>
             </div>
             <div class="flex items-center space-x-4">
               <span>👁️ {{ article.readCount }}</span>
@@ -71,44 +88,50 @@
       </div>
 
       <!-- 错误提示 -->
-      <div v-if="error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+      <div
+        v-if="error"
+        class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md"
+      >
         <p class="text-red-600">{{ error }}</p>
       </div>
     </div>
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { categoryApi } from '@/api/category'
-import { articleApi } from '@/api/article'
-import type { Category, ArticleListItem } from '@/types/api'
+import { ref, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { categoryApi } from "@/api/category";
+import { articleApi } from "@/api/article";
+import type { Category, ArticleListItem } from "@/types/api";
+import AppNavbar from "@/components/AppNavbar.vue";
+import AppFooter from "@/components/AppFooter.vue";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const category = ref<Category | null>(null)
-const articles = ref<ArticleListItem[]>([])
-const loading = ref(false)
-const error = ref('')
+const category = ref<Category | null>(null);
+const articles = ref<ArticleListItem[]>([]);
+const loading = ref(false);
+const error = ref("");
 const pagination = ref({
   pageNo: 1,
   pageSize: 10,
   total: 0,
-  totalPages: 0
-})
+  totalPages: 0,
+});
 
 /**
  * 获取分类信息
  */
 async function fetchCategory() {
-  const categoryId = Number(route.params.id)
+  const categoryId = Number(route.params.id);
   try {
-    category.value = await categoryApi.getById(categoryId)
+    category.value = await categoryApi.getById(categoryId);
   } catch (err: any) {
-    error.value = err.message || '获取分类信息失败'
-    console.error('获取分类信息失败:', err)
+    error.value = err.message || "获取分类信息失败";
+    console.error("获取分类信息失败:", err);
   }
 }
 
@@ -116,25 +139,25 @@ async function fetchCategory() {
  * 获取文章列表
  */
 async function fetchArticles() {
-  loading.value = true
-  error.value = ''
-  const categoryId = Number(route.params.id)
-  
+  loading.value = true;
+  error.value = "";
+  const categoryId = Number(route.params.id);
+
   try {
     const result = await articleApi.getList({
       categoryId,
       pageNo: pagination.value.pageNo,
-      pageSize: pagination.value.pageSize
-    })
-    
-    articles.value = result.list
-    pagination.value.total = result.total
-    pagination.value.totalPages = result.totalPages
+      pageSize: pagination.value.pageSize,
+    });
+
+    articles.value = result.list;
+    pagination.value.total = result.total;
+    pagination.value.totalPages = result.totalPages;
   } catch (err: any) {
-    error.value = err.message || '获取文章列表失败'
-    console.error('获取文章列表失败:', err)
+    error.value = err.message || "获取文章列表失败";
+    console.error("获取文章列表失败:", err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -142,41 +165,44 @@ async function fetchArticles() {
  * 跳转到文章详情页
  */
 function goToArticle(slug: string) {
-  router.push({ name: 'ArticleDetail', params: { slug } })
+  router.push({ name: "ArticleDetail", params: { slug } });
 }
 
 /**
  * 跳转到指定页码
  */
 function goToPage(page: number) {
-  pagination.value.pageNo = page
-  fetchArticles()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  pagination.value.pageNo = page;
+  fetchArticles();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /**
  * 格式化日期
  */
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 // 监听路由变化
-watch(() => route.params.id, () => {
-  if (route.name === 'CategoryArticles') {
-    pagination.value.pageNo = 1
-    fetchCategory()
-    fetchArticles()
-  }
-})
+watch(
+  () => route.params.id,
+  () => {
+    if (route.name === "CategoryArticles") {
+      pagination.value.pageNo = 1;
+      fetchCategory();
+      fetchArticles();
+    }
+  },
+);
 
 onMounted(() => {
-  fetchCategory()
-  fetchArticles()
-})
+  fetchCategory();
+  fetchArticles();
+});
 </script>

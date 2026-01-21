@@ -6,13 +6,18 @@
     <main class="container mx-auto px-4 py-8">
       <!-- 加载状态 -->
       <div v-if="loading" class="flex justify-center items-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+        ></div>
       </div>
 
       <!-- 文章内容 -->
       <div v-else-if="article" class="max-w-4xl mx-auto">
         <!-- 面包屑导航 -->
-        <nav v-if="article.category" class="mb-6 flex items-center text-sm text-muted-foreground">
+        <nav
+          v-if="article.category"
+          class="mb-6 flex items-center text-sm text-muted-foreground"
+        >
           <router-link to="/" class="hover:text-foreground">首页</router-link>
           <span class="mx-2">/</span>
           <router-link
@@ -24,7 +29,10 @@
           <span class="mx-2">/</span>
           <span class="text-foreground">{{ article.title }}</span>
         </nav>
-        <nav v-else class="mb-6 flex items-center text-sm text-muted-foreground">
+        <nav
+          v-else
+          class="mb-6 flex items-center text-sm text-muted-foreground"
+        >
           <router-link to="/" class="hover:text-foreground">首页</router-link>
           <span class="mx-2">/</span>
           <span class="text-foreground">{{ article.title }}</span>
@@ -34,20 +42,34 @@
         <Card class="mb-8">
           <CardHeader>
             <CardTitle class="text-4xl mb-4">{{ article.title }}</CardTitle>
-            <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div
+              class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground"
+            >
               <div v-if="article.author" class="flex items-center gap-2">
                 <Avatar class="h-8 w-8">
-                  <AvatarImage :src="article.author.avatar" :alt="article.author.username" />
-                  <AvatarFallback>{{ article.author.username.charAt(0) }}</AvatarFallback>
+                  <AvatarImage
+                    :src="article.author.avatar || ''"
+                    :alt="article.author.username || ''"
+                  />
+                  <AvatarFallback>{{
+                    article.author.username.charAt(0)
+                  }}</AvatarFallback>
                 </Avatar>
                 <span>{{ article.author.username }}</span>
               </div>
-              <span>发布于 {{ formatDate(article.publishTime || article.createTime) }}</span>
+              <span
+                >发布于
+                {{
+                  formatDate(article.publishTime || article.createTime)
+                }}</span
+              >
               <span v-if="article.updateTime !== article.createTime">
                 更新于 {{ formatDate(article.updateTime) }}
               </span>
             </div>
-            <div class="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+            <div
+              class="flex items-center gap-4 mt-4 text-sm text-muted-foreground"
+            >
               <span class="flex items-center gap-1">
                 👁️ {{ article.readCount || 0 }} 阅读
               </span>
@@ -73,7 +95,10 @@
         <!-- 文章正文 -->
         <Card class="mb-8">
           <CardContent class="pt-6">
-            <MarkdownRenderer v-if="article.contentMd" :content="article.contentMd" />
+            <MarkdownRenderer
+              v-if="article.contentMd"
+              :content="article.contentMd"
+            />
             <div v-else v-html="article.contentHtml"></div>
           </CardContent>
         </Card>
@@ -123,7 +148,9 @@
                 :disabled="!userStore.isLoggedIn || liking"
               >
                 <span class="mr-2">❤️</span>
-                {{ liking ? '点赞中...' : (isLiked ? '已点赞' : '点赞') }} ({{ article.likeCount }})
+                {{ liking ? "点赞中..." : isLiked ? "已点赞" : "点赞" }} ({{
+                  article.likeCount
+                }})
               </Button>
               <Button variant="outline" size="lg" @click="handleShare">
                 <span class="mr-2">🔗</span>
@@ -176,7 +203,9 @@
       <div v-else class="max-w-4xl mx-auto">
         <Card>
           <CardContent class="py-12 text-center">
-            <p class="text-muted-foreground text-lg mb-4">{{ error || '文章不存在' }}</p>
+            <p class="text-muted-foreground text-lg mb-4">
+              {{ error || "文章不存在" }}
+            </p>
             <Button @click="router.push('/')">返回首页</Button>
           </CardContent>
         </Card>
@@ -189,59 +218,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
-import { articleApi } from '@/api/article'
-import { useUserStore } from '@/stores/user'
-import type { ArticleDetail, ArticleListItem } from '@/types/api'
-import AppNavbar from '@/components/AppNavbar.vue'
-import AppFooter from '@/components/AppFooter.vue'
-import MarkdownRenderer from '@/components/Markdown/MarkdownRenderer.vue'
-import CommentList from '@/components/Comment/CommentList.vue'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
+import { articleApi } from "@/api/article";
+import { useUserStore } from "@/stores/user";
+import type { ArticleDetail, ArticleListItem } from "@/types/api";
+import AppNavbar from "@/components/AppNavbar.vue";
+import AppFooter from "@/components/AppFooter.vue";
+import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
+import CommentList from "@/components/Comment/CommentList.vue";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
 
-const article = ref<ArticleDetail | null>(null)
-const relatedArticles = ref<ArticleListItem[]>([])
-const loading = ref(false)
-const error = ref('')
-const isLiked = ref(false)
-const liking = ref(false) // 点赞操作中
+const article = ref<ArticleDetail | null>(null);
+const relatedArticles = ref<ArticleListItem[]>([]);
+const loading = ref(false);
+const error = ref("");
+const isLiked = ref(false);
+const liking = ref(false); // 点赞操作中
 
 /**
  * 获取文章详情
  */
 async function fetchArticle() {
-  loading.value = true
-  error.value = ''
-  const slug = route.params.slug as string
+  loading.value = true;
+  error.value = "";
+  const slug = route.params.slug as string;
 
   try {
-    article.value = await articleApi.getBySlug(slug)
+    article.value = await articleApi.getBySlug(slug);
     // 获取相关文章（同分类）
     if (article.value.category?.id) {
       const result = await articleApi.getList({
         categoryId: article.value.category.id,
-        pageSize: 5
-      })
-      relatedArticles.value = result.list.filter(a => a.id !== article.value!.id).slice(0, 3)
+        pageSize: 5,
+      });
+      relatedArticles.value = result.list
+        .filter((a) => a.id !== article.value!.id)
+        .slice(0, 3);
     }
     // 查询用户是否已点赞
     if (userStore.isLoggedIn && userStore.userInfo) {
-      isLiked.value = await articleApi.getLikeStatus(article.value.id, userStore.userInfo.id)
+      isLiked.value = await articleApi.getLikeStatus(
+        article.value.id,
+        userStore.userInfo.id,
+      );
     }
   } catch (err: any) {
-    error.value = err.message || '获取文章失败'
-    console.error('获取文章详情失败:', err)
+    error.value = err.message || "获取文章失败";
+    console.error("获取文章详情失败:", err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -250,43 +284,49 @@ async function fetchArticle() {
  */
 async function handleLike() {
   if (!userStore.isLoggedIn) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
-  if (!article.value || !userStore.userInfo || liking.value) return
+  if (!article.value || !userStore.userInfo || liking.value) return;
 
-  liking.value = true
+  liking.value = true;
   try {
     if (isLiked.value) {
       // 已点赞，执行取消点赞
-      const success = await articleApi.unlike(article.value.id, userStore.userInfo.id)
+      const success = await articleApi.unlike(
+        article.value.id,
+        userStore.userInfo.id,
+      );
       if (success) {
-        article.value.likeCount--
-        isLiked.value = false
-        toast.success('已取消点赞')
+        article.value.likeCount--;
+        isLiked.value = false;
+        toast.success("已取消点赞");
       } else {
-        toast.error('取消点赞失败')
+        toast.error("取消点赞失败");
       }
     } else {
       // 未点赞，执行点赞
-      const success = await articleApi.like(article.value.id, userStore.userInfo.id)
+      const success = await articleApi.like(
+        article.value.id,
+        userStore.userInfo.id,
+      );
       if (success) {
-        article.value.likeCount++
-        isLiked.value = true
-        toast.success('点赞成功')
+        article.value.likeCount++;
+        isLiked.value = true;
+        toast.success("点赞成功");
       } else {
-        toast.info('您已经点赞过了')
-        isLiked.value = true
+        toast.info("您已经点赞过了");
+        isLiked.value = true;
       }
     }
   } catch (err: any) {
-    console.error('点赞操作失败:', err)
-    toast.error('操作失败', {
-      description: err.message || '请稍后重试'
-    })
+    console.error("点赞操作失败:", err);
+    toast.error("操作失败", {
+      description: err.message || "请稍后重试",
+    });
   } finally {
-    liking.value = false
+    liking.value = false;
   }
 }
 
@@ -294,16 +334,41 @@ async function handleLike() {
  * 分享文章
  */
 function handleShare() {
-  if (navigator.share) {
-    navigator.share({
-      title: article.value?.title,
-      text: article.value?.summary,
-      url: window.location.href
-    })
-  } else {
-    // 复制链接到剪贴板
-    navigator.clipboard.writeText(window.location.href)
-    toast.success('链接已复制到剪贴板')
+  const url = window.location.href;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast.success("链接已复制到剪贴板");
+      })
+      .catch((err: any) => {
+        toast.error("复制失败", {
+          description: err?.message || "请稍后重试",
+        });
+      });
+    return;
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = url;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const success = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    if (success) {
+      toast.success("链接已复制到剪贴板");
+    } else {
+      toast.error("复制失败", {
+        description: "请手动复制地址栏链接",
+      });
+    }
+  } catch (err: any) {
+    toast.error("复制失败", {
+      description: err?.message || "请手动复制地址栏链接",
+    });
   }
 }
 
@@ -311,17 +376,17 @@ function handleShare() {
  * 格式化日期
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const date = new Date(dateString);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 onMounted(() => {
-  fetchArticle()
-})
+  fetchArticle();
+});
 </script>

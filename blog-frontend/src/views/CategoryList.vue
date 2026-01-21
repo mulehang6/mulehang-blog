@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+    <AppNavbar />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 页面标题 -->
       <div class="mb-8">
@@ -47,6 +48,7 @@
         </button>
       </div>
     </div>
+    <AppFooter />
   </div>
 </template>
 
@@ -55,6 +57,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { categoryApi } from '@/api/category'
 import type { Category } from '@/types/api'
+import AppNavbar from '@/components/AppNavbar.vue'
+import AppFooter from '@/components/AppFooter.vue'
 
 const router = useRouter()
 const categories = ref<Category[]>([])

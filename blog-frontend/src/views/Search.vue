@@ -92,9 +92,9 @@
           <CardContent>
             <div class="flex items-center justify-between text-sm text-muted-foreground">
               <div class="flex items-center gap-4">
-                <Badge variant="secondary">{{ article.categoryName }}</Badge>
-                <span>{{ article.author }}</span>
-                <span>{{ formatDate(article.createdAt) }}</span>
+                <Badge variant="secondary">{{ article.category?.name || '未分类' }}</Badge>
+                <span>{{ article.author?.nickname || article.author?.username || '匿名' }}</span>
+                <span>{{ formatDate(article.publishTime || article.createTime) }}</span>
               </div>
               <div class="flex items-center gap-4">
                 <span>👁️ {{ article.readCount }}</span>
@@ -105,11 +105,11 @@
             <div v-if="article.tags.length > 0" class="flex items-center gap-2 mt-3">
               <Badge
                 v-for="tag in article.tags"
-                :key="tag"
+                :key="tag.id"
                 variant="outline"
                 class="text-xs"
               >
-                # {{ tag }}
+                # {{ tag.name }}
               </Badge>
             </div>
           </CardContent>

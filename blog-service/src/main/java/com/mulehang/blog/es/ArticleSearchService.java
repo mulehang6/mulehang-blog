@@ -67,10 +67,10 @@ public class ArticleSearchService {
      * </p>
      * <ul>
      * <li>keyword 非空：使用 bool.should 组合多种匹配方式：
-     *   <ul>
-     *     <li>multi_match：全文检索（title^3, summary^2, content）</li>
-     *     <li>wildcard：支持前缀匹配（title*, summary*）</li>
-     *   </ul>
+     * <ul>
+     * <li>multi_match：全文检索（title^3, summary^2, content）</li>
+     * <li>wildcard：支持前缀匹配（title*, summary*）</li>
+     * </ul>
      * </li>
      * <li>keyword 为空：match_all（仅过滤条件生效）</li>
      * </ul>
@@ -90,7 +90,9 @@ public class ArticleSearchService {
         final int from = (pageNo - 1) * pageSize;
 
         final String keyword = query.getKeyword();
-        final boolean hasKeyword = keyword != null && !keyword.isBlank();
+        final String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        final boolean hasKeyword = !normalizedKeyword.isEmpty();
+        final String loweredKeyword = normalizedKeyword.toLowerCase();
 
         final Long categoryId = query.getCategoryId();
         final Long authorId = query.getAuthorId();
@@ -136,21 +138,19 @@ public class ArticleSearchService {
                                     .minimumShouldMatch("1")
                                     // 1. 全文检索（适合完整词汇）
                                     .should(sh -> sh.multiMatch(mm -> mm
-                                            .query(keyword)
+                                            .query(normalizedKeyword)
                                             .fields("title^3", "summary^2", "content")
                                             .type(TextQueryType.BestFields)))
                                     // 2. 前缀匹配（适合输入中的部分字符）
                                     .should(sh -> sh.bool(pb -> pb
                                             .should(ps -> ps.wildcard(w -> w
                                                     .field("title")
-                                                    .value(keyword.toLowerCase() + "*")
+                                                    .value(loweredKeyword + "*")
                                                     .boost(2.0f)))
                                             .should(ps -> ps.wildcard(w -> w
                                                     .field("summary")
-                                                    .value(keyword.toLowerCase() + "*")
-                                                    .boost(1.0f)))
-                                    ))
-                            ));
+                                                    .value(loweredKeyword + "*")
+                                                    .boost(1.0f)))))));
                         } else {
                             b.must(m -> m.matchAll(ma -> ma));
                         }

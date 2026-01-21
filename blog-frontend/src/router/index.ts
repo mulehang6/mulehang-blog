@@ -67,6 +67,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '搜索结果' }
   },
   {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/views/About.vue'),
+    meta: { title: '关于' }
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('@/views/Profile.vue'),
@@ -106,7 +112,7 @@ const router = createRouter({
 /**
  * 全局前置守卫：权限控制
  */
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const userStore = useUserStore()
 
   // 设置页面标题

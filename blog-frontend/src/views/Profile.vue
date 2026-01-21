@@ -10,7 +10,7 @@
           <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
             <!-- 头像 -->
             <Avatar class="h-24 w-24">
-              <AvatarImage :src="userStore.userInfo?.avatar" :alt="userStore.userInfo?.nickname" />
+              <AvatarImage :src="userStore.userInfo?.avatar || ''" :alt="userStore.userInfo?.nickname || ''" />
               <AvatarFallback class="text-2xl">{{ userStore.userInfo?.nickname?.charAt(0) || 'U' }}</AvatarFallback>
             </Avatar>
 

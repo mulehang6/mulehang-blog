@@ -8,6 +8,7 @@ import com.mulehang.blog.ai.model.AiMessage;
 import com.mulehang.blog.ai.model.AiRequest;
 import com.mulehang.blog.ai.model.AiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
@@ -50,7 +51,7 @@ public class OpenAiProvider implements AiService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(Map.class)
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .timeout(Duration.ofSeconds(config.getTimeout()))
                 .block();
 
@@ -132,23 +133,34 @@ public class OpenAiProvider implements AiService {
         if (response == null || !response.containsKey("choices")) {
             throw new RuntimeException("Invalid response from AI provider: choices not found");
         }
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-        if (choices == null || choices.isEmpty()) {
+        Object choicesObject = response.get("choices");
+        if (!(choicesObject instanceof List<?> choices) || choices.isEmpty()) {
             throw new RuntimeException("Invalid response from AI provider: choices is empty");
         }
-        Map<String, Object> firstChoice = choices.get(0);
-        Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
-        if (message == null || !message.containsKey("content")) {
+        Object firstChoiceObject = choices.get(0);
+        if (!(firstChoiceObject instanceof Map<?, ?> firstChoice)) {
+            throw new RuntimeException("Invalid response from AI provider: choice format error");
+        }
+        Object messageObject = firstChoice.get("message");
+        if (!(messageObject instanceof Map<?, ?> message) || !message.containsKey("content")) {
             throw new RuntimeException("Invalid response from AI provider: message content not found");
         }
-        String content = (String) message.get("content");
+        Object contentObject = message.get("content");
+        String content = contentObject == null ? "" : contentObject.toString();
         
-        Map<String, Object> usage = (Map<String, Object>) response.get("usage");
-        Integer totalTokens = usage != null ? (Integer) usage.get("total_tokens") : null;
+        Integer totalTokens = null;
+        Object usageObject = response.get("usage");
+        if (usageObject instanceof Map<?, ?> usage) {
+            Object totalTokensObject = usage.get("total_tokens");
+            if (totalTokensObject instanceof Number number) {
+                totalTokens = number.intValue();
+            }
+        }
+        Object modelObject = response.get("model");
 
         return AiResponse.builder()
                 .content(content)
-                .model((String) response.get("model"))
+                .model(modelObject == null ? null : modelObject.toString())
                 .usage(totalTokens)
                 .build();
     }

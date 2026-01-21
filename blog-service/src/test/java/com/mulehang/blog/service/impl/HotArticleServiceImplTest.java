@@ -32,7 +32,6 @@ class HotArticleServiceImplTest {
     /**
      * 初始化测试依赖。
      */
-    @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
         redisTemplate = (RedisTemplate<String, Object>) Mockito.mock(RedisTemplate.class);

@@ -35,14 +35,16 @@
 
           <!-- 文章列表 -->
           <div v-else-if="articles.length > 0" class="space-y-6">
-            <Card 
-              v-for="article in articles" 
-              :key="article.id" 
+            <Card
+              v-for="article in articles"
+              :key="article.id"
               class="hover:shadow-lg transition-shadow cursor-pointer group"
               @click="router.push(`/articles/${article.slug}`)"
             >
               <CardHeader>
-                <CardTitle class="text-xl group-hover:text-primary transition-colors">
+                <CardTitle
+                  class="text-xl group-hover:text-primary transition-colors"
+                >
                   {{ article.title }}
                 </CardTitle>
                 <CardDescription class="line-clamp-2 text-base mt-2">
@@ -50,11 +52,17 @@
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div class="flex items-center justify-between text-sm text-muted-foreground">
+                <div
+                  class="flex items-center justify-between text-sm text-muted-foreground"
+                >
                   <div class="flex items-center gap-4">
-                    <Badge v-if="article.category" variant="secondary">{{ article.category.name }}</Badge>
+                    <Badge v-if="article.category" variant="secondary">{{
+                      article.category.name
+                    }}</Badge>
                     <Badge v-else variant="secondary">未分类</Badge>
-                    <span v-if="article.author">{{ article.author.username }}</span>
+                    <span v-if="article.author">{{
+                      article.author.username
+                    }}</span>
                     <span>{{ formatDate(article.createTime) }}</span>
                   </div>
                   <div class="flex items-center gap-4">
@@ -63,8 +71,16 @@
                     <span>💬 {{ article.commentCount || 0 }}</span>
                   </div>
                 </div>
-                <div v-if="article.tags && article.tags.length > 0" class="flex items-center gap-2 mt-3">
-                  <Badge v-for="tag in article.tags" :key="tag.id" variant="outline" class="text-xs">
+                <div
+                  v-if="article.tags && article.tags.length > 0"
+                  class="flex items-center gap-2 mt-3"
+                >
+                  <Badge
+                    v-for="tag in article.tags"
+                    :key="tag.id"
+                    variant="outline"
+                    class="text-xs"
+                  >
                     # {{ tag.name }}
                   </Badge>
                 </div>
@@ -80,10 +96,13 @@
           </Card>
 
           <!-- 分页 -->
-          <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 mt-8">
-            <Button 
-              variant="outline" 
-              size="sm" 
+          <div
+            v-if="totalPages > 1"
+            class="flex items-center justify-center gap-2 mt-8"
+          >
+            <Button
+              variant="outline"
+              size="sm"
               :disabled="currentPage === 1"
               @click="changePage(currentPage - 1)"
             >
@@ -92,9 +111,9 @@
             <span class="text-sm text-muted-foreground">
               第 {{ currentPage }} / {{ totalPages }} 页
             </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               :disabled="currentPage === totalPages"
               @click="changePage(currentPage + 1)"
             >
@@ -112,21 +131,26 @@
             </CardHeader>
             <CardContent>
               <div v-if="hotArticles.length > 0" class="space-y-4">
-                <div 
-                  v-for="(article, index) in hotArticles" 
+                <div
+                  v-for="(article, index) in hotArticles"
                   :key="article.id"
                   class="flex items-start gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
                   @click="router.push(`/articles/${article.slug}`)"
                 >
-                  <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                  <span
+                    class="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold"
+                  >
                     {{ index + 1 }}
                   </span>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium line-clamp-2 hover:text-primary transition-colors">
+                    <p
+                      class="text-sm font-medium line-clamp-2 hover:text-primary transition-colors"
+                    >
                       {{ article.title }}
                     </p>
                     <p class="text-xs text-muted-foreground mt-1">
-                      👁️ {{ article.readCount || 0 }} · ❤️ {{ article.likeCount || 0 }}
+                      👁️ {{ article.readCount || 0 }} · ❤️
+                      {{ article.likeCount || 0 }}
                     </p>
                   </div>
                 </div>
@@ -152,19 +176,28 @@
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-muted-foreground">文章总数</span>
-                  <span class="text-sm font-semibold">{{ siteStats.totalArticles || 0 }}</span>
+                  <span class="text-sm font-semibold">{{
+                    siteStats.totalArticles || 0
+                  }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-muted-foreground">总阅读量</span>
-                  <span class="text-sm font-semibold">{{ siteStats.totalReads || 0 }}</span>
+                  <span class="text-sm font-semibold">{{
+                    siteStats.totalReads || 0
+                  }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-muted-foreground">总点赞数</span>
-                  <span class="text-sm font-semibold">{{ siteStats.totalLikes || 0 }}</span>
+                  <span class="text-sm font-semibold">{{
+                    siteStats.totalLikes || 0
+                  }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-muted-foreground">今日访问</span>
-                  <span class="text-sm font-semibold">{{ siteStats.todayPV || 0 }} / {{ siteStats.todayUV || 0 }}</span>
+                  <span class="text-sm font-semibold"
+                    >{{ siteStats.todayPV || 0 }} /
+                    {{ siteStats.todayUV || 0 }}</span
+                  >
                 </div>
               </div>
             </CardContent>
@@ -179,29 +212,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { articleApi } from '@/api/article'
-import { recordPageView, getSiteStats } from '@/api/stats'
-import type { ArticleListItem, SiteStats } from '@/types/api'
-import AppNavbar from '@/components/AppNavbar.vue'
-import AppFooter from '@/components/AppFooter.vue'
-import CategoryWidget from '@/components/Sidebar/CategoryWidget.vue'
-import TagCloud from '@/components/Sidebar/TagCloud.vue'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { articleApi } from "@/api/article";
+import { recordPageView, getSiteStats } from "@/api/stats";
+import type { ArticleListItem, SiteStats } from "@/types/api";
+import AppNavbar from "@/components/AppNavbar.vue";
+import AppFooter from "@/components/AppFooter.vue";
+import CategoryWidget from "@/components/Sidebar/CategoryWidget.vue";
+import TagCloud from "@/components/Sidebar/TagCloud.vue";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-const router = useRouter()
+const router = useRouter();
 
 // 文章列表状态
-const articles = ref<ArticleListItem[]>([])
-const hotArticles = ref<ArticleListItem[]>([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-const totalPages = ref(0)
+const articles = ref<ArticleListItem[]>([]);
+const hotArticles = ref<ArticleListItem[]>([]);
+const loading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const totalPages = ref(0);
 
 // 网站统计数据
 const siteStats = ref<SiteStats>({
@@ -212,26 +251,26 @@ const siteStats = ref<SiteStats>({
   todayPV: 0,
   todayUV: 0,
   totalPV: 0,
-  totalUV: 0
-})
+  totalUV: 0,
+});
 
 /**
  * 加载文章列表
  */
 async function loadArticles() {
-  loading.value = true
+  loading.value = true;
   try {
     const response = await articleApi.getList({
       pageNo: currentPage.value,
-      pageSize: pageSize.value
-    })
-    articles.value = response.list
-    total.value = response.total
-    totalPages.value = response.totalPages
+      pageSize: pageSize.value,
+    });
+    articles.value = response.list;
+    total.value = response.total;
+    totalPages.value = response.totalPages;
   } catch (error) {
-    console.error('加载文章列表失败:', error)
+    console.error("加载文章列表失败:", error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -240,9 +279,9 @@ async function loadArticles() {
  */
 async function loadHotArticles() {
   try {
-    hotArticles.value = await articleApi.getHotArticles(5)
+    hotArticles.value = await articleApi.getHotArticles(5);
   } catch (error) {
-    console.error('加载热门文章失败:', error)
+    console.error("加载热门文章失败:", error);
   }
 }
 
@@ -251,19 +290,19 @@ async function loadHotArticles() {
  */
 async function loadSiteStats() {
   try {
-    const stats = await getSiteStats()
-    
+    const stats = await getSiteStats();
+
     // 逐个赋值，确保响应式更新
-    siteStats.value.todayPV = stats.todayPV || 0
-    siteStats.value.todayUV = stats.todayUV || 0
-    siteStats.value.totalPV = stats.totalPV || 0
-    siteStats.value.totalUV = stats.totalUV || 0
-    siteStats.value.totalArticles = stats.totalArticles || 0
-    siteStats.value.totalReads = stats.totalReads || 0
-    siteStats.value.totalLikes = stats.totalLikes || 0
-    siteStats.value.totalComments = stats.totalComments || 0
+    siteStats.value.todayPV = stats.todayPV || 0;
+    siteStats.value.todayUV = stats.todayUV || 0;
+    siteStats.value.totalPV = stats.totalPV || 0;
+    siteStats.value.totalUV = stats.totalUV || 0;
+    siteStats.value.totalArticles = stats.totalArticles || 0;
+    siteStats.value.totalReads = stats.totalReads || 0;
+    siteStats.value.totalLikes = stats.totalLikes || 0;
+    siteStats.value.totalComments = stats.totalComments || 0;
   } catch (error) {
-    console.error('加载统计数据失败:', error)
+    console.error("加载统计数据失败:", error);
   }
 }
 
@@ -271,42 +310,42 @@ async function loadSiteStats() {
  * 切换页码
  */
 function changePage(page: number) {
-  currentPage.value = page
-  loadArticles()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  currentPage.value = page;
+  loadArticles();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /**
  * 格式化日期
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
   if (days === 0) {
-    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const hours = Math.floor(diff / (1000 * 60 * 60));
     if (hours === 0) {
-      const minutes = Math.floor(diff / (1000 * 60))
-      return `${minutes}分钟前`
+      const minutes = Math.floor(diff / (1000 * 60));
+      return `${minutes}分钟前`;
     }
-    return `${hours}小时前`
+    return `${hours}小时前`;
   }
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-  if (days < 30) return `${Math.floor(days / 7)}周前`
-  if (days < 365) return `${Math.floor(days / 30)}个月前`
-  return date.toLocaleDateString('zh-CN')
+  if (days === 1) return "昨天";
+  if (days < 7) return `${days}天前`;
+  if (days < 30) return `${Math.floor(days / 7)}周前`;
+  if (days < 365) return `${Math.floor(days / 30)}个月前`;
+  return date.toLocaleDateString("zh-CN");
 }
 
 // 页面加载时获取数据
 onMounted(() => {
   // 记录页面访问
-  recordPageView().catch(err => console.error('记录 PV 失败:', err))
+  recordPageView().catch((err) => console.error("记录 PV 失败:", err));
   // 加载数据
-  loadArticles()
-  loadHotArticles()
-  loadSiteStats()
-})
+  loadArticles();
+  loadHotArticles();
+  loadSiteStats();
+});
 </script>

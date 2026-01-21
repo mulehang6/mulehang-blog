@@ -40,9 +40,8 @@ class SentinelConfigTest {
 
         // Then
         assertNotNull(rules, "流控规则不应为 null");
-        assertEquals(3, rules.size(), "应该加载 3 条流控规则");
+        assertEquals(5, rules.size(), "应该加载 5 条流控规则");
 
-        // 验证 ai-chat 规则
         FlowRule aiChatRule = rules.stream()
                 .filter(r -> "ai-chat".equals(r.getResource()))
                 .findFirst()
@@ -51,7 +50,6 @@ class SentinelConfigTest {
         assertEquals(RuleConstant.FLOW_GRADE_QPS, aiChatRule.getGrade(), "应该使用 QPS 限流");
         assertEquals(10.0, aiChatRule.getCount(), "QPS 限制应该为 10");
 
-        // 验证 ai-chat-stream 规则
         FlowRule aiStreamRule = rules.stream()
                 .filter(r -> "ai-chat-stream".equals(r.getResource()))
                 .findFirst()
@@ -59,13 +57,26 @@ class SentinelConfigTest {
         assertNotNull(aiStreamRule, "ai-chat-stream 流控规则应该存在");
         assertEquals(5.0, aiStreamRule.getCount(), "流式接口 QPS 限制应该为 5");
 
-        // 验证 ai-assistant 规则
         FlowRule aiAssistantRule = rules.stream()
                 .filter(r -> "ai-assistant".equals(r.getResource()))
                 .findFirst()
                 .orElse(null);
         assertNotNull(aiAssistantRule, "ai-assistant 流控规则应该存在");
         assertEquals(20.0, aiAssistantRule.getCount(), "助手功能 QPS 限制应该为 20");
+
+        FlowRule aiWritingRule = rules.stream()
+                .filter(r -> "ai-writing".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(aiWritingRule, "ai-writing 流控规则应该存在");
+        assertEquals(10.0, aiWritingRule.getCount(), "写作助手 QPS 限制应该为 10");
+
+        FlowRule aiWritingStreamRule = rules.stream()
+                .filter(r -> "ai-writing-stream".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(aiWritingStreamRule, "ai-writing-stream 流控规则应该存在");
+        assertEquals(5.0, aiWritingStreamRule.getCount(), "写作助手流式 QPS 限制应该为 5");
     }
 
     @Test
@@ -77,9 +88,8 @@ class SentinelConfigTest {
 
         // Then
         assertNotNull(rules, "熔断规则不应为 null");
-        assertEquals(3, rules.size(), "应该加载 3 条熔断规则");
+        assertEquals(5, rules.size(), "应该加载 5 条熔断规则");
 
-        // 验证 ai-chat 熔断规则
         DegradeRule aiChatRule = rules.stream()
                 .filter(r -> "ai-chat".equals(r.getResource()))
                 .findFirst()
@@ -91,7 +101,6 @@ class SentinelConfigTest {
         assertEquals(30, aiChatRule.getTimeWindow(), "熔断时间窗口应该为 30 秒");
         assertEquals(10, aiChatRule.getMinRequestAmount(), "最小请求数应该为 10");
 
-        // 验证 ai-chat-stream 熔断规则
         DegradeRule aiStreamRule = rules.stream()
                 .filter(r -> "ai-chat-stream".equals(r.getResource()))
                 .findFirst()
@@ -99,7 +108,6 @@ class SentinelConfigTest {
         assertNotNull(aiStreamRule, "ai-chat-stream 熔断规则应该存在");
         assertEquals(5, aiStreamRule.getMinRequestAmount(), "流式接口最小请求数应该为 5");
 
-        // 验证 ai-assistant 熔断规则
         DegradeRule aiAssistantRule = rules.stream()
                 .filter(r -> "ai-assistant".equals(r.getResource()))
                 .findFirst()
@@ -107,6 +115,20 @@ class SentinelConfigTest {
         assertNotNull(aiAssistantRule, "ai-assistant 熔断规则应该存在");
         assertEquals(0.6, aiAssistantRule.getCount(), "助手功能错误率阈值应该为 60%");
         assertEquals(20, aiAssistantRule.getTimeWindow(), "助手功能熔断时间窗口应该为 20 秒");
+
+        DegradeRule aiWritingRule = rules.stream()
+                .filter(r -> "ai-writing".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(aiWritingRule, "ai-writing 熔断规则应该存在");
+        assertEquals(10, aiWritingRule.getMinRequestAmount(), "写作助手最小请求数应该为 10");
+
+        DegradeRule aiWritingStreamRule = rules.stream()
+                .filter(r -> "ai-writing-stream".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(aiWritingStreamRule, "ai-writing-stream 熔断规则应该存在");
+        assertEquals(5, aiWritingStreamRule.getMinRequestAmount(), "写作助手流式最小请求数应该为 5");
     }
 
     @Test
@@ -120,7 +142,7 @@ class SentinelConfigTest {
         List<DegradeRule> degradeRules = DegradeRuleManager.getRules();
 
         // 验证每个资源都有对应的流控和熔断规则
-        String[] resources = {"ai-chat", "ai-chat-stream", "ai-assistant"};
+        String[] resources = {"ai-chat", "ai-chat-stream", "ai-assistant", "ai-writing", "ai-writing-stream"};
         for (String resource : resources) {
             long flowCount = flowRules.stream()
                     .filter(r -> resource.equals(r.getResource()))

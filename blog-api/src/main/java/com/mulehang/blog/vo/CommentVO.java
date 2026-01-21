@@ -19,6 +19,12 @@ public class CommentVO {
 
     private Long userId;// 用户 ID
 
+    private String username;// 用户名
+
+    private String nickname;// 用户昵称
+
+    private String avatar;// 用户头像
+
     private Long replyToUser;// 被回复的用户 ID
 
     private String content;// 评论内容

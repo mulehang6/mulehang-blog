@@ -32,4 +32,24 @@ public final class RedisKeys {
      * Redisson RDelayedQueue：邮件通知（配合 RBlockingQueue 使用）。
      */
     public static final String DELAYED_EMAIL_QUEUE = "delayed:email:queue";
+
+    /**
+     * 今日网站 PV（页面浏览量）。
+     */
+    public static final String SITE_PV_TODAY = "blog:stats:pv:today";
+
+    /**
+     * 今日网站 UV（独立访客数，HyperLogLog）。
+     */
+    public static final String SITE_UV_TODAY = "blog:stats:uv:today";
+
+    /**
+     * 总网站 PV。
+     */
+    public static final String SITE_PV_TOTAL = "blog:stats:pv:total";
+
+    /**
+     * 总网站 UV（HyperLogLog）。
+     */
+    public static final String SITE_UV_TOTAL = "blog:stats:uv:total";
 }

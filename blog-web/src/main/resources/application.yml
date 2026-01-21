@@ -37,7 +37,7 @@ spring:
     enabled: true
 
   application:
-    name: blog-web
+    name: mulehang-blog
 
   # 文件上传配置
   servlet:
@@ -216,6 +216,22 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400}  # 过期时间（秒），默认 24 小时
   issuer: ${JWT_ISSUER:mulehang-blog}
 
+# GitHub OAuth 配置
+github:
+  oauth:
+    # GitHub OAuth App 配置（在 https://github.com/settings/developers 创建）
+    client-id: ${GITHUB_OAUTH_CLIENT_ID:your-github-client-id}
+    client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:your-github-client-secret}
+    # 授权回调地址（必须与 GitHub OAuth App 中配置的一致）
+    # 注意：回调到前端页面，而不是后端 API
+    redirect-uri: ${GITHUB_OAUTH_REDIRECT_URI:http://localhost:5173/oauth/github/callback}
+    # GitHub OAuth 授权地址
+    authorize-url: https://github.com/login/oauth/authorize
+    # GitHub OAuth Token 获取地址
+    access-token-url: https://github.com/login/oauth/access_token
+    # GitHub 用户信息 API
+    user-info-url: https://api.github.com/user
+
 # 文件存储配置（XFileStorage）
 dromara:
   x-file-storage:
@@ -245,3 +261,20 @@ storage:
   enable-date-path: true
   # 日期目录格式（默认 yyyy/MM/dd）
   date-path-pattern: yyyy/MM/dd
+
+# Sentinel 流控和熔断配置
+csp:
+  sentinel:
+    # 应用名称（用于 Sentinel Dashboard 识别）
+    project:
+      name: ${spring.application.name:mulehang-blog}
+    # 应用类型
+    app:
+      type: 0
+    # Metric 日志配置
+    metric:
+      file:
+        single-size: 52428800  # 单个日志文件大小（50MB）
+        total-count: 6         # 日志文件总数
+      flush:
+        interval: 1            # 日志刷新间隔（秒）

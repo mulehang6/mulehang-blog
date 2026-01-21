@@ -319,6 +319,10 @@ public class ArticleServiceImpl implements ArticleService {
         }
         // 访问详情时，增加热榜阅读计数（ZINCRBY）
         hotArticleService.incrementReadCount(id);
+        // 增加数据库阅读量
+        articleMapper.incrementReadCount(id);
+        // 刷新缓存中的阅读量
+        vo.setReadCount(vo.getReadCount() + 1);
         return vo;
     }
 
@@ -351,6 +355,10 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 访问详情时，增加热榜阅读计数（ZINCRBY）
         hotArticleService.incrementReadCount(id);
+        // 增加数据库阅读量
+        articleMapper.incrementReadCount(id);
+        // 刷新缓存中的阅读量
+        vo.setReadCount(vo.getReadCount() + 1);
         return vo;
     }
 
@@ -375,6 +383,10 @@ public class ArticleServiceImpl implements ArticleService {
         ArticlePublicVO vo = convertToPublicVO(detailVO);
 
         hotArticleService.incrementReadCount(id);
+        // 增加数据库阅读量
+        articleMapper.incrementReadCount(id);
+        // 刷新缓存中的阅读量
+        vo.setReadCount(vo.getReadCount() + 1);
         return vo;
     }
 
@@ -681,6 +693,8 @@ public class ArticleServiceImpl implements ArticleService {
             vo.setLikeCount(a.getLikeCount());
             vo.setCommentCount(a.getCommentCount());
             vo.setPublishTime(a.getPublishTime());
+            vo.setCreateTime(a.getCreateTime());
+            vo.setUpdateTime(a.getUpdateTime());
 
             vo.setAuthor(toUserVO(userMap.get(a.getAuthorId())));
             vo.setCategory(toCategoryVO(a.getCategoryId() == null ? null : categoryMap.get(a.getCategoryId())));

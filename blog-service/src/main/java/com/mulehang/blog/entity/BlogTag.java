@@ -22,4 +22,6 @@ public class BlogTag extends BaseEntity {
     private String color;// 展示颜色
 
     private String description;// 描述
+
+    private Long creatorId;// 创建者ID，逻辑外键，关联 sys_user.id
 }

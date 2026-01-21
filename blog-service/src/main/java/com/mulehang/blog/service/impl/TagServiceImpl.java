@@ -1,6 +1,7 @@
 package com.mulehang.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.TagDTO;
 import com.mulehang.blog.entity.BlogTag;
 import com.mulehang.blog.mapper.BlogTagMapper;
@@ -46,6 +47,11 @@ public class TagServiceImpl implements TagService {
         t.setSlug(dto.getSlug());
         t.setColor(dto.getColor());
         t.setDescription(dto.getDescription());
+        
+        // 设置创建者ID
+        Long currentUserId = UserContext.getCurrentUserId();
+        t.setCreatorId(currentUserId);
+        
         tagMapper.insert(t);
         return t.getId();
     }
@@ -135,6 +141,7 @@ public class TagServiceImpl implements TagService {
         vo.setSlug(t.getSlug());
         vo.setColor(t.getColor());
         vo.setDescription(t.getDescription());
+        vo.setCreatorId(t.getCreatorId());
         return vo;
     }
 }

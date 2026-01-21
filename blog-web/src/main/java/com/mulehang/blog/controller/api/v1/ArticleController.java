@@ -4,6 +4,7 @@ import com.mulehang.blog.dto.ArticleCreateDTO;
 import com.mulehang.blog.dto.ArticleQueryDTO;
 import com.mulehang.blog.dto.ArticleSearchDTO;
 import com.mulehang.blog.dto.ArticleUpdateDTO;
+import com.mulehang.blog.es.ArticleIndexService;
 import com.mulehang.blog.es.ArticleSearchService;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.model.Result;
@@ -43,6 +44,11 @@ public class ArticleController {
     private final ObjectProvider<ArticleSearchService> articleSearchServiceProvider;
 
     /**
+     * ES 索引服务（可选）。
+     */
+    private final ObjectProvider<ArticleIndexService> articleIndexServiceProvider;
+
+    /**
      * 构造函数（构造器注入）。
      *
      * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
@@ -50,11 +56,13 @@ public class ArticleController {
     public ArticleController(ArticleService articleService,
                              LikeService likeService,
                              DelayedEmailService delayedEmailService,
-                             ObjectProvider<ArticleSearchService> articleSearchServiceProvider) {
+                             ObjectProvider<ArticleSearchService> articleSearchServiceProvider,
+                             ObjectProvider<ArticleIndexService> articleIndexServiceProvider) {
         this.articleService = articleService;
         this.likeService = likeService;
         this.delayedEmailService = delayedEmailService;
         this.articleSearchServiceProvider = articleSearchServiceProvider;
+        this.articleIndexServiceProvider = articleIndexServiceProvider;
     }
 
     /**
@@ -188,6 +196,32 @@ public class ArticleController {
     }
 
     /**
+     * 查询用户是否已点赞文章。
+     *
+     * @param id 文章 ID
+     * @param userId 用户 ID
+     * @return true=已点赞，false=未点赞
+     */
+    @GetMapping("/{id}/like/status")
+    @Operation(summary = "查询用户是否已点赞文章")
+    public Result<Boolean> getLikeStatus(@PathVariable Long id, @RequestParam Long userId) {
+        return Result.ok(likeService.hasLiked(userId, id));
+    }
+
+    /**
+     * 取消点赞文章。
+     *
+     * @param id 文章 ID
+     * @param userId 用户 ID
+     * @return 取消结果（true=成功，false=未点赞或未获取到锁）
+     */
+    @DeleteMapping("/{id}/like")
+    @Operation(summary = "取消点赞文章")
+    public Result<Boolean> unlike(@PathVariable Long id, @RequestParam Long userId) {
+        return Result.ok(likeService.unlikeArticle(userId, id));
+    }
+
+    /**
      * 延迟邮件测试（仅开发/演示）。
      *
      * @param to 收件人邮箱
@@ -217,5 +251,33 @@ public class ArticleController {
     public Result<Void> delete(@PathVariable Long id) {
         articleService.deleteArticle(id);
         return Result.ok();
+    }
+
+    /**
+     * 重建文章搜索索引（ES）。
+     *
+     * <p>用途：</p>
+     * <ul>
+     *     <li>初始化时同步种子数据到 ES</li>
+     *     <li>修复索引数据不一致</li>
+     *     <li>索引结构变更后重建</li>
+     * </ul>
+     *
+     * <p>注意：该接口应该仅管理员可用，生产环境请加上权限验证。</p>
+     *
+     * @return 同步成功的文章数量
+     */
+    @PostMapping("/rebuild-search-index")
+    @Operation(summary = "重建文章搜索索引（ES）", 
+               description = "全量同步已发布文章到 Elasticsearch，用于初始化或修复索引")
+    public Result<Integer> rebuildSearchIndex() {
+        ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
+        if (indexService == null) {
+            return Result.fail("索引服务不可用：请确认 Elasticsearch 已启动并配置 spring.elasticsearch.uris");
+        }
+        int count = indexService.rebuildAllArticlesIndex();
+        Result<Integer> result = Result.ok(count);
+        result.setMsg("索引重建完成，成功同步 " + count + " 篇文章");
+        return result;
     }
 }

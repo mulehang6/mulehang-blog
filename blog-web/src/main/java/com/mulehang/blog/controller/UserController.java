@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "用户管理", description = "用户信息相关接口")
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")  // 修复：改为 users（复数）与文档一致
 public class UserController {
 
     /**

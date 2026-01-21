@@ -4,21 +4,27 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
+import com.mulehang.blog.dto.NotificationDTO;
 import com.mulehang.blog.entity.BlogArticle;
 import com.mulehang.blog.entity.BlogComment;
+import com.mulehang.blog.entity.SysUser;
 import com.mulehang.blog.enums.CommentStatusEnum;
 import com.mulehang.blog.mapper.BlogArticleMapper;
 import com.mulehang.blog.mapper.BlogCommentMapper;
+import com.mulehang.blog.mapper.SysUserMapper;
 import com.mulehang.blog.metrics.BlogMetrics;
 import com.mulehang.blog.mq.producer.CommentNotifyProducer;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.security.SensitiveWordService;
 import com.mulehang.blog.service.CommentService;
+import com.mulehang.blog.service.WebSocketNotificationService;
 import com.mulehang.blog.util.IpRegionService;
 import com.mulehang.blog.vo.CommentVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,6 +34,7 @@ import java.util.Objects;
  * @author mulehang
  * @since 2026-01-17
  */
+@Slf4j
 @Service
 public class CommentServiceImpl implements CommentService {
 
@@ -37,6 +44,8 @@ public class CommentServiceImpl implements CommentService {
     private final SensitiveWordService sensitiveWordService;
     private final IpRegionService ipRegionService;
     private final BlogMetrics blogMetrics;
+    private final WebSocketNotificationService wsNotificationService;
+    private final SysUserMapper userMapper;
 
     /**
      * 构造函数。
@@ -47,19 +56,25 @@ public class CommentServiceImpl implements CommentService {
      * @param sensitiveWordService  敏感词服务
      * @param ipRegionService       IP 归属地服务
      * @param blogMetrics           业务指标
+     * @param wsNotificationService WebSocket 通知服务
+     * @param userMapper            用户 Mapper
      */
     public CommentServiceImpl(BlogCommentMapper commentMapper,
             BlogArticleMapper articleMapper,
             CommentNotifyProducer commentNotifyProducer,
             SensitiveWordService sensitiveWordService,
             IpRegionService ipRegionService,
-            BlogMetrics blogMetrics) {
+            BlogMetrics blogMetrics,
+            WebSocketNotificationService wsNotificationService,
+            SysUserMapper userMapper) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
         this.commentNotifyProducer = commentNotifyProducer;
         this.sensitiveWordService = sensitiveWordService;
         this.ipRegionService = ipRegionService;
         this.blogMetrics = blogMetrics;
+        this.wsNotificationService = wsNotificationService;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -130,7 +145,12 @@ public class CommentServiceImpl implements CommentService {
 
         blogMetrics.incrementComment();
 
+        // 发送 MQ 异步邮件通知
         commentNotifyProducer.sendNotify(dto.getArticleId(), commentId);
+        
+        // 发送 WebSocket 实时通知给文章作者
+        sendWebSocketNotification(article, comment);
+        
         return commentId;
     }
 
@@ -186,6 +206,17 @@ public class CommentServiceImpl implements CommentService {
         vo.setLocation(comment.getLocation());
         vo.setIsTop(comment.getIsTop());
         vo.setCreateTime(comment.getCreateTime());
+        
+        // 查询并填充用户信息
+        if (comment.getUserId() != null) {
+            SysUser user = userMapper.selectById(comment.getUserId());
+            if (user != null) {
+                vo.setUsername(user.getUsername());
+                vo.setNickname(user.getNickname());
+                vo.setAvatar(user.getAvatar());
+            }
+        }
+        
         return vo;
     }
 
@@ -210,5 +241,43 @@ public class CommentServiceImpl implements CommentService {
      */
     private Long normalizeId(Long id) {
         return id == null ? 0L : id;
+    }
+    
+    /**
+     * 发送 WebSocket 实时通知给文章作者
+     *
+     * @param article 文章实体
+     * @param comment 评论实体
+     */
+    private void sendWebSocketNotification(BlogArticle article, BlogComment comment) {
+        try {
+            // 如果评论者是文章作者自己，不需要通知
+            if (Objects.equals(comment.getUserId(), article.getAuthorId())) {
+                return;
+            }
+            
+            // 构造通知消息
+            NotificationDTO notification = NotificationDTO.builder()
+                    .type("COMMENT")
+                    .title("新评论通知")
+                    .content(comment.getContent())
+                    .articleId(article.getId())
+                    .articleTitle(article.getTitle())
+                    .commentId(comment.getId())
+                    .senderId(comment.getUserId())
+                    .receiverId(article.getAuthorId())
+                    .url("/articles/" + article.getSlug())
+                    .timestamp(LocalDateTime.now())
+                    .read(false)
+                    .build();
+            
+            // 发送通知
+            wsNotificationService.sendToUser(article.getAuthorId(), notification);
+            log.debug("已发送 WebSocket 通知给文章作者: authorId={}, commentId={}", 
+                    article.getAuthorId(), comment.getId());
+        } catch (Exception e) {
+            // WebSocket 通知失败不影响主流程
+            log.error("WebSocket 通知发送失败", e);
+        }
     }
 }

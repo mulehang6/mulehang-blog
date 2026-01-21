@@ -39,6 +39,7 @@ public class DelayedEmailServiceImpl implements DelayedEmailService {
      * @throws IllegalArgumentException 当 task 为空或 delay 为空/负数时抛出
      */
     @Override
+    @SuppressWarnings("deprecation") // RDelayedQueue 已弃用，但 RReliableQueue 为 Pro 功能，社区版继续使用
     public void enqueue(EmailTask task, Duration delay) {
         if (task == null) {
             throw new IllegalArgumentException("参数 task 不能为空");

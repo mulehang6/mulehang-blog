@@ -65,4 +65,65 @@ public class LikeServiceImpl implements LikeService {
         }
         return false;
     }
+
+    /**
+     * 查询用户是否已点赞某文章。
+     *
+     * @param userId 用户 ID
+     * @param articleId 文章 ID
+     * @return true=已点赞；false=未点赞
+     * @throws IllegalArgumentException 当 userId 或 articleId 为空时抛出
+     */
+    @Override
+    public boolean hasLiked(Long userId, Long articleId) {
+        if (userId == null || articleId == null) {
+            throw new IllegalArgumentException("参数 userId/articleId 不能为空");
+        }
+
+        String likeKey = RedisKeys.ARTICLE_LIKE_SET_PREFIX + articleId;
+        Boolean isMember = redisTemplate.opsForSet().isMember(likeKey, userId.toString());
+        return Boolean.TRUE.equals(isMember);
+    }
+
+    /**
+     * 取消点赞文章。
+     *
+     * <p>使用 Redisson 分布式锁防止并发重复操作，获取锁超时 3 秒，锁自动释放时间 10 秒。</p>
+     *
+     * @param userId 用户 ID
+     * @param articleId 文章 ID
+     * @return true=取消成功；false=未点赞或未获取到锁
+     * @throws IllegalArgumentException 当 userId 或 articleId 为空时抛出
+     */
+    @Override
+    public boolean unlikeArticle(Long userId, Long articleId) {
+        if (userId == null || articleId == null) {
+            throw new IllegalArgumentException("参数 userId/articleId 不能为空");
+        }
+
+        String lockKey = RedisKeys.LOCK_LIKE_PREFIX + articleId + ":" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(3, 10, TimeUnit.SECONDS)) {
+                try {
+                    String likeKey = RedisKeys.ARTICLE_LIKE_SET_PREFIX + articleId;
+                    Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, userId.toString());
+                    if (!Boolean.TRUE.equals(hasLiked)) {
+                        return false;
+                    }
+
+                    redisTemplate.opsForSet().remove(likeKey, userId.toString());
+                    articleMapper.decrementLikeCount(articleId);
+                    return true;
+                } finally {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return false;
+    }
 }

@@ -13,7 +13,6 @@
         <module>blog-api</module>
         <module>blog-core</module>
         <module>blog-service</module>
-        <module>blog-ui</module>
         <module>blog-web</module>
     </modules>
     <packaging>pom</packaging>
@@ -43,6 +42,7 @@
         <java-jwt.version>4.5.0</java-jwt.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <springdoc.version>2.7.0</springdoc.version>
+        <swagger-annotations.version>2.2.26</swagger-annotations.version>
         <!-- Markdown & Content Processing -->
         <flexmark.version>0.64.8</flexmark.version>
         <!-- Utilities -->
@@ -141,6 +141,11 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations.version}</version>
             </dependency>
 
             <!-- Markdown Processing -->

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Anthropic 协议实现
@@ -42,6 +43,12 @@ public class AnthropicProvider implements AiService {
                 .build();
     }
 
+    /**
+     * 向 Anthropic API 发起非流式对话请求
+     *
+     * @param request AI 请求对象
+     * @return AI 响应结果
+     */
     @Override
     public AiResponse chat(AiRequest request) {
         Map<String, Object> body = buildRequestBody(request, false);
@@ -103,7 +110,7 @@ public class AnthropicProvider implements AiService {
                 .messages(List.of(new AiMessage("user", prompt)))
                 .build();
         String result = chat(request).getContent();
-        return List.of(result.split("\n")).stream()
+        return Stream.of(result.split("\n"))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
@@ -116,12 +123,19 @@ public class AnthropicProvider implements AiService {
                 .messages(List.of(new AiMessage("user", prompt)))
                 .build();
         String result = chat(request).getContent();
-        return List.of(result.split(",")).stream()
+        return Stream.of(result.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 构建 Anthropic API 请求体
+     *
+     * @param request AI 请求对象
+     * @param stream 是否为流式请求
+     * @return 请求体 Map
+     */
     private Map<String, Object> buildRequestBody(AiRequest request, boolean stream) {
         Map<String, Object> body = new HashMap<>();
         body.put("model", request.getModel() != null ? request.getModel() : config.getModel());
@@ -148,6 +162,13 @@ public class AnthropicProvider implements AiService {
         return body;
     }
 
+    /**
+     * 解析 Anthropic API 响应
+     *
+     * @param response API 响应数据
+     * @return AI 响应对象
+     */
+    @SuppressWarnings("unchecked")
     private AiResponse parseResponse(Map<String, Object> response) {
         if (response == null || !response.containsKey("content")) {
             return AiResponse.builder().content("Error: Invalid response from Anthropic").build();

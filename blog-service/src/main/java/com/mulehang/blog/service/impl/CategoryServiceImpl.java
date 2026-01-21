@@ -1,8 +1,10 @@
 package com.mulehang.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CategoryDTO;
 import com.mulehang.blog.entity.BlogCategory;
+import com.mulehang.blog.mapper.BlogArticleMapper;
 import com.mulehang.blog.mapper.BlogCategoryMapper;
 import com.mulehang.blog.service.CategoryService;
 import com.mulehang.blog.vo.CategoryVO;
@@ -18,14 +20,16 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
 
     private final BlogCategoryMapper categoryMapper;
+    private final BlogArticleMapper articleMapper;
 
     /**
      * 构造函数（构造器注入）。
      *
      * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
      */
-    public CategoryServiceImpl(BlogCategoryMapper categoryMapper) {
+    public CategoryServiceImpl(BlogCategoryMapper categoryMapper, BlogArticleMapper articleMapper) {
         this.categoryMapper = categoryMapper;
+        this.articleMapper = articleMapper;
     }
 
     /**
@@ -48,6 +52,11 @@ public class CategoryServiceImpl implements CategoryService {
         c.setDescription(dto.getDescription());
         c.setSort(dto.getSort());
         c.setStatus(dto.getStatus());
+        
+        // 设置创建者ID
+        Long currentUserId = UserContext.getCurrentUserId();
+        c.setCreatorId(currentUserId);
+        
         categoryMapper.insert(c);
         return c.getId();
     }
@@ -142,6 +151,12 @@ public class CategoryServiceImpl implements CategoryService {
         vo.setDescription(c.getDescription());
         vo.setSort(c.getSort());
         vo.setStatus(c.getStatus());
+        vo.setCreatorId(c.getCreatorId());
+        
+        // 统计文章数量
+        int articleCount = articleMapper.countByCategoryId(c.getId());
+        vo.setArticleCount(articleCount);
+        
         return vo;
     }
 }

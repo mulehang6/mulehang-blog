@@ -157,6 +157,64 @@ public class ArticleIndexService {
     }
 
     /**
+     * 全量重建文章索引。
+     *
+     * <p>用途：</p>
+     * <ul>
+     *     <li>初始化 ES 索引（种子数据同步）</li>
+     *     <li>修复索引数据不一致问题</li>
+     *     <li>索引结构变更后的重建</li>
+     * </ul>
+     *
+     * @return 同步成功的文章数量
+     */
+    public int rebuildAllArticlesIndex() {
+        log.info("开始全量重建文章索引...");
+        
+        // 查询所有已发布的文章
+        List<BlogArticle> articles = articleMapper.selectList(
+            new LambdaQueryWrapper<BlogArticle>()
+                .eq(BlogArticle::getStatus, STATUS_PUBLISHED)
+        );
+        
+        log.info("查询结果: 找到 {} 篇已发布文章 (status={})", articles.size(), STATUS_PUBLISHED);
+        
+        // 额外调试：查询所有文章看看
+        List<BlogArticle> allArticles = articleMapper.selectList(new LambdaQueryWrapper<>());
+        log.info("数据库中共有 {} 篇文章", allArticles.size());
+        if (!allArticles.isEmpty()) {
+            BlogArticle first = allArticles.get(0);
+            log.info("第一篇文章: id={}, title={}, status={}, isDeleted={}", 
+                first.getId(), first.getTitle(), first.getStatus(), first.getIsDeleted());
+        }
+        
+        if (articles.isEmpty()) {
+            log.info("没有已发布的文章需要同步");
+            return 0;
+        }
+        
+        int successCount = 0;
+        int failCount = 0;
+        
+        for (BlogArticle article : articles) {
+            try {
+                syncArticle(article.getId());
+                successCount++;
+                log.debug("同步文章成功: articleId={}, title={}", article.getId(), article.getTitle());
+            } catch (Exception e) {
+                failCount++;
+                log.warn("同步文章失败: articleId={}, title={}, error={}", 
+                    article.getId(), article.getTitle(), e.getMessage());
+            }
+        }
+        
+        log.info("文章索引重建完成: 总数={}, 成功={}, 失败={}", 
+            articles.size(), successCount, failCount);
+        
+        return successCount;
+    }
+
+    /**
      * 关闭 ES 索引同步线程池。
      *
      * <p>避免应用热重启时出现线程泄漏。</p>

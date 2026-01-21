@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 这是一个基于 Spring Boot 3.5.9 + Java 21 的个人博客系统，采用 Maven 多模块架构。项目参考了 paicoding 的技术栈设计，但升级到了 Spring Boot 3.x 生态（使用 Jakarta EE 规范）。
 
-**核心技术栈**：MyBatis-Plus + MySQL, Redis (多级缓存), RabbitMQ (异步解耦), Redisson (分布式锁/延迟队列), Liquibase (数据库版本管理), Thymeleaf (模板引擎), SpringDoc OpenAPI 3 (API 文档), Micrometer + Prometheus (可观测性)。
+**核心技术栈**：MyBatis-Plus + MySQL, Redis (多级缓存), RabbitMQ (异步解耦), Redisson (分布式锁/延迟队列), Liquibase (数据库版本管理), Vue 3 + Tailwind CSS v4 (前端), SpringDoc OpenAPI 3 (API 文档), Micrometer + Prometheus (可观测性)。
 
 **已完成的里程碑**：
 - Milestone 1（文章发布链路）：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）
@@ -33,7 +33,7 @@ blog-core (基础设施层) + blog-api (API契约层)
 - **blog-api**: DTO/VO 定义、统一响应模型、枚举常量
 - **blog-core**: 通用基础设施（缓存、JWT、Markdown 渲染、OSS 上传、敏感词过滤、IP 归属、工具类）
 - **blog-service**: 业务逻辑、数据访问层(MyBatis-Plus Mapper)、Liquibase 变更脚本、MQ 生产者/消费者、邮件服务、WebSocket 处理
-- **blog-ui**: Thymeleaf 模板文件（`src/main/resources/templates/`）和静态资源（CSS/JS/图片）
+- **blog-frontend**: Vue 3 前端项目（Vite + TypeScript + Tailwind CSS v4 + Shadcn-vue，独立于 Maven 模块，位于根目录）
 - **blog-web**: Web 层控制器、全局异常处理、SpringDoc 配置、Spring Boot 主类
 
 ## 常用命令

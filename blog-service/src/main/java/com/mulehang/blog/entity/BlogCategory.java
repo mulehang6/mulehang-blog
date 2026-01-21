@@ -26,4 +26,6 @@ public class BlogCategory extends BaseEntity {
     private Integer sort;// 排序值
 
     private Integer status;// 状态
+
+    private Long creatorId;// 创建者ID，逻辑外键，关联 sys_user.id
 }

@@ -3,6 +3,9 @@ package com.mulehang.blog.config;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
@@ -48,8 +51,16 @@ public class ElasticsearchConfig {
      */
     @Bean
     public ElasticsearchClient elasticsearchClient(RestClient restClient) {
-        RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-        log.info("ElasticsearchClient 初始化完成");
+        // 配置 ObjectMapper 支持 Java 8 时间类型
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        
+        RestClientTransport transport = new RestClientTransport(
+            restClient, 
+            new JacksonJsonpMapper(objectMapper)
+        );
+        log.info("ElasticsearchClient 初始化完成，已配置 JavaTimeModule");
         return new ElasticsearchClient(transport);
     }
 }

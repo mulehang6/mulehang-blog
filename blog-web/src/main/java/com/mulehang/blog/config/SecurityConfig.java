@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Spring Security 6 配置
@@ -27,6 +28,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     /**
      * 配置安全过滤器链
@@ -38,6 +40,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 启用 CORS（使用自定义配置）
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
                 // 禁用 CSRF（使用 JWT 无需 CSRF 保护）
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -54,10 +59,12 @@ public class SecurityConfig {
                         // 公开接口：认证相关
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 公开接口：前台文章、分类、标签
-                        .requestMatchers("/api/v1/articles/public/**").permitAll()
+                        // 公开接口：前台文章、分类、标签、专栏
+                        .requestMatchers("/api/v1/articles/public/**", "/api/v1/articles/slug/**", 
+                                         "/api/v1/articles/hot", "/api/v1/articles/search").permitAll()
                         .requestMatchers("/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/tags/**").permitAll()
+                        .requestMatchers("/api/v1/columns/**").permitAll()
 
                         // 公开接口：测试接口（仅开发环境，生产环境应移除）
                         .requestMatchers("/api/v1/articles/email/test").permitAll()
@@ -69,6 +76,9 @@ public class SecurityConfig {
                         // Actuator 健康检查
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
+
+                        // WebSocket 端点
+                        .requestMatchers("/ws/**").permitAll()
 
                         // 管理接口（需要 ADMIN 角色）
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

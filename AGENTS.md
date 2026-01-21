@@ -7,7 +7,7 @@
 - `blog-api`：DTO/VO 契约、统一响应模型、枚举常量。
 - `blog-core`：基础设施工具（多级缓存、JWT、Markdown 渲染、文件存储、Redis 工具等）。
 - `blog-service`：业务逻辑、数据访问（MyBatis-Plus Mapper）、Liquibase、MQ、邮件、Redisson 分布式锁/延迟队列。
-- `blog-ui`：Thymeleaf 模板和 Web 资源（`blog-ui/src/main/resources/templates`）。
+- `blog-frontend`：Vue 3 前端项目（Vite + TypeScript + Tailwind CSS v4 + Shadcn-vue，独立于 Maven 模块）。
 - `blog-web`：Web 层控制器、全局异常处理、SpringDoc 配置、Spring Boot 主类。
 使用标准 Maven 布局：`*/src/main/java`、`*/src/main/resources`、`*/src/test/java`。
 

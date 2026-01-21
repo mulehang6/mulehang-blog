@@ -45,21 +45,16 @@ public class OpenAiProvider implements AiService {
     public AiResponse chat(AiRequest request) {
         Map<String, Object> body = buildRequestBody(request, false);
         
-        try {
-            Map<String, Object> response = webClient.post()
-                    .uri("/v1/chat/completions")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(config.getTimeout()))
-                    .block();
+        Map<String, Object> response = webClient.post()
+                .uri("/v1/chat/completions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .timeout(Duration.ofSeconds(config.getTimeout()))
+                .block();
 
-            return parseResponse(response);
-        } catch (Exception e) {
-            log.error("OpenAI chat error", e);
-            return AiResponse.builder().content("Error: " + e.getMessage()).build();
-        }
+        return parseResponse(response);
     }
 
     @Override
@@ -135,14 +130,17 @@ public class OpenAiProvider implements AiService {
 
     private AiResponse parseResponse(Map<String, Object> response) {
         if (response == null || !response.containsKey("choices")) {
-            return AiResponse.builder().content("Error: Invalid response from AI provider").build();
+            throw new RuntimeException("Invalid response from AI provider: choices not found");
         }
         List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
         if (choices == null || choices.isEmpty()) {
-            return AiResponse.builder().content("Error: No choices in response").build();
+            throw new RuntimeException("Invalid response from AI provider: choices is empty");
         }
         Map<String, Object> firstChoice = choices.get(0);
         Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+        if (message == null || !message.containsKey("content")) {
+            throw new RuntimeException("Invalid response from AI provider: message content not found");
+        }
         String content = (String) message.get("content");
         
         Map<String, Object> usage = (Map<String, Object>) response.get("usage");

@@ -1,11 +1,13 @@
 package com.mulehang.blog.controller;
 
 import com.mulehang.blog.context.UserContext;
+import com.mulehang.blog.dto.GitHubOAuthCallbackDTO;
 import com.mulehang.blog.dto.GuestLoginRequest;
 import com.mulehang.blog.dto.LoginRequest;
 import com.mulehang.blog.dto.RegisterRequest;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.service.AuthService;
+import com.mulehang.blog.service.GitHubOAuthService;
 import com.mulehang.blog.vo.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final GitHubOAuthService gitHubOAuthService;
 
     /**
      * 用户登录
@@ -77,6 +80,35 @@ public class AuthController {
             request = new GuestLoginRequest();
         }
         LoginResponse response = authService.guestLogin(request);
+        return Result.ok(response);
+    }
+
+    /**
+     * 获取 GitHub OAuth 授权 URL
+     *
+     * @return GitHub 授权 URL
+     */
+    @Operation(summary = "GitHub 授权", description = "获取 GitHub OAuth 授权 URL，用于跳转到 GitHub 登录页面")
+    @GetMapping("/oauth/github/authorize")
+    public Result<String> githubAuthorize(@RequestParam(required = false) String state) {
+        // 如果没有传递 state，使用默认值
+        if (state == null || state.isBlank()) {
+            state = "default";
+        }
+        String authorizeUrl = gitHubOAuthService.getAuthorizeUrl(state);
+        return Result.ok(authorizeUrl);
+    }
+
+    /**
+     * GitHub OAuth 回调接口
+     *
+     * @param callback 回调参数（包含 code 和 state）
+     * @return 登录响应（包含 JWT Token 和用户信息）
+     */
+    @Operation(summary = "GitHub OAuth 回调", description = "GitHub 授权回调接口，用于接收 GitHub 返回的授权码")
+    @GetMapping("/oauth/github/callback")
+    public Result<LoginResponse> githubCallback(@Valid GitHubOAuthCallbackDTO callback) {
+        LoginResponse response = gitHubOAuthService.login(callback.getCode());
         return Result.ok(response);
     }
 }

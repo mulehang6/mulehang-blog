@@ -66,11 +66,15 @@ public class GlobalExceptionHandler {
      *
      * <p>生产环境可在这里接入日志与告警。</p>
      *
-     * @param ignored 异常
+     * @param e 异常
      * @return 错误响应
      */
     @ExceptionHandler(Exception.class)
-    public Result<?> handleException(Exception ignored) {
-        return Result.fail(ResultCodeEnum.INTERNAL_ERROR);
+    public Result<?> handleException(Exception e) {
+        // 记录详细异常信息用于排查问题
+        e.printStackTrace();
+        // 返回异常消息，避免前端只看到 "internal server error"
+        String errorMessage = e.getMessage() != null ? e.getMessage() : "服务器内部错误";
+        return Result.fail(errorMessage);
     }
 }

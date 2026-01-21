@@ -21,4 +21,8 @@ public class CategoryVO {
     private Integer sort;// 排序值
 
     private Integer status;// 状态
+
+    private Integer articleCount;// 文章数量
+
+    private Long creatorId;// 创建者ID
 }

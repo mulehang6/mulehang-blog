@@ -1,25 +1,29 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <AppNavbar />
+  <div class="min-h-screen bg-transparent text-foreground">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 面包屑导航 -->
-      <nav class="mb-6 flex items-center text-sm text-gray-600">
-        <router-link to="/" class="hover:text-gray-900">首页</router-link>
+      <nav class="mb-6 flex items-center text-sm text-muted-foreground">
+        <router-link to="/" class="hover:text-foreground">首页</router-link>
         <span class="mx-2">/</span>
-        <router-link to="/categories" class="hover:text-gray-900"
+        <router-link to="/categories" class="hover:text-foreground"
           >分类</router-link
         >
         <span class="mx-2">/</span>
-        <span class="text-gray-900">{{ category?.name || "加载中..." }}</span>
+        <span class="text-foreground">{{ category?.name || "加载中..." }}</span>
       </nav>
 
       <!-- 分类信息 -->
-      <div v-if="category" class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      <div
+        v-if="category"
+        class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm p-6 mb-8"
+      >
+        <h1 class="text-3xl font-bold text-foreground mb-2">
           {{ category.name }}
         </h1>
-        <p class="text-gray-600">{{ category.description || "暂无描述" }}</p>
-        <p class="mt-2 text-sm text-gray-500">
+        <p class="text-muted-foreground">
+          {{ category.description || "暂无描述" }}
+        </p>
+        <p class="mt-2 text-sm text-muted-foreground">
           共 {{ category.articleCount }} 篇文章
         </p>
       </div>
@@ -27,7 +31,7 @@
       <!-- 文章列表 -->
       <div v-if="loading" class="flex justify-center items-center py-12">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
         ></div>
       </div>
 
@@ -35,18 +39,20 @@
         <div
           v-for="article in articles"
           :key="article.id"
-          class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6 cursor-pointer"
+          class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 cursor-pointer"
           @click="goToArticle(article.slug)"
         >
           <h2
-            class="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600"
+            class="text-xl font-semibold text-foreground mb-2 hover:text-primary"
           >
             {{ article.title }}
           </h2>
-          <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+          <p class="text-muted-foreground text-sm mb-4 line-clamp-2">
             {{ article.summary }}
           </p>
-          <div class="flex items-center justify-between text-sm text-gray-500">
+          <div
+            class="flex items-center justify-between text-sm text-muted-foreground"
+          >
             <div class="flex items-center space-x-4">
               <span>{{
                 article.author?.nickname || article.author?.username || "匿名"
@@ -65,7 +71,7 @@
       </div>
 
       <div v-else class="text-center py-12">
-        <p class="text-gray-500">该分类下暂无文章</p>
+        <p class="text-muted-foreground">该分类下暂无文章</p>
       </div>
 
       <!-- 分页 -->
@@ -78,8 +84,8 @@
             class="px-4 py-2 rounded-md transition-colors"
             :class="
               page === pagination.pageNo
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-card/70 text-foreground hover:bg-muted'
             "
           >
             {{ page }}
@@ -90,12 +96,11 @@
       <!-- 错误提示 -->
       <div
         v-if="error"
-        class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md"
+        class="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md"
       >
-        <p class="text-red-600">{{ error }}</p>
+        <p class="text-destructive">{{ error }}</p>
       </div>
     </div>
-    <AppFooter />
   </div>
 </template>
 
@@ -105,8 +110,6 @@ import { useRoute, useRouter } from "vue-router";
 import { categoryApi } from "@/api/category";
 import { articleApi } from "@/api/article";
 import type { Category, ArticleListItem } from "@/types/api";
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -148,6 +151,7 @@ async function fetchArticles() {
       categoryId,
       pageNo: pagination.value.pageNo,
       pageSize: pagination.value.pageSize,
+      status: 1,
     });
 
     articles.value = result.list;

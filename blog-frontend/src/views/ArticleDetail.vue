@@ -1,8 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background">
-    <!-- 顶部导航栏 -->
-    <AppNavbar />
-
+  <div class="min-h-screen bg-transparent">
     <main class="container mx-auto px-4 py-8">
       <!-- 加载状态 -->
       <div v-if="loading" class="flex justify-center items-center py-20">
@@ -211,9 +208,6 @@
         </Card>
       </div>
     </main>
-
-    <!-- 页脚 -->
-    <AppFooter />
   </div>
 </template>
 
@@ -224,8 +218,6 @@ import { toast } from "vue-sonner";
 import { articleApi } from "@/api/article";
 import { useUserStore } from "@/stores/user";
 import type { ArticleDetail, ArticleListItem } from "@/types/api";
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
 import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
 import CommentList from "@/components/Comment/CommentList.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -259,6 +251,7 @@ async function fetchArticle() {
       const result = await articleApi.getList({
         categoryId: article.value.category.id,
         pageSize: 5,
+        status: 1,
       });
       relatedArticles.value = result.list
         .filter((a) => a.id !== article.value!.id)

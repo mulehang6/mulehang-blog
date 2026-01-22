@@ -1,213 +1,264 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground">
-    <!-- 顶部导航栏 -->
-    <AppNavbar />
+  <div class="space-y-6">
+    <!-- 顶部标题区域 -->
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">
+          {{ localeStore.t.latestArticles }}
+        </h1>
+        <p class="text-muted-foreground mt-1">
+          {{ localeStore.t.latestSubtitle }}
+        </p>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        @click="loadArticles"
+        :disabled="loading"
+        class="gap-2 glass-button"
+      >
+        <span :class="{ 'animate-spin': loading }">↻</span>
+        {{ localeStore.t.refresh }}
+      </Button>
+    </div>
 
-    <!-- 主要内容区域 -->
-    <main class="container mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+      <!-- 文章列表 (左侧) -->
+      <div class="lg:col-span-8 space-y-6">
+        <!-- 加载中状态 -->
+        <div v-if="loading && articles.length === 0" class="space-y-6">
+          <Card v-for="i in 3" :key="i" class="animate-pulse">
+            <CardHeader>
+              <div class="h-6 bg-muted rounded w-3/4"></div>
+              <div class="h-4 bg-muted rounded w-1/2 mt-2"></div>
+            </CardHeader>
+            <CardContent>
+              <div class="space-y-2">
+                <div class="h-4 bg-muted rounded"></div>
+                <div class="h-4 bg-muted rounded w-5/6"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <!-- 文章列表 -->
-        <div class="lg:col-span-2 space-y-6">
-          <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold">最新文章</h1>
-            <div class="flex items-center gap-2">
-              <Button variant="outline" size="sm" @click="loadArticles">
-                <span class="text-sm">刷新</span>
-              </Button>
-            </div>
-          </div>
-
-          <!-- 加载中状态 -->
-          <div v-if="loading" class="space-y-6">
-            <Card v-for="i in 3" :key="i" class="animate-pulse">
-              <CardHeader>
-                <div class="h-6 bg-muted rounded w-3/4"></div>
-                <div class="h-4 bg-muted rounded w-1/2 mt-2"></div>
-              </CardHeader>
-              <CardContent>
-                <div class="space-y-2">
-                  <div class="h-4 bg-muted rounded"></div>
-                  <div class="h-4 bg-muted rounded w-5/6"></div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <!-- 文章列表 -->
-          <div v-else-if="articles.length > 0" class="space-y-6">
-            <Card
-              v-for="article in articles"
-              :key="article.id"
-              class="hover:shadow-lg transition-shadow cursor-pointer group"
-              @click="router.push(`/articles/${article.slug}`)"
-            >
-              <CardHeader>
-                <CardTitle
-                  class="text-xl group-hover:text-primary transition-colors"
-                >
-                  {{ article.title }}
-                </CardTitle>
-                <CardDescription class="line-clamp-2 text-base mt-2">
-                  {{ article.summary }}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div
-                  class="flex items-center justify-between text-sm text-muted-foreground"
-                >
-                  <div class="flex items-center gap-4">
-                    <Badge v-if="article.category" variant="secondary">{{
-                      article.category.name
-                    }}</Badge>
-                    <Badge v-else variant="secondary">未分类</Badge>
-                    <span v-if="article.author">{{
-                      article.author.username
-                    }}</span>
-                    <span>{{ formatDate(article.createTime) }}</span>
-                  </div>
-                  <div class="flex items-center gap-4">
-                    <span>👁️ {{ article.readCount || 0 }}</span>
-                    <span>❤️ {{ article.likeCount || 0 }}</span>
-                    <span>💬 {{ article.commentCount || 0 }}</span>
+        <div v-else-if="articles.length > 0" class="space-y-4">
+          <Card
+            v-for="article in articles"
+            :key="article.id"
+            class="group hover:border-primary/50 transition-all duration-300 cursor-pointer overflow-hidden border-border/60 hover-lift-sheen"
+            @click="router.push(`/articles/${article.slug}`)"
+          >
+            <CardHeader class="pb-3">
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-1">
+                  <CardTitle
+                    class="text-xl font-bold group-hover:text-primary transition-colors"
+                  >
+                    {{ article.title }}
+                  </CardTitle>
+                  <div
+                    class="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <Badge
+                      v-if="article.category"
+                      variant="secondary"
+                      class="rounded-sm font-normal"
+                    >
+                      {{ article.category.name }}
+                    </Badge>
+                    <span v-if="article.author" class="flex items-center gap-1">
+                      <span
+                        class="w-1 h-1 rounded-full bg-muted-foreground"
+                      ></span>
+                      {{ article.author.username }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <span
+                        class="w-1 h-1 rounded-full bg-muted-foreground"
+                      ></span>
+                      {{ formatDate(article.createTime) }}
+                    </span>
                   </div>
                 </div>
-                <div
-                  v-if="article.tags && article.tags.length > 0"
-                  class="flex items-center gap-2 mt-3"
-                >
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p
+                class="text-muted-foreground text-sm line-clamp-2 leading-relaxed"
+              >
+                {{ article.summary }}
+              </p>
+
+              <div
+                class="flex items-center justify-between mt-4 pt-4 border-t border-border/40"
+              >
+                <div class="flex items-center gap-2">
                   <Badge
-                    v-for="tag in article.tags"
+                    v-for="tag in article.tags?.slice(0, 3)"
                     :key="tag.id"
                     variant="outline"
-                    class="text-xs"
+                    class="text-xs text-muted-foreground border-border/60"
                   >
-                    # {{ tag.name }}
+                    #{{ tag.name }}
                   </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <!-- 空状态 -->
-          <Card v-else>
-            <CardContent class="py-12 text-center">
-              <p class="text-muted-foreground text-lg">暂无文章</p>
+                <div
+                  class="flex items-center gap-4 text-xs text-muted-foreground"
+                >
+                  <span class="flex items-center gap-1"
+                    >👁️ {{ article.readCount || 0 }}</span
+                  >
+                  <span class="flex items-center gap-1"
+                    >❤️ {{ article.likeCount || 0 }}</span
+                  >
+                  <span class="flex items-center gap-1"
+                    >💬 {{ article.commentCount || 0 }}</span
+                  >
+                </div>
+              </div>
             </CardContent>
           </Card>
-
-          <!-- 分页 -->
-          <div
-            v-if="totalPages > 1"
-            class="flex items-center justify-center gap-2 mt-8"
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="currentPage === 1"
-              @click="changePage(currentPage - 1)"
-            >
-              上一页
-            </Button>
-            <span class="text-sm text-muted-foreground">
-              第 {{ currentPage }} / {{ totalPages }} 页
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="currentPage === totalPages"
-              @click="changePage(currentPage + 1)"
-            >
-              下一页
-            </Button>
-          </div>
         </div>
 
-        <!-- 侧边栏 -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- 热门文章 -->
-          <Card>
-            <CardHeader>
-              <CardTitle class="text-lg">🔥 热门文章</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div v-if="hotArticles.length > 0" class="space-y-4">
-                <div
-                  v-for="(article, index) in hotArticles"
-                  :key="article.id"
-                  class="flex items-start gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
-                  @click="router.push(`/articles/${article.slug}`)"
+        <!-- 空状态 -->
+        <Card v-else class="border-dashed">
+          <CardContent class="py-12 text-center">
+            <div class="text-4xl mb-4">📭</div>
+            <p class="text-muted-foreground text-lg">
+              {{ localeStore.t.emptyArticles }}
+            </p>
+          </CardContent>
+        </Card>
+
+        <!-- 分页 -->
+        <div
+          v-if="totalPages > 1"
+          class="flex items-center justify-center gap-2 pt-4"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+          >
+            {{ localeStore.t.previous }}
+          </Button>
+          <span class="text-sm text-muted-foreground px-2">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            :disabled="currentPage === totalPages"
+            @click="changePage(currentPage + 1)"
+          >
+            {{ localeStore.t.next }}
+          </Button>
+        </div>
+      </div>
+
+      <!-- 侧边栏 (右侧) -->
+      <div class="lg:col-span-4 space-y-6">
+        <!-- 热门文章 -->
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg flex items-center gap-2">
+              🔥 {{ localeStore.t.trending }}
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="grid gap-4">
+            <div v-if="hotArticles.length > 0" class="space-y-3">
+              <div
+                v-for="(article, index) in hotArticles"
+                :key="article.id"
+                class="flex items-start gap-3 group cursor-pointer hover-lift-sheen-sm"
+                @click="router.push(`/articles/${article.slug}`)"
+              >
+                <span
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                 >
-                  <span
-                    class="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold"
+                  {{ index + 1 }}
+                </span>
+                <div class="space-y-1">
+                  <p
+                    class="text-sm font-medium leading-none group-hover:text-primary transition-colors line-clamp-2"
                   >
-                    {{ index + 1 }}
-                  </span>
-                  <div class="flex-1 min-w-0">
-                    <p
-                      class="text-sm font-medium line-clamp-2 hover:text-primary transition-colors"
+                    {{ article.title }}
+                  </p>
+                  <div
+                    class="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span
+                      >{{ article.readCount || 0 }}
+                      {{ localeStore.t.reads }}</span
                     >
-                      {{ article.title }}
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-1">
-                      👁️ {{ article.readCount || 0 }} · ❤️
-                      {{ article.likeCount || 0 }}
-                    </p>
+                    <span
+                      >{{ article.likeCount || 0 }}
+                      {{ localeStore.t.likes }}</span
+                    >
                   </div>
                 </div>
               </div>
-              <p v-else class="text-sm text-muted-foreground text-center py-4">
-                暂无热门文章
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+            <p v-else class="text-sm text-muted-foreground text-center py-4">
+              {{ localeStore.t.noTrending }}
+            </p>
+          </CardContent>
+        </Card>
 
-          <!-- 文章分类 -->
-          <CategoryWidget />
+        <!-- 文章分类 -->
+        <CategoryWidget />
 
-          <!-- 热门标签 -->
-          <TagCloud />
+        <!-- 热门标签 -->
+        <TagCloud />
 
-          <!-- 统计信息 -->
-          <Card>
-            <CardHeader>
-              <CardTitle class="text-lg">📊 博客统计</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">文章总数</span>
-                  <span class="text-sm font-semibold">{{
-                    siteStats.totalArticles || 0
-                  }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">总阅读量</span>
-                  <span class="text-sm font-semibold">{{
-                    siteStats.totalReads || 0
-                  }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">总点赞数</span>
-                  <span class="text-sm font-semibold">{{
-                    siteStats.totalLikes || 0
-                  }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">今日访问</span>
-                  <span class="text-sm font-semibold"
-                    >{{ siteStats.todayPV || 0 }} /
-                    {{ siteStats.todayUV || 0 }}</span
-                  >
-                </div>
+        <!-- 统计信息 -->
+        <Card class="hover-lift-sheen">
+          <CardHeader>
+            <CardTitle class="text-lg flex items-center gap-2">
+              📊 {{ localeStore.t.statistics }}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <p class="text-xs text-muted-foreground">
+                  {{ localeStore.t.statArticles }}
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ siteStats.totalArticles || 0 }}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div class="space-y-1">
+                <p class="text-xs text-muted-foreground">
+                  {{ localeStore.t.statReads }}
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ siteStats.totalReads || 0 }}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs text-muted-foreground">
+                  {{ localeStore.t.statLikes }}
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ siteStats.totalLikes || 0 }}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs text-muted-foreground">
+                  {{ localeStore.t.statTodayVisits }}
+                </p>
+                <p class="text-2xl font-bold">{{ siteStats.todayPV || 0 }}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </main>
-
-    <!-- 页脚 -->
-    <AppFooter />
+    </div>
   </div>
 </template>
 
@@ -216,22 +267,16 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { articleApi } from "@/api/article";
 import { recordPageView, getSiteStats } from "@/api/stats";
+import { useLocaleStore } from "@/stores/locale";
 import type { ArticleListItem, SiteStats } from "@/types/api";
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
 import CategoryWidget from "@/components/Sidebar/CategoryWidget.vue";
 import TagCloud from "@/components/Sidebar/TagCloud.vue";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const router = useRouter();
+const localeStore = useLocaleStore();
 
 // 文章列表状态
 const articles = ref<ArticleListItem[]>([]);
@@ -263,6 +308,7 @@ async function loadArticles() {
     const response = await articleApi.getList({
       pageNo: currentPage.value,
       pageSize: pageSize.value,
+      status: 1,
     });
     articles.value = response.list;
     total.value = response.total;
@@ -328,14 +374,12 @@ function formatDate(dateString: string): string {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     if (hours === 0) {
       const minutes = Math.floor(diff / (1000 * 60));
-      return `${minutes}分钟前`;
+      return `${minutes} mins ago`;
     }
-    return `${hours}小时前`;
+    return `${hours} hours ago`;
   }
-  if (days === 1) return "昨天";
-  if (days < 7) return `${days}天前`;
-  if (days < 30) return `${Math.floor(days / 7)}周前`;
-  if (days < 365) return `${Math.floor(days / 30)}个月前`;
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
   return date.toLocaleDateString("zh-CN");
 }
 

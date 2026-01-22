@@ -11,6 +11,7 @@ export const articleApi = {
   getList(params: {
     pageNo?: number
     pageSize?: number
+    status?: number
     categoryId?: number
     tagId?: number
     authorId?: number

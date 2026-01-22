@@ -7,10 +7,12 @@ import com.mulehang.blog.entity.BlogTag;
 import com.mulehang.blog.mapper.BlogTagMapper;
 import com.mulehang.blog.service.TagService;
 import com.mulehang.blog.vo.TagVO;
+import com.mulehang.blog.vo.UserInfoVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 标签 Service。
@@ -18,12 +20,16 @@ import java.util.List;
 @Service
 public class TagServiceImpl implements TagService {
 
+    private static final String ROLE_ADMIN = "ADMIN";
+
     private final BlogTagMapper tagMapper;
 
     /**
      * 构造函数（构造器注入）。
      *
-     * <p>通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。</p>
+     * <p>
+     * 通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。
+     * </p>
      */
     public TagServiceImpl(BlogTagMapper tagMapper) {
         this.tagMapper = tagMapper;
@@ -42,16 +48,16 @@ public class TagServiceImpl implements TagService {
         if (dto == null) {
             throw new IllegalArgumentException("参数 dto 不能为空");
         }
+        Long currentUserId = requireCurrentUserId();
         BlogTag t = new BlogTag();
         t.setName(dto.getName());
         t.setSlug(dto.getSlug());
         t.setColor(dto.getColor());
         t.setDescription(dto.getDescription());
-        
+
         // 设置创建者ID
-        Long currentUserId = UserContext.getCurrentUserId();
         t.setCreatorId(currentUserId);
-        
+
         tagMapper.insert(t);
         return t.getId();
     }
@@ -59,7 +65,7 @@ public class TagServiceImpl implements TagService {
     /**
      * 更新标签。
      *
-     * @param id 标签 ID
+     * @param id  标签 ID
      * @param dto 标签更新 DTO
      * @throws IllegalArgumentException 当 id 或 dto 为空时抛出
      */
@@ -72,12 +78,18 @@ public class TagServiceImpl implements TagService {
         if (dto == null) {
             throw new IllegalArgumentException("参数 dto 不能为空");
         }
+        BlogTag existing = tagMapper.selectById(id);
+        assertCanOperate(existing);
         BlogTag patch = new BlogTag();
         patch.setId(id);
-        if (dto.getName() != null) patch.setName(dto.getName());
-        if (dto.getSlug() != null) patch.setSlug(dto.getSlug());
-        if (dto.getColor() != null) patch.setColor(dto.getColor());
-        if (dto.getDescription() != null) patch.setDescription(dto.getDescription());
+        if (dto.getName() != null)
+            patch.setName(dto.getName());
+        if (dto.getSlug() != null)
+            patch.setSlug(dto.getSlug());
+        if (dto.getColor() != null)
+            patch.setColor(dto.getColor());
+        if (dto.getDescription() != null)
+            patch.setDescription(dto.getDescription());
         tagMapper.updateById(patch);
     }
 
@@ -93,6 +105,8 @@ public class TagServiceImpl implements TagService {
         if (id == null) {
             throw new IllegalArgumentException("参数 id 不能为空");
         }
+        BlogTag existing = tagMapper.selectById(id);
+        assertCanOperate(existing);
         tagMapper.deleteById(id);
     }
 
@@ -119,10 +133,56 @@ public class TagServiceImpl implements TagService {
     @Override
     public List<TagVO> listAll() {
         return tagMapper.selectList(new LambdaQueryWrapper<BlogTag>()
-                        .orderByAsc(BlogTag::getId))
+                .orderByAsc(BlogTag::getId))
                 .stream()
                 .map(this::toVO)
                 .toList();
+    }
+
+    /**
+     * 获取当前登录用户 ID（强制要求已登录）。
+     *
+     * @return 当前用户 ID
+     * @throws IllegalStateException 当未登录时抛出
+     */
+    private Long requireCurrentUserId() {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("未登录或登录已过期");
+        }
+        return userId;
+    }
+
+    /**
+     * 判断当前用户是否为管理员。
+     *
+     * @return true-管理员，false-非管理员
+     */
+    private boolean isAdmin() {
+        UserInfoVO user = UserContext.getCurrentUser();
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        return user.getRoles().stream().anyMatch(role -> ROLE_ADMIN.equalsIgnoreCase(role));
+    }
+
+    /**
+     * 权限校验：仅创建者本人或管理员可操作标签。
+     *
+     * @param tag 标签实体
+     * @throws IllegalArgumentException 当无权限操作时抛出
+     */
+    private void assertCanOperate(BlogTag tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("标签不存在");
+        }
+        if (isAdmin()) {
+            return;
+        }
+        Long currentUserId = requireCurrentUserId();
+        if (!Objects.equals(tag.getCreatorId(), currentUserId)) {
+            throw new IllegalArgumentException("无权限修改或删除该标签");
+        }
     }
 
     /**

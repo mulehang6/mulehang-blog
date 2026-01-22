@@ -52,6 +52,7 @@ export interface ArticleListItem {
   slug: string
   summary: string
   coverUrl?: string
+  status?: number
   author: {
     id: number
     username: string
@@ -175,4 +176,17 @@ export interface SiteStats {
   totalReads: number
   totalLikes: number
   totalComments: number
+}
+
+/**
+ * 文件上传响应
+ */
+export interface UploadFile {
+  url: string
+  platform?: string
+  path?: string
+  filename?: string
+  originalFilename?: string
+  ext?: string
+  size?: number
 }

@@ -97,6 +97,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '编辑文章', requiresAuth: true }
   },
   {
+    path: '/articles/manage',
+    name: 'ArticleManage',
+    component: () => import('@/views/ArticleManage.vue'),
+    meta: { title: '文章管理', requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
@@ -116,7 +122,7 @@ router.beforeEach((to, _from, next) => {
   const userStore = useUserStore()
 
   // 设置页面标题
-  document.title = (to.meta.title as string) || 'Mulehang Blog'
+  document.title = (to.meta.title as string) || 'MuleHang'
 
   // 需要登录的页面
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {

@@ -1,65 +1,121 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <AppNavbar />
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- 页面标题 -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">文章标签</h1>
-        <p class="mt-2 text-gray-600">浏览所有文章标签</p>
-      </div>
+  <div class="space-y-6">
+    <!-- 页面标题 -->
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ localeStore.t.tags }}
+      </h1>
+      <p class="text-muted-foreground mt-1">
+        {{ localeStore.t.tagsSubtitle }}
+      </p>
+    </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loading" class="flex justify-center items-center py-12">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"
-        ></div>
-      </div>
+    <!-- 管理面板 -->
+    <Card v-if="userStore.isLoggedIn" class="hover-lift-sheen">
+      <CardContent class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold">
+            {{ editingId ? localeStore.t.editTag : localeStore.t.createTag }}
+          </h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input
+            v-model="form.name"
+            type="text"
+            :placeholder="localeStore.t.name"
+            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+          />
+          <input
+            v-model="form.slug"
+            type="text"
+            :placeholder="localeStore.t.slug"
+            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+          />
+        </div>
+        <div class="mt-4 flex items-center gap-2">
+          <Button size="sm" @click="handleSubmit">
+            {{ localeStore.t.save }}
+          </Button>
+          <Button v-if="editingId" size="sm" variant="ghost" @click="resetForm">
+            {{ localeStore.t.cancel }}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
 
-      <!-- 标签云 -->
+    <!-- 加载状态 -->
+    <div v-if="loading" class="flex justify-center items-center py-12">
       <div
-        v-else-if="tags.length > 0"
-        class="bg-white rounded-lg shadow-md p-8"
-      >
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- 标签云 -->
+    <Card v-else-if="tags.length > 0" class="hover-lift-sheen">
+      <CardContent class="p-8">
         <div class="flex flex-wrap gap-3">
-          <div
+          <span
             v-for="tag in tags"
             :key="tag.id"
-            class="inline-flex items-center px-4 py-2 rounded-full cursor-pointer transition-all duration-300"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/50 hover:bg-muted hover-lift-sheen-sm"
             :style="{
               fontSize: getTagSize(getArticleCount(tag)) + 'px',
-              backgroundColor: getTagColor(getArticleCount(tag)),
-              color: 'white',
+              backgroundColor: 'var(--muted)',
+              color: 'var(--foreground)',
             }"
+            :title="
+              userStore.isAdmin
+                ? `id: ${tag.id} | ${localeStore.t.slug}: ${tag.slug} | ${localeStore.t.creatorId}: ${tag.creatorId ?? '-'} `
+                : ''
+            "
             @click="goToTagArticles(tag.id)"
           >
-            <span class="mr-2">#{{ tag.name }}</span>
-            <span class="text-xs opacity-80"
-              >· {{ getArticleCount(tag) }} 篇</span
+            <span class="mr-2 text-primary">#</span>{{ tag.name }}
+            <span
+              class="ml-2 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-full"
+              >{{ getArticleCount(tag) }}</span
             >
-          </div>
+            <button
+              v-if="canManage(tag)"
+              class="ml-2 text-[11px] text-destructive hover:underline"
+              @click.stop="handleDelete(tag)"
+            >
+              {{ localeStore.t.delete }}
+            </button>
+            <button
+              v-if="canManage(tag)"
+              class="ml-1 text-[11px] text-primary hover:underline"
+              @click.stop="startEdit(tag)"
+            >
+              {{ localeStore.t.editTag }}
+            </button>
+          </span>
         </div>
-      </div>
+      </CardContent>
+    </Card>
 
-      <!-- 空状态 -->
-      <div v-else class="text-center py-12">
-        <p class="text-gray-500">暂无标签</p>
-      </div>
+    <!-- 空状态 -->
+    <Card v-else class="border-dashed">
+      <CardContent class="py-12 text-center">
+        <div class="text-4xl mb-4">🏷️</div>
+        <p class="text-muted-foreground text-lg">No tags found</p>
+      </CardContent>
+    </Card>
 
-      <!-- 错误提示 -->
-      <div
-        v-if="error"
-        class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md"
+    <!-- 错误提示 -->
+    <div
+      v-if="error"
+      class="p-4 bg-destructive/10 border border-destructive/20 rounded-md text-center"
+    >
+      <p class="text-destructive">{{ error }}</p>
+      <Button
+        variant="link"
+        @click="fetchTags"
+        class="mt-2 text-destructive hover:text-destructive/80"
       >
-        <p class="text-red-600">{{ error }}</p>
-        <button
-          @click="fetchTags"
-          class="mt-2 text-sm text-red-800 hover:text-red-900 underline"
-        >
-          重新加载
-        </button>
-      </div>
+        Try Again
+      </Button>
     </div>
-    <AppFooter />
   </div>
 </template>
 
@@ -68,13 +124,22 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { tagApi } from "@/api/tag";
 import type { Tag } from "@/types/api";
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useLocaleStore } from "@/stores/locale";
+import { useUserStore } from "@/stores/user";
 
 const router = useRouter();
+const localeStore = useLocaleStore();
+const userStore = useUserStore();
 const tags = ref<Tag[]>([]);
 const loading = ref(false);
 const error = ref("");
+const editingId = ref<number | null>(null);
+const form = ref({
+  name: "",
+  slug: "",
+});
 
 /**
  * 获取标签列表
@@ -85,10 +150,85 @@ async function fetchTags() {
   try {
     tags.value = await tagApi.getAll();
   } catch (err: any) {
-    error.value = err.message || "获取标签列表失败";
-    console.error("获取标签列表失败:", err);
+    error.value = err.message || "Failed to fetch tags";
+    console.error("Failed to fetch tags:", err);
   } finally {
     loading.value = false;
+  }
+}
+
+/**
+ * 检查是否可管理标签（管理员或创建者）。
+ */
+function canManage(tag: Tag): boolean {
+  if (!userStore.isLoggedIn) return false;
+  if (userStore.isAdmin) return true;
+  return !!tag.creatorId && tag.creatorId === userStore.userInfo?.id;
+}
+
+/**
+ * 生成 slug。
+ */
+function buildSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+/**
+ * 开始编辑标签。
+ */
+function startEdit(tag: Tag) {
+  editingId.value = tag.id;
+  form.value = {
+    name: tag.name,
+    slug: tag.slug,
+  };
+}
+
+/**
+ * 重置表单。
+ */
+function resetForm() {
+  editingId.value = null;
+  form.value = { name: "", slug: "" };
+}
+
+/**
+ * 提交新增/更新。
+ */
+async function handleSubmit() {
+  if (!form.value.name.trim()) return;
+  const payload = {
+    name: form.value.name.trim(),
+    slug: form.value.slug.trim() || buildSlug(form.value.name),
+  };
+  try {
+    if (editingId.value) {
+      await tagApi.update(editingId.value, payload);
+    } else {
+      await tagApi.create(payload);
+    }
+    resetForm();
+    await fetchTags();
+  } catch (err) {
+    console.error("保存标签失败:", err);
+  }
+}
+
+/**
+ * 删除标签。
+ */
+async function handleDelete(tag: Tag) {
+  const ok = window.confirm(localeStore.t.confirmDeleteTag);
+  if (!ok) return;
+  try {
+    await tagApi.delete(tag.id);
+    await fetchTags();
+  } catch (err) {
+    console.error("删除标签失败:", err);
   }
 }
 
@@ -100,18 +240,6 @@ function getTagSize(articleCount: number): number {
   const maxSize = 24;
   const maxCount = Math.max(...tags.value.map(getArticleCount), 1);
   return minSize + (articleCount / maxCount) * (maxSize - minSize);
-}
-
-/**
- * 根据文章数量计算标签颜色
- */
-function getTagColor(articleCount: number): string {
-  const maxCount = Math.max(...tags.value.map(getArticleCount), 1);
-  const ratio = articleCount / maxCount;
-
-  if (ratio > 0.7) return "#3b82f6"; // blue-500
-  if (ratio > 0.4) return "#10b981"; // green-500
-  return "#8b5cf6"; // purple-500
 }
 
 function getArticleCount(tag: Tag): number {

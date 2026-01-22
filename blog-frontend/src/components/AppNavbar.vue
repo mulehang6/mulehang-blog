@@ -1,6 +1,6 @@
 <template>
   <header
-    class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60"
+    class="sticky top-0 z-50 w-full border-b border-border/60 bg-background/60 backdrop-blur-2xl supports-backdrop-filter:bg-background/40"
   >
     <div class="container mx-auto px-4 py-4">
       <div class="flex h-14 items-center justify-between">
@@ -149,11 +149,11 @@
               <!-- 下拉菜单 -->
               <div
                 v-if="showUserMenu"
-                class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card border"
+                class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card/60 border border-border/60 backdrop-blur-xl"
                 @click="showUserMenu = false"
               >
                 <div class="py-1">
-                  <div class="px-4 py-3 border-b">
+                  <div class="px-4 py-3 border-b border-border/60">
                     <p class="text-sm font-medium">
                       {{ userStore.userInfo?.nickname }}
                     </p>
@@ -163,20 +163,20 @@
                   </div>
                   <button
                     @click="router.push('/profile')"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted/60 transition-colors"
                   >
                     个人主页
                   </button>
                   <button
                     @click="router.push('/settings')"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted/60 transition-colors"
                   >
                     设置
                   </button>
-                  <div class="border-t"></div>
+                  <div class="border-t border-border/60"></div>
                   <button
                     @click="handleLogout"
-                    class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted/60 transition-colors"
                   >
                     退出登录
                   </button>
@@ -212,7 +212,7 @@
     </div>
 
     <!-- 移动端菜单 -->
-    <div v-if="showMobileMenu" class="md:hidden border-t">
+    <div v-if="showMobileMenu" class="md:hidden border-t border-border/60 bg-background/50 backdrop-blur-xl">
       <nav class="container mx-auto px-4 py-4 flex flex-col gap-4">
         <router-link
           to="/"
@@ -248,11 +248,11 @@
     <!-- 搜索对话框 -->
     <div
       v-if="showSearchDialog"
-      class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+      class="fixed inset-0 z-50 bg-background/40 backdrop-blur-md"
       @click="showSearchDialog = false"
     >
       <div
-        class="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg"
+        class="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border/60 bg-background/50 p-6 shadow-lg backdrop-blur-2xl sm:rounded-lg"
         @click.stop
       >
         <h2 class="text-lg font-semibold mb-4">搜索文章</h2>
@@ -261,7 +261,7 @@
             v-model="searchKeyword"
             type="text"
             placeholder="输入关键词..."
-            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            class="flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 backdrop-blur-md"
             @keyup.enter="handleSearch"
             autofocus
           />

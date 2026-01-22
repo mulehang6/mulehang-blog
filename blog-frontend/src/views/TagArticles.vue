@@ -1,22 +1,24 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <AppNavbar />
+  <div class="min-h-screen bg-transparent text-foreground">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 面包屑导航 -->
-      <nav class="mb-6 flex items-center text-sm text-gray-600">
-        <router-link to="/" class="hover:text-gray-900">首页</router-link>
+      <nav class="mb-6 flex items-center text-sm text-muted-foreground">
+        <router-link to="/" class="hover:text-foreground">首页</router-link>
         <span class="mx-2">/</span>
-        <router-link to="/tags" class="hover:text-gray-900">标签</router-link>
+        <router-link to="/tags" class="hover:text-foreground">标签</router-link>
         <span class="mx-2">/</span>
-        <span class="text-gray-900">{{ tag?.name || "加载中..." }}</span>
+        <span class="text-foreground">{{ tag?.name || "加载中..." }}</span>
       </nav>
 
       <!-- 标签信息 -->
-      <div v-if="tag" class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div
+        v-if="tag"
+        class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm p-6 mb-8"
+      >
         <div class="flex items-center space-x-3">
-          <h1 class="text-3xl font-bold text-gray-900">#{{ tag.name }}</h1>
+          <h1 class="text-3xl font-bold text-foreground">#{{ tag.name }}</h1>
           <span
-            class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+            class="px-3 py-1 bg-primary/15 text-primary text-sm rounded-full"
           >
             {{ tagArticleCount }} 篇文章
           </span>
@@ -26,7 +28,7 @@
       <!-- 文章列表 -->
       <div v-if="loading" class="flex justify-center items-center py-12">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
         ></div>
       </div>
 
@@ -34,15 +36,15 @@
         <div
           v-for="article in articles"
           :key="article.id"
-          class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6 cursor-pointer"
+          class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 cursor-pointer"
           @click="goToArticle(article.slug)"
         >
           <h2
-            class="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600"
+            class="text-xl font-semibold text-foreground mb-2 hover:text-primary"
           >
             {{ article.title }}
           </h2>
-          <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+          <p class="text-muted-foreground text-sm mb-4 line-clamp-2">
             {{ article.summary }}
           </p>
 
@@ -51,13 +53,15 @@
             <span
               v-for="tag in article.tags"
               :key="tag.id"
-              class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+              class="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
             >
               #{{ tag.name }}
             </span>
           </div>
 
-          <div class="flex items-center justify-between text-sm text-gray-500">
+          <div
+            class="flex items-center justify-between text-sm text-muted-foreground"
+          >
             <div class="flex items-center space-x-4">
               <span>{{
                 article.author?.nickname || article.author?.username || "匿名"
@@ -76,7 +80,7 @@
       </div>
 
       <div v-else class="text-center py-12">
-        <p class="text-gray-500">该标签下暂无文章</p>
+        <p class="text-muted-foreground">该标签下暂无文章</p>
       </div>
 
       <!-- 分页 -->
@@ -89,8 +93,8 @@
             class="px-4 py-2 rounded-md transition-colors"
             :class="
               page === pagination.pageNo
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-card/70 text-foreground hover:bg-muted'
             "
           >
             {{ page }}
@@ -101,12 +105,11 @@
       <!-- 错误提示 -->
       <div
         v-if="error"
-        class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md"
+        class="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md"
       >
-        <p class="text-red-600">{{ error }}</p>
+        <p class="text-destructive">{{ error }}</p>
       </div>
     </div>
-    <AppFooter />
   </div>
 </template>
 
@@ -116,8 +119,6 @@ import { useRoute, useRouter } from "vue-router";
 import { tagApi } from "@/api/tag";
 import { articleApi } from "@/api/article";
 import type { Tag, ArticleListItem } from "@/types/api";
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -165,6 +166,7 @@ async function fetchArticles() {
       tagId,
       pageNo: pagination.value.pageNo,
       pageSize: pagination.value.pageSize,
+      status: 1,
     });
 
     articles.value = result.list;

@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground">
-    <AppNavbar />
+  <div class="min-h-screen bg-transparent text-foreground">
     <main class="container mx-auto px-4 py-8">
       <div class="max-w-5xl mx-auto space-y-8">
         <div class="text-center">
@@ -20,7 +19,8 @@
                 项目以文章发布、标签分类与互动为核心，强调清晰的模块拆分与可扩展性。
               </p>
               <p class="text-sm text-muted-foreground">
-                前端采用 Vue 3 与 Tailwind CSS，后端采用 Spring Boot 并结合缓存与搜索方案。
+                前端采用 Vue 3 与 Tailwind CSS，后端采用 Spring Boot
+                并结合缓存与搜索方案。
               </p>
             </CardContent>
           </Card>
@@ -30,14 +30,28 @@
               <CardTitle>技术栈</CardTitle>
             </CardHeader>
             <CardContent class="grid grid-cols-2 gap-3 text-sm">
-              <div class="rounded-md border bg-card px-3 py-2">Vue 3 + Vite</div>
-              <div class="rounded-md border bg-card px-3 py-2">Pinia + Router</div>
-              <div class="rounded-md border bg-card px-3 py-2">Tailwind CSS</div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                Vue 3 + Vite
+              </div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                Pinia + Router
+              </div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                Tailwind CSS
+              </div>
               <div class="rounded-md border bg-card px-3 py-2">shadcn-vue</div>
-              <div class="rounded-md border bg-card px-3 py-2">Spring Boot 3</div>
-              <div class="rounded-md border bg-card px-3 py-2">MyBatis-Plus</div>
-              <div class="rounded-md border bg-card px-3 py-2">Redis + Caffeine</div>
-              <div class="rounded-md border bg-card px-3 py-2">ElasticSearch</div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                Spring Boot 3
+              </div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                MyBatis-Plus
+              </div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                Redis + Caffeine
+              </div>
+              <div class="rounded-md border bg-card px-3 py-2">
+                ElasticSearch
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -73,12 +87,8 @@
         </Card>
       </div>
     </main>
-    <AppFooter />
   </div>
 </template>
-
 <script setup lang="ts">
-import AppNavbar from "@/components/AppNavbar.vue";
-import AppFooter from "@/components/AppFooter.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 </script>

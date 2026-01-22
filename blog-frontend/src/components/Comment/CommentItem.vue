@@ -27,7 +27,7 @@
 
         <!-- 评论内容 -->
         <div class="mb-2 text-foreground whitespace-pre-wrap wrap-break-word">
-          {{ comment.content }}
+          <MarkdownRenderer :content="comment.content" />
         </div>
 
         <!-- 操作按钮 -->
@@ -78,6 +78,7 @@
 import { ref } from "vue";
 import type { CommentVO } from "@/types/api";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
 import CommentForm from "./CommentForm.vue";
 
 /**

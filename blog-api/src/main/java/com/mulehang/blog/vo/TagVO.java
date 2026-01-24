@@ -19,4 +19,6 @@ public class TagVO {
     private String description;// 描述
 
     private Long creatorId;// 创建者ID
+
+    private Long articleCount;// 文章数量
 }

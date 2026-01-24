@@ -11,8 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **已完成的里程碑**：
 - Milestone 1（文章发布链路）：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）
 - Milestone 2（缓存与热点数据）：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略
+- Milestone 3（AI 与安全防护）：AI 写作助手（智谱 GLM 集成）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知
 
-**计划集成的技术**：Elasticsearch (站内搜索), MongoDB (版本历史), AI SDK (智谱/通义/豆包等, 用于写作助手), WebSocket (实时通知), OSS (对象存储), Sentinel (限流熔断)。
+**计划集成的技术**：Elasticsearch (站内搜索), MongoDB (版本历史), OSS (对象存储)。
 
 ## 注意事项
 - [设计文档](./docs/DEVELOPMENT_GUIDE.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但

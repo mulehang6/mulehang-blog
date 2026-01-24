@@ -2,6 +2,8 @@ package com.mulehang.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.converter.ArticleConverter;
@@ -229,8 +231,33 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         if (dto.getTagIds() != null) {
+            List<Long> inputTagIds = dto.getTagIds().stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            List<Long> existingTagIds = articleTagMapper.selectAllTagIdsByArticleId(id);
+            Set<Long> existingTagIdSet = existingTagIds == null ? Collections.emptySet() : new HashSet<>(existingTagIds);
+
             articleTagMapper.delete(new QueryWrapper<BlogArticleTag>().eq("article_id", id));
-            saveArticleTags(id, dto.getTagIds());
+
+            if (!inputTagIds.isEmpty()) {
+                List<Long> restoreTagIds = inputTagIds.stream()
+                        .filter(existingTagIdSet::contains)
+                        .toList();
+                if (!restoreTagIds.isEmpty()) {
+                    UpdateWrapper<BlogArticleTag> restoreWrapper = new UpdateWrapper<>();
+                    restoreWrapper.eq("article_id", id)
+                            .in("tag_id", restoreTagIds)
+                            .set("is_deleted", 0)
+                            .set("update_time", LocalDateTime.now());
+                    articleTagMapper.update(null, restoreWrapper);
+                }
+
+                List<Long> newTagIds = inputTagIds.stream()
+                        .filter(tagId -> !existingTagIdSet.contains(tagId))
+                        .toList();
+                saveArticleTags(id, newTagIds);
+            }
         }
 
         if (dto.getStatus() != null
@@ -543,7 +570,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (user == null || user.getRoles() == null) {
             return false;
         }
-        return user.getRoles().stream().anyMatch(role -> ROLE_ADMIN.equalsIgnoreCase(role));
+        return user.getRoles().stream().anyMatch(ROLE_ADMIN::equalsIgnoreCase);
     }
 
     /**

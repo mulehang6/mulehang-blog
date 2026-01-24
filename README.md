@@ -13,6 +13,8 @@
 - **核心框架**: Java 21, Spring Boot 3.5.9
 - **持久层**: MySQL 8.0, MyBatis-Plus, Liquibase (数据库版本管理)
 - **缓存/中间件**: Redis, RabbitMQ, Redisson (分布式锁/延迟队列)
+- **AI/限流**: OpenAI & Anthropic Compatible (AI 写作助手), Sentinel (限流熔断)
+- **认证**: JWT, GitHub OAuth
 - **文档/监控**: Knife4j (OpenAPI3), Actuator + Prometheus
 - **工具库**: MapStruct, Lombok, Flexmark (Markdown 渲染)
 
@@ -38,6 +40,14 @@ mulehang-blog
 ## 📈 当前进度
 
 后端核心链路已完成（文章/分类/标签/评论/文件上传/权限等），前端基础功能与管理页已可用。
+
+**已完成功能**：
+- 文章发布全链路（CRUD、Markdown 渲染、XSS 防护）
+- 多级缓存（Caffeine + Redis）、热门文章榜
+- AI 写作助手（智谱 GLM 集成、流式输出）
+- Sentinel 限流降级保护
+- GitHub OAuth 第三方登录、访客登录
+- WebSocket 实时通知
 
 ## 🛠️ 环境要求
 

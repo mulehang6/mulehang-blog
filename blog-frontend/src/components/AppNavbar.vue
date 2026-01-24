@@ -163,20 +163,20 @@
                   </div>
                   <button
                     @click="router.push('/profile')"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted/60 transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm transition-colors menu-item-hover-outline sidebar-nav-item"
                   >
                     个人主页
                   </button>
                   <button
                     @click="router.push('/settings')"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-muted/60 transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm transition-colors menu-item-hover-outline sidebar-nav-item"
                   >
                     设置
                   </button>
                   <div class="border-t border-border/60"></div>
                   <button
                     @click="handleLogout"
-                    class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted/60 transition-colors"
+                    class="w-full text-left px-4 py-2 text-sm text-destructive transition-colors menu-item-hover-outline sidebar-nav-item"
                   >
                     退出登录
                   </button>
@@ -212,7 +212,10 @@
     </div>
 
     <!-- 移动端菜单 -->
-    <div v-if="showMobileMenu" class="md:hidden border-t border-border/60 bg-background/50 backdrop-blur-xl">
+    <div
+      v-if="showMobileMenu"
+      class="md:hidden border-t border-border/60 bg-background/50 backdrop-blur-xl"
+    >
       <nav class="container mx-auto px-4 py-4 flex flex-col gap-4">
         <router-link
           to="/"
@@ -345,3 +348,25 @@ async function handleLogout() {
   router.push("/login");
 }
 </script>
+
+<style scoped>
+/* 强制退出登录按钮保持红色 */
+.menu-item-hover-outline.text-destructive,
+.menu-item-hover-outline.text-destructive *,
+button.menu-item-hover-outline.text-destructive,
+button.menu-item-hover-outline.text-destructive *,
+button.sidebar-nav-item.text-destructive,
+button.sidebar-nav-item.text-destructive * {
+  color: var(--destructive) !important;
+}
+
+.menu-item-hover-outline.text-destructive:hover,
+.menu-item-hover-outline.text-destructive:hover *,
+button.menu-item-hover-outline.text-destructive:hover,
+button.menu-item-hover-outline.text-destructive:hover *,
+button.sidebar-nav-item.text-destructive:hover,
+button.sidebar-nav-item.text-destructive:hover * {
+  color: var(--destructive) !important;
+  border-color: var(--destructive) !important;
+}
+</style>

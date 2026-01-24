@@ -9,6 +9,8 @@ import {
   LogIn,
   LogOut,
 } from "lucide-vue-next";
+import type { Component } from "vue";
+import { storeToRefs } from "pinia";
 import Logo from "@/components/Logo.vue";
 import {
   Sidebar,
@@ -32,9 +34,24 @@ import { useLocaleStore } from "@/stores/locale";
 const router = useRouter();
 const userStore = useUserStore();
 const localeStore = useLocaleStore();
+const { t } = storeToRefs(localeStore);
 const { state } = useSidebar();
 
-const navMain = [
+type LocaleKey = keyof typeof t.value;
+
+type NavItem = {
+  titleKey: LocaleKey;
+  url: string;
+  icon: Component;
+  requiresAuth?: boolean;
+};
+
+type NavGroup = {
+  titleKey: LocaleKey;
+  items: NavItem[];
+};
+
+const navMain: NavGroup[] = [
   {
     titleKey: "navDiscover",
     items: [
@@ -63,7 +80,7 @@ const navMain = [
   },
 ];
 
-const navUser = [
+const navUser: NavGroup[] = [
   {
     titleKey: "navUser",
     items: [
@@ -81,6 +98,7 @@ const navUser = [
   },
 ];
 
+/** 退出登录后跳转到登录页 */
 const handleLogout = () => {
   userStore.logout();
   router.push("/login");
@@ -111,7 +129,7 @@ const handleLogout = () => {
     <SidebarContent class="overflow-x-hidden relative z-10">
       <SidebarGroup v-for="group in navMain" :key="group.titleKey">
         <SidebarGroupLabel>{{
-          localeStore.t[group.titleKey]
+          t[group.titleKey]
         }}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
@@ -121,7 +139,7 @@ const handleLogout = () => {
               >
                 <SidebarMenuButton
                   as-child
-                  :tooltip="localeStore.t[item.titleKey]"
+                  :tooltip="t[item.titleKey]"
                 >
                   <router-link
                     :to="item.url"
@@ -131,7 +149,7 @@ const handleLogout = () => {
                     <component :is="item.icon" class="size-4 shrink-0" />
                     <div class="flex flex-1 overflow-hidden">
                       <div class="line-clamp-1 pr-6">
-                        {{ localeStore.t[item.titleKey] }}
+                        {{ t[item.titleKey] }}
                       </div>
                     </div>
                   </router-link>
@@ -145,7 +163,7 @@ const handleLogout = () => {
       <SidebarSeparator />
 
       <SidebarGroup v-if="userStore.isLoggedIn">
-        <SidebarGroupLabel>{{ localeStore.t.navUser }}</SidebarGroupLabel>
+        <SidebarGroupLabel>{{ t.navUser }}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem
@@ -154,7 +172,7 @@ const handleLogout = () => {
             >
               <SidebarMenuButton
                 as-child
-                :tooltip="localeStore.t[item.titleKey]"
+                :tooltip="t[item.titleKey]"
               >
                 <router-link
                   :to="item.url"
@@ -164,7 +182,7 @@ const handleLogout = () => {
                   <component :is="item.icon" class="size-4 shrink-0" />
                   <div class="flex flex-1 overflow-hidden">
                     <div class="line-clamp-1 pr-6">
-                      {{ localeStore.t[item.titleKey] }}
+                      {{ t[item.titleKey] }}
                     </div>
                   </div>
                 </router-link>
@@ -173,11 +191,11 @@ const handleLogout = () => {
             <SidebarMenuItem>
               <SidebarMenuButton
                 @click="handleLogout"
-                :tooltip="localeStore.t.navLogout"
-                class="sidebar-nav-item font-mono transition-colors"
+                :tooltip="t.navLogout"
+                class="sidebar-nav-item font-mono transition-colors menu-item-hover-outline text-destructive hover:text-destructive hover:bg-transparent"
               >
                 <LogOut />
-                <span>{{ localeStore.t.navLogout }}</span>
+                <span>{{ t.navLogout }}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -188,13 +206,13 @@ const handleLogout = () => {
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton as-child :tooltip="localeStore.t.navLogin">
+              <SidebarMenuButton as-child :tooltip="t.navLogin">
                 <router-link
                   to="/login"
                   class="sidebar-nav-item font-mono transition-colors"
                 >
                   <LogIn />
-                  <span>{{ localeStore.t.navLogin }}</span>
+                  <span>{{ t.navLogin }}</span>
                 </router-link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -218,5 +236,27 @@ const handleLogout = () => {
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+/* 强制退出登录按钮保持红色 */
+:deep(.text-destructive),
+:deep(.text-destructive:hover),
+:deep(.text-destructive:focus),
+:deep(.text-destructive:active) {
+  color: var(--destructive) !important;
+}
+
+:deep(.text-destructive:hover),
+:deep(.text-destructive:focus),
+:deep(.text-destructive:active) {
+  background-color: transparent !important;
+  border-color: var(--destructive) !important;
+}
+
+:deep(.text-destructive span),
+:deep(.text-destructive svg),
+:deep(.text-destructive:hover span),
+:deep(.text-destructive:hover svg) {
+  color: var(--destructive) !important;
 }
 </style>

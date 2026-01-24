@@ -22,17 +22,11 @@
             }}
           </h3>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input
             v-model="form.name"
             type="text"
             :placeholder="localeStore.t.name"
-            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
-          />
-          <input
-            v-model="form.slug"
-            type="text"
-            :placeholder="localeStore.t.slug"
             class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
           />
           <input
@@ -141,6 +135,32 @@
         Try Again
       </Button>
     </div>
+
+    <AlertDialog
+      :open="deleteDialog.open"
+      @update:open="handleDeleteDialogOpen"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>确认删除</AlertDialogTitle>
+          <AlertDialogDescription>
+            {{ localeStore.t.confirmDeleteCategory }}
+            <span
+              v-if="deleteDialog.target"
+              class="font-medium text-foreground"
+            >
+              「{{ deleteDialog.target.name }}」
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDeleteCategory">
+            确认删除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -152,6 +172,16 @@ import type { Category } from "@/types/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocaleStore } from "@/stores/locale";
 import { useUserStore } from "@/stores/user";
 
@@ -164,8 +194,11 @@ const error = ref("");
 const editingId = ref<number | null>(null);
 const form = ref({
   name: "",
-  slug: "",
   description: "",
+});
+const deleteDialog = ref<{ open: boolean; target: Category | null }>({
+  open: false,
+  target: null,
 });
 
 /**
@@ -211,7 +244,6 @@ function startEdit(category: Category) {
   editingId.value = category.id;
   form.value = {
     name: category.name,
-    slug: category.slug,
     description: category.description ?? "",
   };
 }
@@ -221,7 +253,7 @@ function startEdit(category: Category) {
  */
 function resetForm() {
   editingId.value = null;
-  form.value = { name: "", slug: "", description: "" };
+  form.value = { name: "", description: "" };
 }
 
 /**
@@ -231,7 +263,7 @@ async function handleSubmit() {
   if (!form.value.name.trim()) return;
   const payload = {
     name: form.value.name.trim(),
-    slug: form.value.slug.trim() || buildSlug(form.value.name),
+    slug: buildSlug(form.value.name),
     description: form.value.description.trim() || undefined,
   };
   try {
@@ -251,13 +283,51 @@ async function handleSubmit() {
  * 删除分类。
  */
 async function handleDelete(category: Category) {
-  const ok = window.confirm(localeStore.t.confirmDeleteCategory);
-  if (!ok) return;
+  openDeleteDialog(category);
+}
+
+/**
+ * 打开删除确认对话框。
+ */
+function openDeleteDialog(category: Category) {
+  deleteDialog.value = {
+    open: true,
+    target: category,
+  };
+}
+
+/**
+ * 处理删除对话框开关。
+ */
+function handleDeleteDialogOpen(open: boolean) {
+  if (!open) {
+    closeDeleteDialog();
+    return;
+  }
+  deleteDialog.value.open = true;
+}
+
+/**
+ * 关闭删除确认对话框。
+ */
+function closeDeleteDialog() {
+  deleteDialog.value.open = false;
+  deleteDialog.value.target = null;
+}
+
+/**
+ * 确认删除分类。
+ */
+async function confirmDeleteCategory() {
+  const target = deleteDialog.value.target;
+  if (!target) return;
   try {
-    await categoryApi.delete(category.id);
+    await categoryApi.delete(target.id);
     await fetchCategories();
   } catch (err) {
     console.error("删除分类失败:", err);
+  } finally {
+    closeDeleteDialog();
   }
 }
 

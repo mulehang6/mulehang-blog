@@ -15,6 +15,7 @@
 
 - **Milestone 1（文章发布链路）**：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）。
 - **Milestone 2（缓存与热点数据）**：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略。
+- **Milestone 3（AI 与安全防护）**：AI 写作助手（智谱 GLM 集成）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知。
 
 ## 构建、测试和开发命令
 

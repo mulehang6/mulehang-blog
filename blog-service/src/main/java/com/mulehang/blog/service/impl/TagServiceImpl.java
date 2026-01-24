@@ -4,14 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.TagDTO;
 import com.mulehang.blog.entity.BlogTag;
+import com.mulehang.blog.mapper.BlogArticleTagMapper;
 import com.mulehang.blog.mapper.BlogTagMapper;
+import com.mulehang.blog.mapper.dto.TagArticleCountDTO;
 import com.mulehang.blog.service.TagService;
 import com.mulehang.blog.vo.TagVO;
 import com.mulehang.blog.vo.UserInfoVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,6 +28,8 @@ public class TagServiceImpl implements TagService {
 
     private final BlogTagMapper tagMapper;
 
+    private final BlogArticleTagMapper articleTagMapper;
+
     /**
      * 构造函数（构造器注入）。
      *
@@ -31,8 +37,9 @@ public class TagServiceImpl implements TagService {
      * 通过构造器注入依赖，避免字段注入带来的可测试性与可维护性问题。
      * </p>
      */
-    public TagServiceImpl(BlogTagMapper tagMapper) {
+    public TagServiceImpl(BlogTagMapper tagMapper, BlogArticleTagMapper articleTagMapper) {
         this.tagMapper = tagMapper;
+        this.articleTagMapper = articleTagMapper;
     }
 
     /**
@@ -122,7 +129,12 @@ public class TagServiceImpl implements TagService {
         if (id == null) {
             throw new IllegalArgumentException("参数 id 不能为空");
         }
-        return toVO(tagMapper.selectById(id));
+        TagVO vo = toVO(tagMapper.selectById(id));
+        if (vo != null) {
+            Long count = articleTagMapper.countByTagId(id);
+            vo.setArticleCount(count == null ? 0L : count);
+        }
+        return vo;
     }
 
     /**
@@ -132,11 +144,37 @@ public class TagServiceImpl implements TagService {
      */
     @Override
     public List<TagVO> listAll() {
-        return tagMapper.selectList(new LambdaQueryWrapper<BlogTag>()
+        List<TagVO> tags = tagMapper.selectList(new LambdaQueryWrapper<BlogTag>()
                 .orderByAsc(BlogTag::getId))
                 .stream()
                 .map(this::toVO)
                 .toList();
+        if (tags.isEmpty()) {
+            return tags;
+        }
+
+        List<TagArticleCountDTO> countList = articleTagMapper.selectTagArticleCounts();
+        if (countList == null || countList.isEmpty()) {
+            tags.forEach(tag -> tag.setArticleCount(0L));
+            return tags;
+        }
+
+        Map<Long, Long> countMap = new HashMap<>();
+        for (TagArticleCountDTO dto : countList) {
+            if (dto == null || dto.getTagId() == null) {
+                continue;
+            }
+            countMap.put(dto.getTagId(), dto.getArticleCount() == null ? 0L : dto.getArticleCount());
+        }
+
+        for (TagVO tag : tags) {
+            if (tag == null) {
+                continue;
+            }
+            Long count = countMap.getOrDefault(tag.getId(), 0L);
+            tag.setArticleCount(count);
+        }
+        return tags;
     }
 
     /**

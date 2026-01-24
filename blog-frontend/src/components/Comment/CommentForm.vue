@@ -1,6 +1,6 @@
 <template>
   <div class="comment-form">
-    <Card>
+    <Card class="hover-lift-sheen">
       <CardHeader>
         <CardTitle class="text-lg">
           {{ parentComment ? `回复 @${parentComment.nickname}` : "发表评论" }}

@@ -207,6 +207,8 @@ class ArticleServiceImplTest {
                 dto.setStatus(1);
                 dto.setTagIds(List.of(9L));
 
+                when(articleTagMapper.selectAllTagIdsByArticleId(10L)).thenReturn(List.of(9L));
+
                 BlogArticleBody existingBody = new BlogArticleBody();
                 existingBody.setId(3L);
                 when(bodyMapper.selectOne(ArgumentMatchers.<LambdaQueryWrapper<BlogArticleBody>>any()))
@@ -232,7 +234,8 @@ class ArticleServiceImplTest {
 
                 verify(articleTagMapper)
                                 .delete(ArgumentMatchers.any());
-                verify(articleTagMapper).insert(rel);
+                verify(articleTagMapper).update(ArgumentMatchers.isNull(), ArgumentMatchers.any());
+                verify(articleTagMapper, never()).insert(rel);
                 verify(cacheConsistencyService).evictArticleDetail(10L);
         }
 

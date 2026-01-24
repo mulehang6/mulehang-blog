@@ -324,7 +324,7 @@
               保存草稿
             </Button>
             <Button type="submit" :disabled="loading">
-              {{ isEditMode ? "更新文章" : "发布文章" }}
+              {{ isEditMode && form.status === 1 ? "更新文章" : "发布文章" }}
             </Button>
           </div>
         </form>

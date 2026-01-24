@@ -135,12 +135,13 @@
         </Card>
 
         <!-- 操作按钮 -->
-        <Card class="mb-8">
+        <Card class="mb-8 hover-lift-sheen">
           <CardContent class="pt-6">
             <div class="flex items-center justify-center gap-4">
               <Button
                 :variant="isLiked ? 'default' : 'outline'"
                 size="lg"
+                class="glass-button action-button-hover"
                 @click="handleLike"
                 :disabled="!userStore.isLoggedIn || liking"
               >
@@ -149,7 +150,12 @@
                   article.likeCount
                 }})
               </Button>
-              <Button variant="outline" size="lg" @click="handleShare">
+              <Button
+                variant="outline"
+                size="lg"
+                class="glass-button action-button-hover"
+                @click="handleShare"
+              >
                 <span class="mr-2">🔗</span>
                 分享
               </Button>

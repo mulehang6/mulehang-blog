@@ -116,6 +116,32 @@
         Try Again
       </Button>
     </div>
+
+    <AlertDialog
+      :open="deleteDialog.open"
+      @update:open="handleDeleteDialogOpen"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>确认删除</AlertDialogTitle>
+          <AlertDialogDescription>
+            {{ localeStore.t.confirmDeleteTag }}
+            <span
+              v-if="deleteDialog.target"
+              class="font-medium text-foreground"
+            >
+              「{{ deleteDialog.target.name }}」
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDeleteTag">
+            确认删除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -126,6 +152,16 @@ import { tagApi } from "@/api/tag";
 import type { Tag } from "@/types/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocaleStore } from "@/stores/locale";
 import { useUserStore } from "@/stores/user";
 
@@ -139,6 +175,10 @@ const editingId = ref<number | null>(null);
 const form = ref({
   name: "",
   slug: "",
+});
+const deleteDialog = ref<{ open: boolean; target: Tag | null }>({
+  open: false,
+  target: null,
 });
 
 /**
@@ -222,13 +262,51 @@ async function handleSubmit() {
  * 删除标签。
  */
 async function handleDelete(tag: Tag) {
-  const ok = window.confirm(localeStore.t.confirmDeleteTag);
-  if (!ok) return;
+  openDeleteDialog(tag);
+}
+
+/**
+ * 打开删除确认对话框。
+ */
+function openDeleteDialog(tag: Tag) {
+  deleteDialog.value = {
+    open: true,
+    target: tag,
+  };
+}
+
+/**
+ * 处理删除对话框开关。
+ */
+function handleDeleteDialogOpen(open: boolean) {
+  if (!open) {
+    closeDeleteDialog();
+    return;
+  }
+  deleteDialog.value.open = true;
+}
+
+/**
+ * 关闭删除确认对话框。
+ */
+function closeDeleteDialog() {
+  deleteDialog.value.open = false;
+  deleteDialog.value.target = null;
+}
+
+/**
+ * 确认删除标签。
+ */
+async function confirmDeleteTag() {
+  const target = deleteDialog.value.target;
+  if (!target) return;
   try {
-    await tagApi.delete(tag.id);
+    await tagApi.delete(target.id);
     await fetchTags();
   } catch (err) {
     console.error("删除标签失败:", err);
+  } finally {
+    closeDeleteDialog();
   }
 }
 

@@ -272,20 +272,20 @@ async function handleLogout() {
                     </div>
                     <button
                       @click="router.push('/profile')"
-                      class="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                      class="w-full text-left px-4 py-2 text-sm transition-colors menu-item-hover-outline sidebar-nav-item"
                     >
                       个人主页
                     </button>
                     <button
                       @click="router.push('/settings')"
-                      class="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                      class="w-full text-left px-4 py-2 text-sm transition-colors menu-item-hover-outline sidebar-nav-item"
                     >
                       设置
                     </button>
                     <div class="border-t"></div>
                     <button
                       @click="handleLogout"
-                      class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                      class="w-full text-left px-4 py-2 text-sm text-destructive transition-colors menu-item-hover-outline sidebar-nav-item"
                     >
                       退出登录
                     </button>

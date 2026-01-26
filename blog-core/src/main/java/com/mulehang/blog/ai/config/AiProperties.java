@@ -29,7 +29,7 @@ public class AiProperties {
         private String apiKey;
         
         /**
-         * Base URL (用于兼容 OpenAI 协议的代理)
+         * Base URL
          */
         private String baseUrl;
         

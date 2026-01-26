@@ -46,7 +46,6 @@ public class AnthropicProvider implements AiService {
 
     /**
      * 向 Anthropic API 发起非流式对话请求
-     *
      * @param request AI 请求对象
      * @return AI 响应结果
      */

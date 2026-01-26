@@ -13,9 +13,34 @@
 
 ## 已完成的里程碑
 
+- **Milestone 0（工程骨架）**：Spring Boot 3 多模块骨架、Liquibase 初始化、Vue 3 前端项目搭建。
 - **Milestone 1（文章发布链路）**：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）。
 - **Milestone 2（缓存与热点数据）**：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略。
-- **Milestone 3（AI 与安全防护）**：AI 写作助手（智谱 GLM 集成）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知。
+- **Milestone 3（搜索与异步）**：Elasticsearch 全文搜索、RabbitMQ 异步消息、定时任务补偿。
+- **Milestone 4（安全与运营）**：JWT 登录/注册、Spring Security 6 权限控制、敏感词过滤、IP 归属地解析、Actuator + Prometheus 监控。
+- **Milestone 5（AI 与内容生产）**：AI 写作助手（OpenAI/Anthropic Compatible）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知。
+
+## 后端接口统计（55 个）
+
+| 模块 | 接口数 |
+|------|--------|
+| 认证 (AuthController) | 6 |
+| 用户 (UserController) | 1 |
+| 文章 (ArticleController) | 14 |
+| 分类 (CategoryController) | 5 |
+| 标签 (TagController) | 5 |
+| 评论 (CommentController) | 2 |
+| 专栏 (ColumnController) | 5 |
+| 文件 (FileController) | 1 |
+| AI (AiController) | 10 |
+| 统计 (SiteStatsController) | 2 |
+| WebSocket (WebSocketTestController) | 4 |
+
+## 前端完成情况
+
+**已完成页面（16 个）**：首页、文章详情、写文章/编辑、文章管理、登录/注册、GitHub OAuth 回调、分类列表/文章、标签列表/文章、搜索、个人主页、账户设置、关于页、404。
+
+**待完成**：专栏功能、AI 功能集成、用户设置接口联调。
 
 ## 构建、测试和开发命令
 

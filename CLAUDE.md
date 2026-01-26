@@ -9,11 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **核心技术栈**：MyBatis-Plus + MySQL, Redis (多级缓存), RabbitMQ (异步解耦), Redisson (分布式锁/延迟队列), Liquibase (数据库版本管理), Vue 3 + Tailwind CSS v4 (前端), SpringDoc OpenAPI 3 (API 文档), Micrometer + Prometheus (可观测性)。
 
 **已完成的里程碑**：
+- Milestone 0（工程骨架）：Spring Boot 3 多模块骨架、Liquibase 初始化、Vue 3 前端项目搭建
 - Milestone 1（文章发布链路）：Entity/Mapper/DTO/VO/Service/Controller 全链路、MapStruct 转换器、Markdown 渲染（Flexmark + XSS 防护）、文件上传（本地存储）
 - Milestone 2（缓存与热点数据）：Caffeine + Redis 多级缓存、热门文章榜（Redis ZSet）、Redisson 分布式锁（点赞防重）、延迟队列（邮件通知）、Cache-Aside + 延迟双删一致性策略
-- Milestone 3（AI 与安全防护）：AI 写作助手（智谱 GLM 集成）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知
+- Milestone 3（搜索与异步）：Elasticsearch 全文搜索、RabbitMQ 异步消息、定时任务补偿
+- Milestone 4（安全与运营）：JWT 登录/注册、Spring Security 6 权限控制、敏感词过滤、IP 归属地解析、Actuator + Prometheus 监控
+- Milestone 5（AI 与内容生产）：AI 写作助手（OpenAI/Anthropic Compatible）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知
 
-**计划集成的技术**：Elasticsearch (站内搜索), MongoDB (版本历史), OSS (对象存储)。
+**计划集成的技术**：OSS (对象存储)。
 
 ## 注意事项
 - [设计文档](./docs/DEVELOPMENT_GUIDE.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但

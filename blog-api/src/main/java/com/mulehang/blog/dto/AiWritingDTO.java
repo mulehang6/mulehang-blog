@@ -30,6 +30,6 @@ public class AiWritingDTO {
     @Max(value = 10000, message = "目标字数不能超过10000")
     private Integer targetLength;
 
-    @Schema(description = "AI服务提供商（可选，为空则使用默认）", example = "zhipu")
+    @Schema(description = "AI服务提供商（openai/anthropic，可选，为空则使用默认）", example = "openai")
     private String provider;
 }

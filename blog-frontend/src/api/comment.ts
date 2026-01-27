@@ -12,7 +12,7 @@ export const commentApi = {
     articleId: number
     content: string
     parentId?: number
-    replyToUserId?: number
+    replyToUser?: number
   }): Promise<number> {
     return request.post('/api/v1/comments', data)
   },

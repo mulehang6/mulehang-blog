@@ -1,5 +1,5 @@
 import { request } from './request'
-import type { ArticleListItem, ArticleDetail, PageResult } from '@/types/api'
+import type { ArticleListItem, ArticleDetail, PageResult, ArticleSearchItem } from '@/types/api'
 
 /**
  * 文章相关 API
@@ -48,7 +48,10 @@ export const articleApi = {
     keyword: string
     pageNo?: number
     pageSize?: number
-  }): Promise<PageResult<ArticleListItem>> {
+    categoryId?: number
+    authorId?: number
+    tag?: string
+  }): Promise<PageResult<ArticleSearchItem>> {
     return request.get('/api/v1/articles/search', { params })
   },
 

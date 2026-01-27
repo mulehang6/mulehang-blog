@@ -5,6 +5,7 @@ import com.mulehang.blog.security.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -59,12 +60,18 @@ public class SecurityConfig {
                         // 公开接口：认证相关
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 公开接口：前台文章、分类、标签、专栏
-                        .requestMatchers("/api/v1/articles/public/**", "/api/v1/articles/slug/**", 
-                                         "/api/v1/articles/hot", "/api/v1/articles/search").permitAll()
-                        .requestMatchers("/api/v1/categories/**").permitAll()
-                        .requestMatchers("/api/v1/tags/**").permitAll()
-                        .requestMatchers("/api/v1/columns/**").permitAll()
+                        // 公开接口：前台文章列表/详情/搜索、分类/标签/专栏查询
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles",
+                                "/api/v1/articles/slug/**",
+                                "/api/v1/articles/hot",
+                                "/api/v1/articles/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tags/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/columns/**").permitAll()
+
+                        // 公开接口：网站统计（PV/UV）
+                        .requestMatchers(HttpMethod.POST, "/api/v1/stats/pv").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/stats").permitAll()
 
                         // 公开接口：测试接口（仅开发环境，生产环境应移除）
                         .requestMatchers("/api/v1/articles/email/test").permitAll()

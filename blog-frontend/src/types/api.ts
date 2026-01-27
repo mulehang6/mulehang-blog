@@ -16,7 +16,7 @@ export interface PageResult<T> {
   total: number
   pageNo: number
   pageSize: number
-  totalPages: number
+  totalPages?: number
 }
 
 /**
@@ -75,6 +75,30 @@ export interface ArticleListItem {
   createTime: string
   updateTime: string
   publishTime?: string
+}
+
+/**
+ * 搜索结果项（对应后端 ArticleSearchVO）
+ */
+export interface ArticleSearchItem {
+  id: number
+  title: string
+  summary: string
+  slug: string
+  coverUrl?: string
+  authorId?: number
+  authorName?: string
+  categoryId?: number
+  categoryName?: string
+  tags: string[]
+  status?: number
+  readCount: number
+  likeCount: number
+  commentCount: number
+  publishTime?: string
+  createTime: string
+  highlightTitle?: string
+  highlightSummary?: string
 }
 
 /**
@@ -151,16 +175,19 @@ export interface Tag {
 export interface CommentVO {
   id: number
   articleId: number
+  rootId: number | null
   userId: number
   username: string
   nickname: string
   avatar: string | null
+  replyToUser: number | null
   content: string
   parentId: number | null
-  replyToUserId: number | null
   likeCount: number
   status: number
-  createdAt: string
+  location?: string | null
+  isTop?: number
+  createTime: string
   children?: CommentVO[]
 }
 

@@ -127,7 +127,7 @@ async function handleSubmit() {
       articleId: props.articleId,
       content: content.value.trim(),
       parentId: props.parentComment?.id,
-      replyToUserId: props.parentComment?.userId,
+      replyToUser: props.parentComment?.userId,
     });
 
     content.value = "";

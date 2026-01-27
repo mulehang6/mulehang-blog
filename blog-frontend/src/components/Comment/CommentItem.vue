@@ -15,13 +15,13 @@
         <div class="flex items-center gap-2 mb-2">
           <span class="font-medium">{{ comment.nickname }}</span>
           <span
-            v-if="comment.replyToUserId"
+            v-if="comment.replyToUser"
             class="text-sm text-muted-foreground"
           >
-            回复 @{{ comment.nickname }}
+            回复 @用户{{ comment.replyToUser }}
           </span>
           <span class="text-sm text-muted-foreground">
-            {{ formatDate(comment.createdAt) }}
+            {{ formatDate(comment.createTime) }}
           </span>
         </div>
 

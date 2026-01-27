@@ -312,7 +312,7 @@ async function loadArticles() {
     });
     articles.value = response.list;
     total.value = response.total;
-    totalPages.value = response.totalPages;
+    totalPages.value = Math.ceil(response.total / pageSize.value);
   } catch (error) {
     console.error("加载文章列表失败:", error);
   } finally {

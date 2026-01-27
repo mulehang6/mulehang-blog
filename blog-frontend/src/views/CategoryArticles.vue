@@ -156,7 +156,7 @@ async function fetchArticles() {
 
     articles.value = result.list;
     pagination.value.total = result.total;
-    pagination.value.totalPages = result.totalPages;
+    pagination.value.totalPages = Math.ceil(result.total / pagination.value.pageSize);
   } catch (err: any) {
     error.value = err.message || "获取文章列表失败";
     console.error("获取文章列表失败:", err);

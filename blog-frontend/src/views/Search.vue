@@ -86,10 +86,12 @@
         >
           <CardHeader>
             <CardTitle class="text-xl hover:text-primary transition-colors">
-              {{ article.title }}
+              <span v-if="article.highlightTitle" v-html="article.highlightTitle"></span>
+              <span v-else>{{ article.title }}</span>
             </CardTitle>
             <CardDescription class="line-clamp-2 text-base mt-2">
-              {{ article.summary }}
+              <span v-if="article.highlightSummary" v-html="article.highlightSummary"></span>
+              <span v-else>{{ article.summary }}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,11 +100,9 @@
             >
               <div class="flex items-center gap-4">
                 <Badge variant="secondary">{{
-                  article.category?.name || "未分类"
+                  article.categoryName || "未分类"
                 }}</Badge>
-                <span>{{
-                  article.author?.nickname || article.author?.username || "匿名"
-                }}</span>
+                <span>{{ article.authorName || "匿名" }}</span>
                 <span>{{
                   formatDate(article.publishTime || article.createTime)
                 }}</span>
@@ -114,16 +114,16 @@
               </div>
             </div>
             <div
-              v-if="article.tags.length > 0"
+              v-if="article.tags && article.tags.length > 0"
               class="flex items-center gap-2 mt-3"
             >
               <Badge
                 v-for="tag in article.tags"
-                :key="tag.id"
+                :key="tag"
                 variant="outline"
                 class="text-xs"
               >
-                # {{ tag.name }}
+                # {{ tag }}
               </Badge>
             </div>
           </CardContent>
@@ -176,7 +176,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { articleApi } from "@/api/article";
-import type { ArticleListItem } from "@/types/api";
+import type { ArticleSearchItem } from "@/types/api";
 import {
   Card,
   CardContent,
@@ -193,7 +193,7 @@ const router = useRouter();
 
 const keyword = ref("");
 const currentKeyword = ref("");
-const articles = ref<ArticleListItem[]>([]);
+const articles = ref<ArticleSearchItem[]>([]);
 const loading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -226,7 +226,7 @@ async function performSearch(searchKeyword: string) {
 
     articles.value = result.list;
     total.value = result.total;
-    totalPages.value = result.totalPages;
+    totalPages.value = Math.ceil(result.total / pageSize.value);
   } catch (err) {
     console.error("搜索失败:", err);
   } finally {

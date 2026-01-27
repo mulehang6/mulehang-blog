@@ -118,7 +118,7 @@ async function fetchComments() {
     // 构建评论树
     comments.value = buildCommentTree(result.list);
     total.value = result.total;
-    totalPages.value = result.totalPages;
+    totalPages.value = Math.ceil(result.total / pageSize.value);
   } catch (err) {
     console.error("获取评论列表失败:", err);
   } finally {

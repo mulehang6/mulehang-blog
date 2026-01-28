@@ -12,34 +12,27 @@
             @keyup.enter="handleSearch"
           />
           <Button
-            variant="ghost"
-            size="icon"
-            class="absolute right-0 top-0 text-ink-light hover:text-clay"
+            class="absolute right-0 top-0 h-11 rounded-xl bg-ink px-5 text-sm font-medium text-white hover:bg-clay dark:bg-clay dark:text-paper-bg whitespace-nowrap leading-none"
             @click="handleSearch"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            搜索
           </Button>
         </div>
       </div>
 
       <!-- 搜索历史 -->
-      <div v-if="searchHistory.length > 0" class="rounded-2xl border border-ink/10 bg-paper-card p-4">
+      <div
+        v-if="searchHistory.length > 0"
+        class="rounded-2xl border border-ink/10 bg-paper-card p-4"
+      >
         <div class="mb-3 flex items-center justify-between">
           <span class="text-sm text-ink-light">搜索历史</span>
-          <Button variant="ghost" size="sm" class="text-ink-light hover:text-clay" @click="clearHistory">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-ink-light hover:text-clay"
+            @click="clearHistory"
+          >
             清除
           </Button>
         </div>
@@ -59,8 +52,8 @@
 
     <!-- 搜索结果信息 -->
     <div v-if="currentKeyword" class="text-ink-light">
-      搜索 "<span class="font-medium text-ink">{{ currentKeyword }}</span>"
-      找到 <span class="font-medium text-ink">{{ total }}</span> 篇文章
+      搜索 "<span class="font-medium text-ink">{{ currentKeyword }}</span
+      >" 找到 <span class="font-medium text-ink">{{ total }}</span> 篇文章
     </div>
 
     <!-- 加载状态 -->
@@ -79,23 +72,38 @@
         @click="router.push(`/articles/${article.slug}`)"
       >
         <CardHeader>
-          <CardTitle class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay">
-            <span v-if="article.highlightTitle" v-html="article.highlightTitle"></span>
+          <CardTitle
+            class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay"
+          >
+            <span
+              v-if="article.highlightTitle"
+              v-html="article.highlightTitle"
+            ></span>
             <span v-else>{{ article.title }}</span>
           </CardTitle>
           <CardDescription class="mt-2 line-clamp-2 text-base text-ink-light">
-            <span v-if="article.highlightSummary" v-html="article.highlightSummary"></span>
+            <span
+              v-if="article.highlightSummary"
+              v-html="article.highlightSummary"
+            ></span>
             <span v-else>{{ article.summary }}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-ink-light">
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 text-sm text-ink-light"
+          >
             <div class="flex items-center gap-4">
-              <Badge variant="secondary" class="rounded-full bg-paper-dark text-ink">
+              <Badge
+                variant="secondary"
+                class="rounded-full bg-paper-dark text-ink"
+              >
                 {{ article.categoryName || "未分类" }}
               </Badge>
               <span>{{ article.authorName || "匿名" }}</span>
-              <span>{{ formatDate(article.publishTime || article.createTime) }}</span>
+              <span>{{
+                formatDate(article.publishTime || article.createTime)
+              }}</span>
             </div>
             <div class="flex items-center gap-4">
               <span>👁️ {{ article.readCount }}</span>
@@ -103,7 +111,10 @@
               <span>💬 {{ article.commentCount }}</span>
             </div>
           </div>
-          <div v-if="article.tags && article.tags.length > 0" class="mt-3 flex flex-wrap gap-2">
+          <div
+            v-if="article.tags && article.tags.length > 0"
+            class="mt-3 flex flex-wrap gap-2"
+          >
             <Badge
               v-for="tag in article.tags"
               :key="tag"
@@ -118,7 +129,10 @@
     </div>
 
     <!-- 空状态 -->
-    <Card v-else-if="currentKeyword" class="border-ink/10 bg-paper-card shadow-soft">
+    <Card
+      v-else-if="currentKeyword"
+      class="border-ink/10 bg-paper-card shadow-soft"
+    >
       <CardContent class="py-12 text-center">
         <p class="text-ink-light text-lg mb-4">没有找到相关文章</p>
         <p class="text-sm text-ink-light mb-6">
@@ -131,10 +145,7 @@
     </Card>
 
     <!-- 分页 -->
-    <div
-      v-if="totalPages > 1"
-      class="flex items-center justify-center gap-2"
-    >
+    <div v-if="totalPages > 1" class="flex items-center justify-center gap-2">
       <Button
         variant="outline"
         size="sm"

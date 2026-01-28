@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.util.StringUtils;
@@ -37,8 +38,9 @@ public class OpenAiProvider implements AiService {
     public OpenAiProvider(AiProperties.ProviderConfig config) {
         this.config = config;
         WebClient.Builder builder = WebClient.builder()
-                .baseUrl(config.getBaseUrl() != null && !config.getBaseUrl().isEmpty() 
-                        ? config.getBaseUrl() : "https://api.openai.com");
+                .baseUrl(config.getBaseUrl() != null && !config.getBaseUrl().isEmpty()
+                        ? config.getBaseUrl()
+                        : "https://api.openai.com");
         if (StringUtils.hasText(config.getApiKey())) {
             builder.defaultHeader("Authorization", "Bearer " + config.getApiKey());
         }
@@ -48,13 +50,19 @@ public class OpenAiProvider implements AiService {
     @Override
     public AiResponse chat(AiRequest request) {
         Map<String, Object> body = buildRequestBody(request, false);
-        
+
         Map<String, Object> response = webClient.post()
                 .uri("/v1/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse.bodyToMono(String.class)
+                        .defaultIfEmpty("")
+                        .map(errorBody -> new RuntimeException(
+                                "AI 请求失败: status=" + clientResponse.statusCode()
+                                        + ", body=" + errorBody)))
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                })
                 .timeout(Duration.ofSeconds(config.getTimeout()))
                 .block();
 
@@ -122,14 +130,53 @@ public class OpenAiProvider implements AiService {
 
     private Map<String, Object> buildRequestBody(AiRequest request, boolean stream) {
         Map<String, Object> body = new HashMap<>();
-        body.put("model", request.getModel() != null ? request.getModel() : config.getModel());
+        String model = resolveModel(request.getModel());
+        body.put("model", model);
         body.put("messages", request.getMessages());
         body.put("temperature", request.getTemperature() != null ? request.getTemperature() : 0.7);
         body.put("stream", stream);
-        if (request.getMaxTokens() != null) {
-            body.put("max_tokens", request.getMaxTokens());
+        Integer normalizedMaxTokens = normalizeMaxTokens(request.getMaxTokens(), model);
+        if (normalizedMaxTokens != null) {
+            body.put("max_tokens", normalizedMaxTokens);
         }
         return body;
+    }
+
+    /**
+     * 规范化 max_tokens，兼容部分 OpenAI-compatible 的上限。
+     * DeepSeek 最大 8192。
+     */
+    private Integer normalizeMaxTokens(Integer maxTokens, String model) {
+        if (maxTokens == null) {
+            return null;
+        }
+        int normalized = Math.max(1, maxTokens);
+        String baseUrl = config.getBaseUrl();
+        boolean isDeepSeek = StringUtils.hasText(baseUrl) && baseUrl.contains("deepseek.com");
+        if (isDeepSeek && normalized > 8192) {
+            log.warn("检测到 DeepSeek Base URL，max_tokens {} 超过上限 8192，已自动截断。model={}", normalized, model);
+            return 8192;
+        }
+        return normalized;
+    }
+
+    /**
+     * 解析并适配模型名称。
+     * 对 DeepSeek OpenAI-compatible Base URL 做默认模型兜底。
+     *
+     * @param requestedModel 请求中的模型
+     * @return 最终模型
+     */
+    private String resolveModel(String requestedModel) {
+        String model = StringUtils.hasText(requestedModel) ? requestedModel : config.getModel();
+        String baseUrl = config.getBaseUrl();
+        if (StringUtils.hasText(baseUrl)
+                && baseUrl.contains("deepseek.com")
+                && (!StringUtils.hasText(model) || model.startsWith("gpt-"))) {
+            log.warn("检测到 DeepSeek Base URL，自动使用模型 deepseek-chat（原模型: {}）", model);
+            return "deepseek-chat";
+        }
+        return model;
     }
 
     private AiResponse parseResponse(Map<String, Object> response) {
@@ -144,13 +191,11 @@ public class OpenAiProvider implements AiService {
         if (!(firstChoiceObject instanceof Map<?, ?> firstChoice)) {
             throw new RuntimeException("Invalid response from AI provider: choice format error");
         }
-        Object messageObject = firstChoice.get("message");
-        if (!(messageObject instanceof Map<?, ?> message) || !message.containsKey("content")) {
-            throw new RuntimeException("Invalid response from AI provider: message content not found");
+        String content = extractContentFromChoice(firstChoice);
+        if (!StringUtils.hasText(content)) {
+            log.warn("AI 返回内容为空，model={}, rawChoiceKeys={}", response.get("model"), firstChoice.keySet());
         }
-        Object contentObject = message.get("content");
-        String content = contentObject == null ? "" : contentObject.toString();
-        
+
         Integer totalTokens = null;
         Object usageObject = response.get("usage");
         if (usageObject instanceof Map<?, ?> usage) {
@@ -169,6 +214,34 @@ public class OpenAiProvider implements AiService {
     }
 
     /**
+     * 从不同协议的响应中提取内容。
+     * 兼容 OpenAI-compatible 与部分模型的 reasoning 字段。
+     *
+     * @param choice choices[0]
+     * @return 内容文本
+     */
+    private String extractContentFromChoice(Map<?, ?> choice) {
+        if (choice == null) {
+            return "";
+        }
+        Object messageObject = choice.get("message");
+        if (messageObject instanceof Map<?, ?> message) {
+            Object contentObject = message.get("content");
+            String content = contentObject == null ? "" : contentObject.toString();
+            if (StringUtils.hasText(content)) {
+                return content;
+            }
+            Object reasoningObject = message.get("reasoning_content");
+            String reasoning = reasoningObject == null ? "" : reasoningObject.toString();
+            if (StringUtils.hasText(reasoning)) {
+                return reasoning;
+            }
+        }
+        Object textObject = choice.get("text");
+        return textObject == null ? "" : textObject.toString();
+    }
+
+    /**
      * 解析SSE流式响应数据块
      * OpenAI SSE格式: data: {json}\n\n
      * 响应结构: {"choices": [{"delta": {"content": "文本"}}]}
@@ -180,24 +253,24 @@ public class OpenAiProvider implements AiService {
         if (chunk == null || chunk.isEmpty()) {
             return Flux.empty();
         }
-        
+
         List<String> results = new ArrayList<>();
         String[] lines = chunk.split("\n");
-        
+
         for (String line : lines) {
             line = line.trim();
             if (line.startsWith("data: ")) {
                 String data = line.substring(6).trim();
-                
+
                 // 跳过[DONE]标记
                 if ("[DONE]".equals(data)) {
                     continue;
                 }
-                
+
                 try {
                     JsonNode node = objectMapper.readTree(data);
                     JsonNode choices = node.get("choices");
-                    
+
                     if (choices != null && choices.isArray() && choices.size() > 0) {
                         JsonNode delta = choices.get(0).get("delta");
                         if (delta != null && delta.has("content")) {
@@ -212,7 +285,7 @@ public class OpenAiProvider implements AiService {
                 }
             }
         }
-        
+
         return Flux.fromIterable(results);
     }
 }

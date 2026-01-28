@@ -2,6 +2,7 @@ package com.mulehang.blog.controller.api.v1;
 
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
+import com.mulehang.blog.dto.CommentUpdateDTO;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.service.CommentService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -63,8 +65,8 @@ public class CommentController {
     @GetMapping("/api/v1/articles/{articleId}/comments")
     @Operation(summary = "按文章分页查询评论列表")
     public Result<PageResult<CommentVO>> listByArticle(@PathVariable Long articleId,
-                                                       Long pageNo,
-                                                       Long pageSize) {
+            Long pageNo,
+            Long pageSize) {
         return Result.ok(commentService.listByArticle(articleId, pageNo, pageSize));
     }
 
@@ -115,5 +117,31 @@ public class CommentController {
         }
         return Result.ok(commentService.unlikeComment(userId, id));
     }
-}
 
+    /**
+     * 编辑评论内容。
+     *
+     * @param id  评论 ID
+     * @param dto 评论更新 DTO
+     * @return true=更新成功
+     */
+    @PutMapping("/api/v1/comments/{id}")
+    @Operation(summary = "编辑评论")
+    public Result<Boolean> update(@PathVariable Long id, @RequestBody CommentUpdateDTO dto) {
+        commentService.update(id, dto);
+        return Result.ok(true);
+    }
+
+    /**
+     * 删除评论。
+     *
+     * @param id 评论 ID
+     * @return true=删除成功
+     */
+    @DeleteMapping("/api/v1/comments/{id}")
+    @Operation(summary = "删除评论")
+    public Result<Boolean> delete(@PathVariable Long id) {
+        commentService.delete(id);
+        return Result.ok(true);
+    }
+}

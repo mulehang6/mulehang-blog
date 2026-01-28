@@ -12,7 +12,8 @@ public enum CommentStatusEnum {
 
     PENDING(0, "待审核"),
     APPROVED(1, "通过"),
-    REJECTED(2, "拒绝/屏蔽");
+    REJECTED(2, "拒绝/屏蔽"),
+    DELETED(3, "已删除");
 
     private final int code;
     private final String desc;

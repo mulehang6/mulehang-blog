@@ -181,7 +181,7 @@ onBeforeUnmount(() => {
           </button>
           <button
             type="button"
-            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-paper-card dark:text-ink dark:hover:bg-paper-dark/80 md:flex"
+            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:flex"
             @click="router.push('/register')"
           >
             {{ registerLabel }}
@@ -191,7 +191,7 @@ onBeforeUnmount(() => {
         <template v-else>
           <button
             type="button"
-            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-paper-card dark:text-ink dark:hover:bg-paper-dark/80 md:flex"
+            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:flex"
             @click="router.push('/write')"
           >
             写文章
@@ -227,6 +227,13 @@ onBeforeUnmount(() => {
                 </p>
               </div>
               <div class="my-2 h-px bg-ink/10"></div>
+              <button
+                type="button"
+                class="w-full rounded-lg px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60"
+                @click="router.push('/articles/manage')"
+              >
+                {{ t.navArticleManage }}
+              </button>
               <button
                 type="button"
                 class="w-full rounded-lg px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60"
@@ -277,6 +284,14 @@ onBeforeUnmount(() => {
         >
           {{ item.label }}
         </router-link>
+        <router-link
+          v-if="userStore.isLoggedIn"
+          to="/articles/manage"
+          class="text-lg font-serif text-ink transition-colors hover:text-clay"
+          @click="closeMobileMenu"
+        >
+          {{ t.navArticleManage }}
+        </router-link>
         <div class="flex items-center gap-4 pt-2">
           <button
             type="button"
@@ -312,7 +327,7 @@ onBeforeUnmount(() => {
         />
         <button
           type="button"
-          class="rounded-xl bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-clay"
+          class="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-clay dark:bg-clay dark:text-paper-bg whitespace-nowrap leading-none"
           @click="handleSearch"
         >
           搜索

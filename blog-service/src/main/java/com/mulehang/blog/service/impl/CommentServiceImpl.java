@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
+import com.mulehang.blog.dto.CommentUpdateDTO;
 import com.mulehang.blog.dto.NotificationDTO;
 import com.mulehang.blog.entity.BlogArticle;
 import com.mulehang.blog.entity.BlogComment;
@@ -165,10 +166,10 @@ public class CommentServiceImpl implements CommentService {
 
         // 发送 MQ 异步邮件通知
         commentNotifyProducer.sendNotify(dto.getArticleId(), commentId);
-        
+
         // 发送 WebSocket 实时通知给文章作者
         sendWebSocketNotification(article, comment);
-        
+
         return commentId;
     }
 
@@ -191,7 +192,9 @@ public class CommentServiceImpl implements CommentService {
         Page<BlogComment> page = new Page<>(pn, ps);
         Page<BlogComment> result = commentMapper.selectPage(page, new LambdaQueryWrapper<BlogComment>()
                 .eq(BlogComment::getArticleId, articleId)
-                .eq(BlogComment::getStatus, CommentStatusEnum.APPROVED.getCode())
+                .in(BlogComment::getStatus,
+                        CommentStatusEnum.APPROVED.getCode(),
+                        CommentStatusEnum.DELETED.getCode())
                 .orderByDesc(BlogComment::getIsTop)
                 .orderByDesc(BlogComment::getCreateTime));
 
@@ -210,7 +213,7 @@ public class CommentServiceImpl implements CommentService {
     /**
      * 点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=点赞成功；false=已点赞或未获取到锁
      */
@@ -249,7 +252,7 @@ public class CommentServiceImpl implements CommentService {
     /**
      * 查询用户是否已点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=已点赞；false=未点赞
      */
@@ -267,7 +270,7 @@ public class CommentServiceImpl implements CommentService {
     /**
      * 取消点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=取消成功；false=未点赞或未获取到锁
      */
@@ -304,9 +307,85 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
+     * 编辑评论内容。
+     *
+     * @param commentId 评论 ID
+     * @param dto       评论更新 DTO
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void update(Long commentId, CommentUpdateDTO dto) {
+        if (commentId == null) {
+            throw new IllegalArgumentException("commentId 为空");
+        }
+        if (dto == null || dto.getContent() == null || dto.getContent().isBlank()) {
+            throw new IllegalArgumentException("content 为空");
+        }
+
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("未登录或登录已过期");
+        }
+
+        BlogComment comment = commentMapper.selectById(commentId);
+        if (comment == null) {
+            throw new IllegalArgumentException("评论未找到: " + commentId);
+        }
+        if (!Objects.equals(comment.getUserId(), userId)) {
+            throw new IllegalStateException("无权限编辑该评论");
+        }
+        if (Objects.equals(comment.getStatus(), CommentStatusEnum.DELETED.getCode())) {
+            throw new IllegalStateException("评论已删除，无法编辑");
+        }
+
+        String content = dto.getContent().trim();
+        if (sensitiveWordService.contains(content)) {
+            content = sensitiveWordService.replace(content);
+        }
+        comment.setContent(content);
+        commentMapper.updateById(comment);
+    }
+
+    /**
+     * 删除评论。
+     *
+     * @param commentId 评论 ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(Long commentId) {
+        if (commentId == null) {
+            throw new IllegalArgumentException("commentId 为空");
+        }
+
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("未登录或登录已过期");
+        }
+
+        BlogComment comment = commentMapper.selectById(commentId);
+        if (comment == null) {
+            throw new IllegalArgumentException("评论未找到: " + commentId);
+        }
+        if (!Objects.equals(comment.getUserId(), userId)) {
+            throw new IllegalStateException("无权限删除该评论");
+        }
+        if (Objects.equals(comment.getStatus(), CommentStatusEnum.DELETED.getCode())) {
+            return;
+        }
+
+        comment.setStatus(CommentStatusEnum.DELETED.getCode());
+        comment.setContent("该评论已删除");
+        comment.setLikeCount(0);
+        commentMapper.updateById(comment);
+
+        articleMapper.decrementCommentCount(comment.getArticleId());
+    }
+
+    /**
      * 将评论实体转换为 VO。
      *
-     * @param comment 评论实体
+     * @param comment       评论实体
      * @param currentUserId 当前用户 ID（可为空）
      * @return 评论 VO
      */
@@ -318,7 +397,11 @@ public class CommentServiceImpl implements CommentService {
         vo.setParentId(comment.getParentId());
         vo.setUserId(comment.getUserId());
         vo.setReplyToUser(comment.getReplyToUser());
-        vo.setContent(comment.getContent());
+        if (Objects.equals(comment.getStatus(), CommentStatusEnum.DELETED.getCode())) {
+            vo.setContent("该评论已删除");
+        } else {
+            vo.setContent(comment.getContent());
+        }
         vo.setLikeCount(comment.getLikeCount());
         vo.setStatus(comment.getStatus());
         vo.setLocation(comment.getLocation());
@@ -331,7 +414,7 @@ public class CommentServiceImpl implements CommentService {
         } else {
             vo.setLiked(false);
         }
-        
+
         // 查询并填充用户信息
         if (comment.getUserId() != null) {
             SysUser user = userMapper.selectById(comment.getUserId());
@@ -341,7 +424,7 @@ public class CommentServiceImpl implements CommentService {
                 vo.setAvatar(user.getAvatar());
             }
         }
-        
+
         return vo;
     }
 
@@ -367,7 +450,7 @@ public class CommentServiceImpl implements CommentService {
     private Long normalizeId(Long id) {
         return id == null ? 0L : id;
     }
-    
+
     /**
      * 发送 WebSocket 实时通知给文章作者
      *
@@ -380,7 +463,7 @@ public class CommentServiceImpl implements CommentService {
             if (Objects.equals(comment.getUserId(), article.getAuthorId())) {
                 return;
             }
-            
+
             // 构造通知消息
             NotificationDTO notification = NotificationDTO.builder()
                     .type("COMMENT")
@@ -395,10 +478,10 @@ public class CommentServiceImpl implements CommentService {
                     .timestamp(LocalDateTime.now())
                     .read(false)
                     .build();
-            
+
             // 发送通知
             wsNotificationService.sendToUser(article.getAuthorId(), notification);
-            log.debug("已发送 WebSocket 通知给文章作者: authorId={}, commentId={}", 
+            log.debug("已发送 WebSocket 通知给文章作者: authorId={}, commentId={}",
                     article.getAuthorId(), comment.getId());
         } catch (Exception e) {
             // WebSocket 通知失败不影响主流程

@@ -82,7 +82,7 @@ const routes: RouteRecordRaw[] = [
     path: '/ai',
     name: 'AiStudio',
     component: () => import('@/views/AiStudio.vue'),
-    meta: { title: 'AI 工作台' }
+    meta: { title: 'mulehang-blog' }
   },
   {
     path: '/about',

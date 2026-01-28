@@ -1,10 +1,17 @@
 <template>
   <div class="space-y-10">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header
+      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+    >
       <div class="space-y-3">
-        <h1 class="font-serif text-4xl font-medium text-ink">AI 工作台</h1>
+        <h1 class="font-serif text-4xl font-medium text-ink">
+          {{ localeStore.t.aiHeaderTitle }}
+        </h1>
         <p class="text-ink-light">
-          对话、摘要、标题、标签与写作助手集中在一处完成。
+          {{ localeStore.t.aiHeaderSubtitle }}
+        </p>
+        <p class="text-ink-light">
+          {{ localeStore.t.aiHeaderNote }}
         </p>
       </div>
       <Button
@@ -14,14 +21,16 @@
         :disabled="!hasResults"
         @click="openResultPanel()"
       >
-        查看结果
+        {{ localeStore.t.aiViewResults }}
       </Button>
     </header>
 
     <!-- 连接设置 -->
     <Card class="border-ink/10 bg-paper-card shadow-soft">
       <CardHeader>
-        <CardTitle class="font-serif text-2xl text-ink">连接设置</CardTitle>
+        <CardTitle class="font-serif text-2xl text-ink">
+          {{ localeStore.t.aiConnectionSettings }}
+        </CardTitle>
       </CardHeader>
       <CardContent class="space-y-6">
         <div class="space-y-4">
@@ -35,7 +44,9 @@
               />
             </div>
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">模型 ID</label>
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiModelId }}
+              </label>
               <Input
                 v-model="aiModel"
                 placeholder="gpt-4o-mini"
@@ -50,18 +61,20 @@
                 placeholder="sk-..."
                 autocomplete="off"
               />
-              <label class="mt-2 flex items-center gap-2 text-xs text-ink-light">
+              <label
+                class="mt-2 flex items-center gap-2 text-xs text-ink-light"
+              >
                 <input
                   v-model="rememberKey"
                   type="checkbox"
                   class="h-4 w-4 rounded border-ink/20 accent-clay"
                 />
-                记住密钥（仅保存在本地）
+                {{ localeStore.t.aiRememberKey }}
               </label>
             </div>
           </div>
           <p class="text-xs text-ink-light">
-            填写 Base URL 时需同时提供 API Key；Model 会覆盖后端默认模型。
+            {{ localeStore.t.aiBaseUrlHint }}
           </p>
           <div class="flex flex-wrap gap-2">
             <Button
@@ -70,56 +83,77 @@
               class="rounded-full border-ink/20 text-ink"
               @click="clearOverrides"
             >
-              恢复默认
+              {{ localeStore.t.aiReset }}
             </Button>
           </div>
         </div>
 
         <div class="border-t border-ink/10 pt-4 space-y-4">
-          <h3 class="text-sm font-semibold text-ink">对话设置</h3>
+          <h3 class="text-sm font-semibold text-ink">
+            {{ localeStore.t.aiChatSettings }}
+          </h3>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">模型提供商</label>
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiProvider }}
+              </label>
               <select
                 v-model="chatProvider"
                 class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
               >
-                <option value="">默认</option>
+                <option value="">{{ localeStore.t.aiDefault }}</option>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
               </select>
             </div>
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">温度</label>
-              <Input v-model.number="chatTemperature" type="number" step="0.1" min="0" max="2" />
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiTemperature }}
+              </label>
+              <Input
+                v-model.number="chatTemperature"
+                type="number"
+                step="0.1"
+                min="0"
+                max="2"
+              />
             </div>
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">最大 Token</label>
-              <Input v-model.number="chatMaxTokens" type="number" min="64" max="4096" />
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiMaxTokens }}
+              </label>
+              <Input
+                v-model.number="chatMaxTokens"
+                type="number"
+                min="64"
+                max="4096"
+              />
             </div>
-            <label
-              class="mt-7 flex items-center gap-2 text-sm text-ink-light"
-            >
+            <label class="mt-7 flex items-center gap-2 text-sm text-ink-light">
               <input
                 v-model="useChatStream"
                 type="checkbox"
                 class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
-              流式输出（需登录）
+              {{ localeStore.t.aiStreamLogin }}
             </label>
           </div>
         </div>
 
         <div class="border-t border-ink/10 pt-4 space-y-4">
-          <h3 class="text-sm font-semibold text-ink">内容助手设置</h3>
+          <h3 class="text-sm font-semibold text-ink">
+            {{ localeStore.t.aiContentSettings }}
+          </h3>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">模型提供商</label>
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiProvider }}
+              </label>
               <select
                 v-model="assistantProvider"
                 class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
               >
-                <option value="">默认</option>
+                <option value="">{{ localeStore.t.aiDefault }}</option>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
               </select>
@@ -128,15 +162,19 @@
         </div>
 
         <div class="border-t border-ink/10 pt-4 space-y-4">
-          <h3 class="text-sm font-semibold text-ink">写作助手设置</h3>
+          <h3 class="text-sm font-semibold text-ink">
+            {{ localeStore.t.aiWritingSettings }}
+          </h3>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">模型提供商</label>
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiProvider }}
+              </label>
               <select
                 v-model="writingProvider"
                 class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
               >
-                <option value="">默认</option>
+                <option value="">{{ localeStore.t.aiDefault }}</option>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
               </select>
@@ -147,7 +185,7 @@
                 type="checkbox"
                 class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
-              续写流式输出（需登录）
+              {{ localeStore.t.aiStreamLogin }}
             </label>
           </div>
         </div>
@@ -158,7 +196,9 @@
     <Card class="border-ink/10 bg-paper-card shadow-soft">
       <CardHeader>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle class="font-serif text-2xl text-ink">AI 对话</CardTitle>
+          <CardTitle class="font-serif text-2xl text-ink">
+            {{ localeStore.t.aiChatTitle }}
+          </CardTitle>
           <div class="flex items-center gap-2">
             <Button
               variant="outline"
@@ -166,7 +206,7 @@
               class="rounded-full border-ink/20 text-ink"
               @click="resetChat"
             >
-              清空对话
+              {{ localeStore.t.aiClearChat }}
             </Button>
             <Button
               v-if="isChatting && useChatStream"
@@ -175,7 +215,7 @@
               class="rounded-full text-clay"
               @click="stopChatStream"
             >
-              停止输出
+              {{ localeStore.t.aiStopOutput }}
             </Button>
           </div>
         </div>
@@ -186,7 +226,7 @@
           class="max-h-[420px] space-y-3 overflow-y-auto rounded-2xl border border-ink/10 bg-paper-dark/30 p-4"
         >
           <div v-if="chatMessages.length === 0" class="text-sm text-ink-light">
-            写下第一句话，让 AI 接住你的想法。
+            {{ localeStore.t.aiChatEmpty }}
           </div>
           <div
             v-for="(message, index) in chatMessages"
@@ -216,20 +256,23 @@
         <div class="flex flex-col gap-3 md:flex-row">
           <Textarea
             v-model="chatInput"
-            placeholder="输入你的问题..."
+            :placeholder="localeStore.t.aiChatPlaceholder"
             class="min-h-20 flex-1"
             @keydown.enter.exact.prevent="sendChat"
           />
           <Button
-            class="h-11 rounded-xl bg-ink px-6 text-white hover:bg-clay"
+            class="h-11 rounded-xl bg-ink px-6 text-paper-bg hover:bg-clay dark:bg-clay dark:text-paper-bg"
             :disabled="isChatting"
             @click="sendChat"
           >
-            {{ isChatting ? "处理中..." : "发送" }}
+            {{ isChatting ? localeStore.t.aiProcessing : localeStore.t.aiSend }}
           </Button>
         </div>
-        <p v-if="useChatStream && !userStore.isLoggedIn" class="text-xs text-clay">
-          流式对话需要登录，未登录时将自动使用同步模式。
+        <p
+          v-if="useChatStream && !userStore.isLoggedIn"
+          class="text-xs text-clay"
+        >
+          {{ localeStore.t.aiChatStreamHint }}
         </p>
       </CardContent>
     </Card>
@@ -238,22 +281,38 @@
       <!-- 内容助手 -->
       <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-        <CardTitle class="font-serif text-2xl text-ink">内容助手</CardTitle>
-      </CardHeader>
-      <CardContent class="space-y-5">
+          <CardTitle class="font-serif text-2xl text-ink">
+            {{ localeStore.t.aiContentAssistantTitle }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-5">
           <Textarea
             v-model="assistantContent"
-            placeholder="粘贴正文内容，生成摘要/标题/标签"
+            :placeholder="localeStore.t.aiContentPlaceholder"
             class="min-h-32"
           />
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">摘要长度</label>
-              <Input v-model.number="assistantMaxLength" type="number" min="50" max="500" />
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiSummaryLength }}
+              </label>
+              <Input
+                v-model.number="assistantMaxLength"
+                type="number"
+                min="50"
+                max="500"
+              />
             </div>
             <div class="space-y-2">
-              <label class="text-xs font-medium text-ink-light">标题/标签数量</label>
-              <Input v-model.number="assistantCount" type="number" min="1" max="10" />
+              <label class="text-xs font-medium text-ink-light">
+                {{ localeStore.t.aiTitleTagCount }}
+              </label>
+              <Input
+                v-model.number="assistantCount"
+                type="number"
+                min="1"
+                max="10"
+              />
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -262,7 +321,11 @@
               :disabled="assistantLoading.summary"
               @click="handleSummary"
             >
-              {{ assistantLoading.summary ? "生成中..." : "生成摘要" }}
+              {{
+                assistantLoading.summary
+                  ? localeStore.t.aiGenerating
+                  : localeStore.t.aiGenerateSummary
+              }}
             </Button>
             <Button
               variant="outline"
@@ -270,7 +333,11 @@
               :disabled="assistantLoading.titles"
               @click="handleTitles"
             >
-              {{ assistantLoading.titles ? "生成中..." : "推荐标题" }}
+              {{
+                assistantLoading.titles
+                  ? localeStore.t.aiGenerating
+                  : localeStore.t.aiSuggestTitles
+              }}
             </Button>
             <Button
               variant="outline"
@@ -278,7 +345,11 @@
               :disabled="assistantLoading.tags"
               @click="handleTags"
             >
-              {{ assistantLoading.tags ? "生成中..." : "推荐标签" }}
+              {{
+                assistantLoading.tags
+                  ? localeStore.t.aiGenerating
+                  : localeStore.t.aiSuggestTags
+              }}
             </Button>
           </div>
         </CardContent>
@@ -287,12 +358,19 @@
       <!-- 写作助手 -->
       <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle class="font-serif text-2xl text-ink">写作助手</CardTitle>
+          <CardTitle class="font-serif text-2xl text-ink">
+            {{ localeStore.t.aiWritingAssistantTitle }}
+          </CardTitle>
         </CardHeader>
         <CardContent class="space-y-5">
           <div class="space-y-2">
-            <label class="text-xs font-medium text-ink-light">文章主题</label>
-            <Input v-model="outlineTopic" placeholder="例如：Java 21 新特性总结" />
+            <label class="text-xs font-medium text-ink-light">
+              {{ localeStore.t.aiTopicLabel }}
+            </label>
+            <Input
+              v-model="outlineTopic"
+              :placeholder="localeStore.t.aiTopicPlaceholder"
+            />
           </div>
           <Button
             variant="outline"
@@ -300,11 +378,15 @@
             :disabled="writingLoading.outline"
             @click="handleOutline"
           >
-            {{ writingLoading.outline ? "生成中..." : "生成大纲" }}
+            {{
+              writingLoading.outline
+                ? localeStore.t.aiGenerating
+                : localeStore.t.aiGenerateOutline
+            }}
           </Button>
           <Textarea
             v-model="writingContent"
-            placeholder="输入文章内容，用于续写/润色/翻译"
+            :placeholder="localeStore.t.aiWritingPlaceholder"
             class="min-h-32"
           />
           <div class="flex flex-wrap gap-2">
@@ -313,7 +395,11 @@
               :disabled="writingLoading.continue"
               @click="handleContinue"
             >
-              {{ writingLoading.continue ? "处理中..." : "续写文章" }}
+              {{
+                writingLoading.continue
+                  ? localeStore.t.aiProcessing
+                  : localeStore.t.aiContinueArticle
+              }}
             </Button>
             <Button
               variant="outline"
@@ -321,7 +407,11 @@
               :disabled="writingLoading.polish"
               @click="handlePolish"
             >
-              {{ writingLoading.polish ? "处理中..." : "润色" }}
+              {{
+                writingLoading.polish
+                  ? localeStore.t.aiProcessing
+                  : localeStore.t.aiPolish
+              }}
             </Button>
             <Button
               variant="outline"
@@ -329,7 +419,11 @@
               :disabled="writingLoading.translate"
               @click="handleTranslate"
             >
-              {{ writingLoading.translate ? "处理中..." : "翻译" }}
+              {{
+                writingLoading.translate
+                  ? localeStore.t.aiProcessing
+                  : localeStore.t.aiTranslate
+              }}
             </Button>
             <Button
               v-if="writingLoading.continue && useWritingStream"
@@ -337,95 +431,157 @@
               class="rounded-full text-clay"
               @click="stopWritingStream"
             >
-              停止续写
+              {{ localeStore.t.aiStopContinue }}
             </Button>
           </div>
           <div class="space-y-2">
-            <label class="text-xs font-medium text-ink-light">翻译目标语言</label>
-            <Input v-model="targetLanguage" placeholder="例如：英文 / 日文" />
+            <label class="text-xs font-medium text-ink-light">
+              {{ localeStore.t.aiTargetLanguage }}
+            </label>
+            <Input
+              v-model="targetLanguage"
+              :placeholder="localeStore.t.aiTargetPlaceholder"
+            />
           </div>
-          <p v-if="useWritingStream && !userStore.isLoggedIn" class="text-xs text-clay">
-            续写流式输出需要登录，未登录时将自动使用同步模式。
+          <p
+            v-if="useWritingStream && !userStore.isLoggedIn"
+            class="text-xs text-clay"
+          >
+            {{ localeStore.t.aiWritingStreamHint }}
           </p>
         </CardContent>
       </Card>
     </div>
 
-    <Sheet :open="isResultPanelOpen" @update:open="setResultPanelOpen">
-      <SheetContent
-        side="right"
-        class="w-full border-ink/10 bg-paper-card p-0 sm:max-w-md"
+    <Dialog :open="isResultPanelOpen" @update:open="setResultPanelOpen">
+      <DialogContent
+        class="sketch-dialog w-[92vw] max-w-3xl rounded-2xl border-ink/10 bg-paper-card p-0 shadow-soft"
       >
-        <SheetHeader class="border-b border-ink/10 pr-12">
+        <DialogHeader class="border-b border-ink/10 px-6 py-4 pr-16 sm:pr-20">
           <div class="flex items-start justify-between gap-3">
             <div class="space-y-1">
-              <SheetTitle class="font-serif text-2xl text-ink">生成结果</SheetTitle>
-              <SheetDescription class="text-xs text-ink-light">
-                生成内容集中展示，可折叠收起。
-              </SheetDescription>
+              <DialogTitle class="font-serif text-2xl text-ink">
+                {{ localeStore.t.aiResultTitle }}
+              </DialogTitle>
+              <DialogDescription class="text-xs text-ink-light">
+                {{ localeStore.t.aiResultSubtitle }}
+              </DialogDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              class="rounded-full border-ink/20 text-ink"
-              :disabled="!hasResults"
-              @click="clearResults"
-            >
-              清空结果
-            </Button>
+            <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
+              <Button
+                variant="outline"
+                size="sm"
+                class="h-8 rounded-full border-ink/20 px-3 text-xs text-ink"
+                @click="
+                  resultSections.summary = false;
+                  resultSections.titles = false;
+                  resultSections.tags = false;
+                  resultSections.outline = false;
+                  resultSections.continuation = false;
+                  resultSections.polish = false;
+                  resultSections.translate = false;
+                "
+              >
+                {{ localeStore.t.aiCollapseAll }}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                class="h-8 rounded-full border-ink/20 px-3 text-xs text-ink"
+                @click="
+                  resultSections.summary = true;
+                  resultSections.titles = true;
+                  resultSections.tags = true;
+                  resultSections.outline = true;
+                  resultSections.continuation = true;
+                  resultSections.polish = true;
+                  resultSections.translate = true;
+                "
+              >
+                {{ localeStore.t.aiExpandAll }}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                class="h-8 rounded-full border-ink/20 px-3 text-xs text-ink"
+                :disabled="!hasResults"
+                @click="clearResults"
+              >
+                {{ localeStore.t.aiClearResults }}
+              </Button>
+            </div>
           </div>
-        </SheetHeader>
-        <div class="space-y-3 p-4">
+        </DialogHeader>
+        <div
+          ref="resultBodyRef"
+          class="result-body space-y-3 overflow-y-auto px-6 py-4"
+        >
           <div v-if="!hasResults" class="text-sm text-ink-light">
-            暂无生成结果。
+            {{ localeStore.t.aiNoResults }}
           </div>
 
           <Collapsible
             v-if="assistantSummary"
             :open="resultSections.summary"
-            class="space-y-2"
             @update:open="(value) => (resultSections.summary = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>摘要</span>
+              <span>{{ localeStore.t.aiSectionSummary }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.summary ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
             <CollapsibleContent
-              class="rounded-xl border border-ink/10 bg-paper-card p-3 text-sm text-ink-light whitespace-pre-wrap"
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="resultSections.summary ? 'sketch-open' : 'sketch-closed'"
             >
-              {{ assistantSummary }}
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3 text-sm text-ink-light whitespace-pre-wrap"
+                >
+                  {{ assistantSummary }}
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
           <Collapsible
             v-if="assistantTitles.length"
             :open="resultSections.titles"
-            class="space-y-2"
             @update:open="(value) => (resultSections.titles = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>标题建议</span>
+              <span>{{ localeStore.t.aiSectionTitles }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.titles ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="title in assistantTitles"
-                  :key="title"
-                  class="rounded-full border border-ink/10 bg-paper-dark/60 px-3 py-1 text-xs text-ink"
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="resultSections.titles ? 'sketch-open' : 'sketch-closed'"
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
-                  {{ title }}
-                </span>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="title in assistantTitles"
+                      :key="title"
+                      class="rounded-full border border-ink/10 bg-paper-dark/60 px-2.5 py-0.5 text-xs text-ink"
+                    >
+                      {{ title }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -433,27 +589,36 @@
           <Collapsible
             v-if="assistantTags.length"
             :open="resultSections.tags"
-            class="space-y-2"
             @update:open="(value) => (resultSections.tags = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>标签建议</span>
+              <span>{{ localeStore.t.aiSectionTags }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.tags ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="tag in assistantTags"
-                  :key="tag"
-                  class="rounded-full border border-ink/10 bg-paper-card px-3 py-1 text-xs text-ink-light"
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="resultSections.tags ? 'sketch-open' : 'sketch-closed'"
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
-                  # {{ tag }}
-                </span>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="tag in assistantTags"
+                      :key="tag"
+                      class="rounded-full border border-ink/10 bg-paper-card px-2.5 py-0.5 text-xs text-ink-light"
+                    >
+                      # {{ tag }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -461,110 +626,183 @@
           <Collapsible
             v-if="outline.length"
             :open="resultSections.outline"
-            class="space-y-2"
             @update:open="(value) => (resultSections.outline = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>大纲</span>
+              <span>{{ localeStore.t.aiSectionOutline }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.outline ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <ul class="list-disc pl-5 text-sm text-ink-light">
-                <li v-for="item in outline" :key="item">{{ item }}</li>
-              </ul>
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="resultSections.outline ? 'sketch-open' : 'sketch-closed'"
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
+                >
+                  <ul class="list-disc pl-5 text-sm text-ink-light">
+                    <li v-for="item in outline" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
           <Collapsible
             v-if="writingLoading.continue || continueOutput"
             :open="resultSections.continuation"
-            class="space-y-2"
             @update:open="(value) => (resultSections.continuation = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>续写结果</span>
+              <span>{{ localeStore.t.aiSectionContinuation }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.continuation ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <p v-if="continueOutput" class="text-sm text-ink-light whitespace-pre-wrap">
-                {{ continueOutput }}
-              </p>
-              <p v-else class="text-sm text-ink-light">续写生成中...</p>
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="
+                resultSections.continuation ? 'sketch-open' : 'sketch-closed'
+              "
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
+                >
+                  <MarkdownRenderer
+                    v-if="continueOutput"
+                    :content="continueOutput"
+                    class="prose-sm"
+                  />
+                  <p v-else class="text-sm text-ink-light">
+                    {{ localeStore.t.aiContinuationGenerating }}
+                  </p>
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
           <Collapsible
             v-if="polishOutput"
             :open="resultSections.polish"
-            class="space-y-2"
             @update:open="(value) => (resultSections.polish = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>润色结果</span>
+              <span>{{ localeStore.t.aiSectionPolish }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.polish ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <p class="text-sm text-ink-light whitespace-pre-wrap">{{ polishOutput }}</p>
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="resultSections.polish ? 'sketch-open' : 'sketch-closed'"
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
+                >
+                  <MarkdownRenderer :content="polishOutput" class="prose-sm" />
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
           <Collapsible
             v-if="translateOutput"
             :open="resultSections.translate"
-            class="space-y-2"
             @update:open="(value) => (resultSections.translate = value)"
           >
             <CollapsibleTrigger
               class="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-paper-dark/30 px-3 py-2 text-sm text-ink"
             >
-              <span>翻译结果</span>
+              <span>{{ localeStore.t.aiSectionTranslate }}</span>
               <ChevronDown
-                class="size-4 transition-transform"
+                class="size-4 transition-transform duration-300"
                 :class="resultSections.translate ? 'rotate-180' : ''"
               />
             </CollapsibleTrigger>
-            <CollapsibleContent class="rounded-xl border border-ink/10 bg-paper-card p-3">
-              <p class="text-sm text-ink-light whitespace-pre-wrap">{{ translateOutput }}</p>
+            <CollapsibleContent
+              :force-mount="true"
+              class="sketch-collapse"
+              :class="
+                resultSections.translate ? 'sketch-open' : 'sketch-closed'
+              "
+            >
+              <div class="sketch-collapse-inner">
+                <div
+                  class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
+                >
+                  <MarkdownRenderer
+                    :content="translateOutput"
+                    class="prose-sm"
+                  />
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
+
+    <div
+      v-if="isResultMinimized && hasResults"
+      class="fixed bottom-6 right-6 z-50"
+    >
+      <Button
+        variant="outline"
+        class="h-10 rounded-full border-ink/20 bg-paper-card px-4 text-sm text-ink shadow-soft"
+        @click="openResultPanel()"
+      >
+        {{ localeStore.t.aiResultMinimized }}
+      </Button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { toast } from "vue-sonner";
 import { aiApi } from "@/api/ai";
 import type { AiMessage, AiChatRequest } from "@/types/api";
 import { useUserStore } from "@/stores/user";
+import { useLocaleStore } from "@/stores/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
 import { ChevronDown } from "lucide-vue-next";
@@ -579,6 +817,7 @@ type ResultSectionKey =
   | "translate";
 
 const userStore = useUserStore();
+const localeStore = useLocaleStore();
 
 const storageKeys = {
   baseUrl: "ai.baseUrl",
@@ -589,7 +828,8 @@ const storageKeys = {
 
 const aiBaseUrl = ref(localStorage.getItem(storageKeys.baseUrl) || "");
 const aiModel = ref(localStorage.getItem(storageKeys.model) || "");
-const storedRememberKey = localStorage.getItem(storageKeys.rememberKey) === "true";
+const storedRememberKey =
+  localStorage.getItem(storageKeys.rememberKey) === "true";
 const rememberKey = ref(storedRememberKey);
 const aiApiKey = ref(
   storedRememberKey
@@ -601,7 +841,7 @@ const chatMessages = ref<AiMessage[]>([]);
 const chatInput = ref("");
 const chatProvider = ref("");
 const chatTemperature = ref(0.7);
-const chatMaxTokens = ref(800);
+const chatMaxTokens = ref(4096);
 const useChatStream = ref(true);
 const isChatting = ref(false);
 const chatController = ref<AbortController | null>(null);
@@ -626,7 +866,7 @@ const writingContent = ref("");
 const continueOutput = ref("");
 const polishOutput = ref("");
 const translateOutput = ref("");
-const targetLanguage = ref("英文");
+const targetLanguage = ref(localeStore.locale === "zh-CN" ? "英文" : "English");
 const writingProvider = ref("");
 const useWritingStream = ref(true);
 const writingController = ref<AbortController | null>(null);
@@ -638,6 +878,8 @@ const writingLoading = ref({
 });
 
 const isResultPanelOpen = ref(false);
+const isResultMinimized = ref(false);
+const resultBodyRef = ref<HTMLElement | null>(null);
 const resultSections = reactive<Record<ResultSectionKey, boolean>>({
   summary: true,
   titles: true,
@@ -649,13 +891,13 @@ const resultSections = reactive<Record<ResultSectionKey, boolean>>({
 });
 const hasResults = computed(
   () =>
-    Boolean(assistantSummary.value)
-    || assistantTitles.value.length > 0
-    || assistantTags.value.length > 0
-    || outline.value.length > 0
-    || Boolean(continueOutput.value)
-    || Boolean(polishOutput.value)
-    || Boolean(translateOutput.value),
+    Boolean(assistantSummary.value) ||
+    assistantTitles.value.length > 0 ||
+    assistantTags.value.length > 0 ||
+    outline.value.length > 0 ||
+    Boolean(continueOutput.value) ||
+    Boolean(polishOutput.value) ||
+    Boolean(translateOutput.value),
 );
 
 watch(
@@ -664,6 +906,18 @@ watch(
     scrollChatToBottom();
   },
 );
+
+function animateResultBodyHeight() {
+  const el = resultBodyRef.value;
+  if (!el) return;
+  const currentHeight = el.getBoundingClientRect().height;
+  el.style.height = `${currentHeight}px`;
+  requestAnimationFrame(() => {
+    const maxHeight = Math.floor(window.innerHeight * 0.7);
+    const targetHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${targetHeight}px`;
+  });
+}
 
 /**
  * 滚动聊天窗口到底部。
@@ -719,11 +973,54 @@ watch(aiApiKey, (value) => {
   }
 });
 
+watch(
+  isResultPanelOpen,
+  async (open) => {
+    if (!open) return;
+    await nextTick();
+    animateResultBodyHeight();
+  },
+  { flush: "post" },
+);
+
+watch(
+  resultSections,
+  async () => {
+    await nextTick();
+    animateResultBodyHeight();
+  },
+  { deep: true, flush: "post" },
+);
+
+watch(
+  [
+    assistantSummary,
+    assistantTitles,
+    assistantTags,
+    outline,
+    continueOutput,
+    polishOutput,
+    translateOutput,
+  ],
+  async () => {
+    await nextTick();
+    animateResultBodyHeight();
+  },
+  { deep: true, flush: "post" },
+);
+
 /**
  * 控制结果面板的显示状态。
  */
 function setResultPanelOpen(value: boolean) {
   isResultPanelOpen.value = value;
+  if (value) {
+    isResultMinimized.value = false;
+    return;
+  }
+  if (hasResults.value) {
+    isResultMinimized.value = true;
+  }
 }
 
 /**
@@ -731,6 +1028,7 @@ function setResultPanelOpen(value: boolean) {
  */
 function openResultPanel(section?: ResultSectionKey) {
   isResultPanelOpen.value = true;
+  isResultMinimized.value = false;
   if (section) {
     resultSections[section] = true;
   }
@@ -748,6 +1046,7 @@ function clearResults() {
   polishOutput.value = "";
   translateOutput.value = "";
   isResultPanelOpen.value = false;
+  isResultMinimized.value = false;
 }
 
 function resetChat() {
@@ -777,11 +1076,11 @@ function buildOverrides() {
   const apiKey = aiApiKey.value.trim();
 
   if (baseUrl && !/^https?:\/\//i.test(baseUrl)) {
-    toast.error("Base URL 需以 http(s):// 开头");
+    toast.error(localeStore.t.aiErrorBaseUrlInvalid);
     return null;
   }
   if (baseUrl && !apiKey) {
-    toast.error("使用自定义 Base URL 需要 API Key");
+    toast.error(localeStore.t.aiErrorBaseUrlNeedKey);
     return null;
   }
 
@@ -799,7 +1098,10 @@ async function sendChat() {
   const overrides = buildOverrides();
   if (!overrides) return;
 
-  const nextMessages: AiMessage[] = [...chatMessages.value, { role: "user", content }];
+  const nextMessages: AiMessage[] = [
+    ...chatMessages.value,
+    { role: "user", content },
+  ];
   chatMessages.value = nextMessages;
   chatInput.value = "";
 
@@ -820,7 +1122,10 @@ async function sendChat() {
   }
 
   if (useChatStream.value) {
-    chatMessages.value = [...chatMessages.value, { role: "assistant", content: "" }];
+    chatMessages.value = [
+      ...chatMessages.value,
+      { role: "assistant", content: "" },
+    ];
     const assistantIndex = chatMessages.value.length - 1;
     isChatting.value = true;
     chatController.value = aiApi.chatStream(payload, {
@@ -834,7 +1139,9 @@ async function sendChat() {
         scrollChatToBottom();
       },
       onError: (message) => {
-        toast.error("流式对话失败", { description: message });
+        toast.error(localeStore.t.aiErrorChatStreamFailed, {
+          description: message,
+        });
         isChatting.value = false;
         chatController.value = null;
       },
@@ -845,10 +1152,13 @@ async function sendChat() {
   isChatting.value = true;
   try {
     const response = await aiApi.chat(payload);
-    chatMessages.value = [...chatMessages.value, { role: "assistant", content: response }];
+    chatMessages.value = [
+      ...chatMessages.value,
+      { role: "assistant", content: response },
+    ];
   } catch (err: any) {
-    toast.error("对话失败", {
-      description: err.message || "请稍后重试",
+    toast.error(localeStore.t.aiErrorChatFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
     });
   } finally {
     isChatting.value = false;
@@ -857,7 +1167,7 @@ async function sendChat() {
 
 async function handleSummary() {
   if (!assistantContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -872,7 +1182,9 @@ async function handleSummary() {
     });
     openResultPanel("summary");
   } catch (err: any) {
-    toast.error("生成摘要失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorSummaryFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     assistantLoading.value.summary = false;
   }
@@ -880,7 +1192,7 @@ async function handleSummary() {
 
 async function handleTitles() {
   if (!assistantContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -895,7 +1207,9 @@ async function handleTitles() {
     });
     openResultPanel("titles");
   } catch (err: any) {
-    toast.error("推荐标题失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorTitlesFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     assistantLoading.value.titles = false;
   }
@@ -903,7 +1217,7 @@ async function handleTitles() {
 
 async function handleTags() {
   if (!assistantContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -918,7 +1232,9 @@ async function handleTags() {
     });
     openResultPanel("tags");
   } catch (err: any) {
-    toast.error("推荐标签失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorTagsFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     assistantLoading.value.tags = false;
   }
@@ -926,7 +1242,7 @@ async function handleTags() {
 
 async function handleOutline() {
   if (!outlineTopic.value.trim()) {
-    toast.error("请输入文章主题");
+    toast.error(localeStore.t.aiErrorTopicRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -940,7 +1256,9 @@ async function handleOutline() {
     });
     openResultPanel("outline");
   } catch (err: any) {
-    toast.error("生成大纲失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorOutlineFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     writingLoading.value.outline = false;
   }
@@ -948,7 +1266,7 @@ async function handleOutline() {
 
 async function handleContinue() {
   if (!writingContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -977,7 +1295,9 @@ async function handleContinue() {
           writingController.value = null;
         },
         onError: (message) => {
-          toast.error("续写失败", { description: message });
+          toast.error(localeStore.t.aiErrorContinueFailed, {
+            description: message,
+          });
           writingLoading.value.continue = false;
           writingController.value = null;
         },
@@ -995,7 +1315,9 @@ async function handleContinue() {
     });
     openResultPanel("continuation");
   } catch (err: any) {
-    toast.error("续写失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorContinueFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     writingLoading.value.continue = false;
   }
@@ -1012,11 +1334,17 @@ function stopWritingStream() {
 onBeforeUnmount(() => {
   stopChatStream();
   stopWritingStream();
+  window.removeEventListener("resize", animateResultBodyHeight);
+});
+
+onMounted(() => {
+  window.addEventListener("resize", animateResultBodyHeight);
+  nextTick(() => animateResultBodyHeight());
 });
 
 async function handlePolish() {
   if (!writingContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -1030,7 +1358,9 @@ async function handlePolish() {
     });
     openResultPanel("polish");
   } catch (err: any) {
-    toast.error("润色失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorPolishFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     writingLoading.value.polish = false;
   }
@@ -1038,11 +1368,11 @@ async function handlePolish() {
 
 async function handleTranslate() {
   if (!writingContent.value.trim()) {
-    toast.error("请输入文章内容");
+    toast.error(localeStore.t.aiErrorContentRequired);
     return;
   }
   if (!targetLanguage.value.trim()) {
-    toast.error("请输入目标语言");
+    toast.error(localeStore.t.aiErrorTargetLanguageRequired);
     return;
   }
   const overrides = buildOverrides();
@@ -1057,9 +1387,104 @@ async function handleTranslate() {
     });
     openResultPanel("translate");
   } catch (err: any) {
-    toast.error("翻译失败", { description: err.message || "请稍后重试" });
+    toast.error(localeStore.t.aiErrorTranslateFailed, {
+      description: err.message || localeStore.t.aiErrorGenericRetry,
+    });
   } finally {
     writingLoading.value.translate = false;
   }
 }
 </script>
+
+<style scoped>
+@keyframes sketch-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98) rotate(-0.35deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01) rotate(0.2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sketch-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98) rotate(0.4deg);
+  }
+}
+
+.sketch-dialog[data-state="open"] {
+  animation: sketch-pop 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 50% 20%;
+}
+
+.sketch-dialog[data-state="closed"] {
+  animation: sketch-out 240ms ease-in;
+}
+
+.result-body {
+  height: 70vh;
+  max-height: 70vh;
+  transition: height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 手绘风折叠动画 - 使用 grid 技巧实现稳定的高度过渡 */
+.sketch-collapse {
+  display: grid;
+  overflow: hidden;
+  transform-origin: top center;
+  transition:
+    grid-template-rows 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms ease-out,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: grid-template-rows, opacity, transform;
+}
+
+/* 内层容器用于隐藏溢出内容 */
+.sketch-collapse-inner {
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 360ms ease,
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 收起状态 */
+.sketch-collapse.sketch-closed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-6px) rotate(-0.25deg);
+}
+
+/* 展开状态 */
+.sketch-collapse.sketch-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+.sketch-collapse.sketch-open .sketch-collapse-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+:global(html) {
+  scrollbar-gutter: stable;
+}
+
+:global(body) {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+</style>

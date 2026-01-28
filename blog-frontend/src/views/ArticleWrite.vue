@@ -11,349 +11,354 @@
         </p>
       </header>
 
-        <!-- 文章表单 -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- 标题 -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-ink"
-              >标题 <span class="text-destructive">*</span></label
-            >
-            <input
-              v-model="form.title"
-              type="text"
-              placeholder="请输入文章标题"
-              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
-              required
+      <!-- 文章表单 -->
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <!-- 标题 -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-ink"
+            >标题 <span class="text-destructive">*</span></label
+          >
+          <input
+            v-model="form.title"
+            type="text"
+            placeholder="请输入文章标题"
+            class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+            required
+          />
+        </div>
+
+        <!-- 摘要 -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-ink">摘要</label>
+          <Textarea
+            v-model="form.summary"
+            placeholder="请输入文章摘要（可选）"
+            class="min-h-25"
+          />
+        </div>
+
+        <!-- 封面图片 -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-ink">封面图片</label>
+          <input
+            v-model="form.coverUrl"
+            type="url"
+            placeholder="请输入封面图片 URL（可选）"
+            class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+          />
+          <div v-if="form.coverUrl" class="mt-2">
+            <img
+              :src="form.coverUrl"
+              alt="封面预览"
+              class="max-w-xs rounded-xl border border-ink/10"
             />
           </div>
+        </div>
 
-          <!-- 摘要 -->
+        <!-- 分类和标签 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 分类 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-ink">摘要</label>
-            <Textarea
-              v-model="form.summary"
-              placeholder="请输入文章摘要（可选）"
-              class="min-h-25"
-            />
-          </div>
-
-          <!-- 封面图片 -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-ink">封面图片</label>
-            <input
-              v-model="form.coverUrl"
-              type="url"
-              placeholder="请输入封面图片 URL（可选）"
-              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
-            />
-            <div v-if="form.coverUrl" class="mt-2">
-              <img
-                :src="form.coverUrl"
-                alt="封面预览"
-                class="max-w-xs rounded-xl border border-ink/10"
-              />
+            <label class="text-sm font-medium text-ink">分类</label>
+            <div class="space-y-2">
+              <div class="relative">
+                <input
+                  v-model="categorySearchKeyword"
+                  type="text"
+                  placeholder="搜索或输入新分类名称..."
+                  class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+                  @focus="showCategoryDropdown = true"
+                />
+                <!-- 分类下拉列表 -->
+                <div
+                  v-if="showCategoryDropdown"
+                  class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
+                >
+                  <!-- 已选分类 -->
+                  <div
+                    v-if="form.categoryId"
+                    class="border-b border-ink/10 bg-paper-dark/70 p-2"
+                  >
+                    <div class="flex items-center justify-between text-sm">
+                      <span class="font-medium text-ink"
+                        >已选：{{ getCategoryName(form.categoryId) }}</span
+                      >
+                      <button
+                        type="button"
+                        @click="clearCategory"
+                        class="text-destructive hover:text-destructive/80"
+                      >
+                        清除
+                      </button>
+                    </div>
+                  </div>
+                  <!-- 创建新分类 -->
+                  <button
+                    v-if="
+                      categorySearchKeyword &&
+                      !filteredCategories.some(
+                        (c) => c.name === categorySearchKeyword,
+                      )
+                    "
+                    type="button"
+                    @click="createNewCategory"
+                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
+                  >
+                    <span>+ 创建分类 "{{ categorySearchKeyword }}"</span>
+                  </button>
+                  <!-- 分类列表 -->
+                  <button
+                    v-for="category in filteredCategories"
+                    :key="category.id"
+                    type="button"
+                    @click="selectCategory(category.id)"
+                    class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
+                    :class="{
+                      'bg-clay/10': form.categoryId === category.id,
+                    }"
+                  >
+                    <span>{{ category.name }}</span>
+                    <!-- 删除按钮（仅创建者可见） -->
+                    <button
+                      v-if="
+                        category.creatorId &&
+                        userStore.userInfo?.id === category.creatorId
+                      "
+                      type="button"
+                      @click.stop="deleteCategory(category.id, category.name)"
+                      class="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 text-xs px-2"
+                      title="删除分类"
+                    >
+                      删除
+                    </button>
+                  </button>
+                  <div
+                    v-if="
+                      filteredCategories.length === 0 && !categorySearchKeyword
+                    "
+                    class="px-3 py-2 text-sm text-ink-light"
+                  >
+                    暂无分类
+                  </div>
+                </div>
+              </div>
+              <!-- 已选分类显示 -->
+              <div
+                v-if="form.categoryId && !showCategoryDropdown"
+                class="text-sm text-ink-light"
+              >
+                已选：{{ getCategoryName(form.categoryId) }}
+              </div>
             </div>
           </div>
 
-          <!-- 分类和标签 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 分类 -->
+          <!-- 标签 -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-ink">标签</label>
             <div class="space-y-2">
-              <label class="text-sm font-medium text-ink">分类</label>
-              <div class="space-y-2">
-                <div class="relative">
-                  <input
-                    v-model="categorySearchKeyword"
-                    type="text"
-                    placeholder="搜索或输入新分类名称..."
-                    class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
-                    @focus="showCategoryDropdown = true"
-                  />
-                  <!-- 分类下拉列表 -->
-                  <div
-                    v-if="showCategoryDropdown"
-                    class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
-                  >
-                    <!-- 已选分类 -->
-                    <div
-                      v-if="form.categoryId"
-                      class="border-b border-ink/10 bg-paper-dark/70 p-2"
-                    >
-                      <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium text-ink"
-                          >已选：{{ getCategoryName(form.categoryId) }}</span
-                        >
-                        <button
-                          type="button"
-                          @click="clearCategory"
-                          class="text-destructive hover:text-destructive/80"
-                        >
-                          清除
-                        </button>
-                      </div>
-                    </div>
-                    <!-- 创建新分类 -->
-                    <button
-                      v-if="
-                        categorySearchKeyword &&
-                        !filteredCategories.some(
-                          (c) => c.name === categorySearchKeyword,
-                        )
-                      "
-                      type="button"
-                      @click="createNewCategory"
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
-                    >
-                      <span>+ 创建分类 "{{ categorySearchKeyword }}"</span>
-                    </button>
-                    <!-- 分类列表 -->
-                    <button
-                      v-for="category in filteredCategories"
-                      :key="category.id"
-                      type="button"
-                      @click="selectCategory(category.id)"
-                      class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
-                      :class="{
-                        'bg-clay/10': form.categoryId === category.id,
-                      }"
-                    >
-                      <span>{{ category.name }}</span>
-                      <!-- 删除按钮（仅创建者可见） -->
-                      <button
-                        v-if="
-                          category.creatorId &&
-                          userStore.userInfo?.id === category.creatorId
-                        "
-                        type="button"
-                        @click.stop="deleteCategory(category.id, category.name)"
-                        class="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 text-xs px-2"
-                        title="删除分类"
-                      >
-                        删除
-                      </button>
-                    </button>
-                    <div
-                      v-if="
-                        filteredCategories.length === 0 &&
-                        !categorySearchKeyword
-                      "
-                      class="px-3 py-2 text-sm text-ink-light"
-                    >
-                      暂无分类
-                    </div>
-                  </div>
-                </div>
-                <!-- 已选分类显示 -->
-                <div
-                  v-if="form.categoryId && !showCategoryDropdown"
+              <!-- 已选标签 -->
+              <div
+                class="flex min-h-10 flex-wrap gap-2 rounded-xl border border-ink/10 bg-paper-card p-2"
+              >
+                <Badge
+                  v-for="tagId in form.tagIds"
+                  :key="tagId"
+                  variant="secondary"
+                  class="cursor-pointer rounded-full bg-paper-dark text-ink"
+                  @click="removeTag(tagId)"
+                >
+                  {{ getTagName(tagId) }}
+                  <span class="ml-1">&times;</span>
+                </Badge>
+                <span
+                  v-if="form.tagIds.length === 0"
                   class="text-sm text-ink-light"
+                  >点击下方添加标签</span
                 >
-                  已选：{{ getCategoryName(form.categoryId) }}
-                </div>
               </div>
-            </div>
-
-            <!-- 标签 -->
-            <div class="space-y-2">
-              <label class="text-sm font-medium text-ink">标签</label>
-              <div class="space-y-2">
-                <!-- 已选标签 -->
+              <!-- 标签搜索 -->
+              <div class="relative">
+                <input
+                  v-model="tagSearchKeyword"
+                  type="text"
+                  placeholder="搜索或输入新标签名称..."
+                  class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+                  @focus="showTagDropdown = true"
+                />
+                <!-- 标签下拉列表 -->
                 <div
-                  class="flex min-h-10 flex-wrap gap-2 rounded-xl border border-ink/10 bg-paper-card p-2"
+                  v-if="showTagDropdown"
+                  class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
                 >
-                  <Badge
-                    v-for="tagId in form.tagIds"
-                    :key="tagId"
-                    variant="secondary"
-                    class="cursor-pointer rounded-full bg-paper-dark text-ink"
-                    @click="removeTag(tagId)"
+                  <!-- 创建新标签 -->
+                  <button
+                    v-if="
+                      tagSearchKeyword &&
+                      !filteredTags.some((t) => t.name === tagSearchKeyword)
+                    "
+                    type="button"
+                    @click="createNewTag"
+                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
                   >
-                    {{ getTagName(tagId) }}
-                    <span class="ml-1">&times;</span>
-                  </Badge>
-                  <span
-                    v-if="form.tagIds.length === 0"
-                    class="text-sm text-ink-light"
-                    >点击下方添加标签</span
+                    <span>+ 创建标签 "{{ tagSearchKeyword }}"</span>
+                  </button>
+                  <!-- 标签列表 -->
+                  <button
+                    v-for="tag in filteredTags"
+                    :key="tag.id"
+                    type="button"
+                    @click="addTag(tag.id)"
+                    class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
+                    :class="{ 'bg-clay/10': form.tagIds.includes(tag.id) }"
                   >
-                </div>
-                <!-- 标签搜索 -->
-                <div class="relative">
-                  <input
-                    v-model="tagSearchKeyword"
-                    type="text"
-                    placeholder="搜索或输入新标签名称..."
-                    class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
-                    @focus="showTagDropdown = true"
-                  />
-                  <!-- 标签下拉列表 -->
-                  <div
-                    v-if="showTagDropdown"
-                    class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
-                  >
-                    <!-- 创建新标签 -->
+                    <span>
+                      <span>{{ tag.name }}</span>
+                      <span
+                        v-if="form.tagIds.includes(tag.id)"
+                        class="ml-2 text-clay"
+                        >✓</span
+                      >
+                    </span>
+                    <!-- 删除按钮（仅创建者可见） -->
                     <button
                       v-if="
-                        tagSearchKeyword &&
-                        !filteredTags.some((t) => t.name === tagSearchKeyword)
+                        tag.creatorId &&
+                        userStore.userInfo?.id === tag.creatorId
                       "
                       type="button"
-                      @click="createNewTag"
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
+                      @click.stop="deleteTag(tag.id, tag.name)"
+                      class="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 text-xs px-2"
+                      title="删除标签"
                     >
-                      <span>+ 创建标签 "{{ tagSearchKeyword }}"</span>
+                      删除
                     </button>
-                    <!-- 标签列表 -->
-                    <button
-                      v-for="tag in filteredTags"
-                      :key="tag.id"
-                      type="button"
-                      @click="addTag(tag.id)"
-                      class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
-                      :class="{ 'bg-clay/10': form.tagIds.includes(tag.id) }"
-                    >
-                      <span>
-                        <span>{{ tag.name }}</span>
-                        <span
-                          v-if="form.tagIds.includes(tag.id)"
-                          class="ml-2 text-clay"
-                          >✓</span
-                        >
-                      </span>
-                      <!-- 删除按钮（仅创建者可见） -->
-                      <button
-                        v-if="
-                          tag.creatorId &&
-                          userStore.userInfo?.id === tag.creatorId
-                        "
-                        type="button"
-                        @click.stop="deleteTag(tag.id, tag.name)"
-                        class="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 text-xs px-2"
-                        title="删除标签"
-                      >
-                        删除
-                      </button>
-                    </button>
-                    <div
-                      v-if="filteredTags.length === 0 && !tagSearchKeyword"
-                      class="px-3 py-2 text-sm text-ink-light"
-                    >
-                      暂无标签
-                    </div>
+                  </button>
+                  <div
+                    v-if="filteredTags.length === 0 && !tagSearchKeyword"
+                    class="px-3 py-2 text-sm text-ink-light"
+                  >
+                    暂无标签
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 专栏 -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-ink">专栏</label>
-            <select
-              v-model="form.columnId"
-              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+        <!-- 专栏 -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-ink">专栏</label>
+          <select
+            v-model="form.columnId"
+            class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+          >
+            <option :value="null">不选择</option>
+            <option
+              v-for="column in columns"
+              :key="column.id"
+              :value="column.id"
             >
-              <option :value="null">不选择</option>
-              <option v-for="column in columns" :key="column.id" :value="column.id">
-                {{ column.name }}{{ column.status === 0 ? "（隐藏）" : "" }}
-              </option>
-            </select>
-            <p v-if="columns.length === 0" class="text-xs text-ink-light">
-              暂无专栏，可先在专栏页面创建
-            </p>
-          </div>
+              {{ column.name }}{{ column.status === 0 ? "（隐藏）" : "" }}
+            </option>
+          </select>
+          <p v-if="columns.length === 0" class="text-xs text-ink-light">
+            暂无专栏，可先在专栏页面创建
+          </p>
+        </div>
 
-          <!-- 文章设置 -->
-          <div class="space-y-4">
-            <label class="text-sm font-medium text-ink">文章设置</label>
-            <div class="flex flex-wrap gap-4">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="form.allowComment"
-                  :true-value="1"
-                  :false-value="0"
-                  class="accent-clay"
-                />
-                <span class="text-sm text-ink">允许评论</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="form.isPinned"
-                  :true-value="1"
-                  :false-value="0"
-                  class="accent-clay"
-                />
-                <span class="text-sm text-ink">置顶文章</span>
-              </label>
-            </div>
+        <!-- 文章设置 -->
+        <div class="space-y-4">
+          <label class="text-sm font-medium text-ink">文章设置</label>
+          <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="form.allowComment"
+                :true-value="1"
+                :false-value="0"
+                class="accent-clay"
+              />
+              <span class="text-sm text-ink">允许评论</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="form.isPinned"
+                :true-value="1"
+                :false-value="0"
+                class="accent-clay"
+              />
+              <span class="text-sm text-ink">置顶文章</span>
+            </label>
           </div>
+        </div>
 
-          <!-- Markdown 编辑器 -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-ink"
-              >文章内容 (Markdown)
-              <span class="text-destructive">*</span></label
-            >
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <!-- 编辑区 -->
-              <div class="space-y-2">
-                <div class="text-xs text-ink-lighter">编辑</div>
+        <!-- Markdown 编辑器 -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-ink"
+            >文章内容 (Markdown) <span class="text-destructive">*</span></label
+          >
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- 编辑区 -->
+            <div class="space-y-2">
+              <div class="text-xs text-ink-lighter">编辑</div>
+              <div ref="editorWrap">
                 <Textarea
                   v-model="form.contentMd"
                   placeholder="请使用 Markdown 格式编写文章内容..."
-                  class="min-h-125 font-mono"
+                  class="min-h-[560px] max-h-[560px] overflow-auto font-mono"
                   @paste="handlePasteImage"
                   required
                 />
               </div>
-              <!-- 预览区 -->
-              <div class="space-y-2">
-                <div class="text-xs text-ink-lighter">预览</div>
-                <div
-                  class="min-h-125 overflow-auto rounded-xl border border-ink/10 bg-paper-card p-4"
-                >
-                  <MarkdownRenderer
-                    v-if="form.contentMd"
-                    :content="form.contentMd"
-                  />
-                  <div v-else class="text-ink-light text-sm">
-                    暂无内容
-                  </div>
-                </div>
+            </div>
+            <!-- 预览区 -->
+            <div class="space-y-2">
+              <div class="text-xs text-ink-lighter">预览</div>
+              <div
+                ref="previewWrap"
+                class="min-h-[560px] max-h-[560px] overflow-auto rounded-xl border border-ink/10 bg-paper-card p-4 scrollbar-soft"
+              >
+                <MarkdownRenderer
+                  v-if="form.contentMd"
+                  :content="form.contentMd"
+                />
+                <div v-else class="text-ink-light text-sm">暂无内容</div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 操作按钮 -->
-          <div class="flex flex-wrap gap-4 justify-end pt-6 border-t border-ink/10">
-            <Button
-              type="button"
-              variant="outline"
-              class="rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
-              @click="router.back()"
-            >
-              取消
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              @click="handleSaveDraft"
-              :disabled="loading"
-              class="rounded-xl bg-paper-dark text-ink hover:bg-paper-dark/80"
-            >
-              保存草稿
-            </Button>
-            <Button
-              type="submit"
-              :disabled="loading"
-              class="rounded-xl bg-ink text-white hover:bg-clay"
-            >
-              {{ isEditMode && form.status === 1 ? "更新文章" : "发布文章" }}
-            </Button>
-          </div>
-        </form>
+        <!-- 操作按钮 -->
+        <div
+          class="flex flex-wrap gap-4 justify-end pt-6 border-t border-ink/10"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            class="rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
+            @click="router.back()"
+          >
+            取消
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            @click="handleSaveDraft"
+            :disabled="loading"
+            class="rounded-xl bg-paper-dark text-ink hover:bg-paper-dark/80"
+          >
+            保存草稿
+          </Button>
+          <Button
+            type="submit"
+            :disabled="loading"
+            class="rounded-xl bg-ink text-paper-bg hover:bg-clay dark:bg-clay dark:text-paper-bg"
+          >
+            {{ isEditMode && form.status === 1 ? "更新文章" : "发布文章" }}
+          </Button>
+        </div>
+      </form>
     </div>
 
     <!-- 删除确认对话框 -->
@@ -383,7 +388,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+  watch,
+} from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { toast } from "vue-sonner";
 import { useUserStore } from "@/stores/user";
@@ -411,6 +423,16 @@ import type { Category, Tag, Column } from "@/types/api";
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+
+const editorWrap = ref<HTMLElement | null>(null);
+const previewWrap = ref<HTMLElement | null>(null);
+let editorEl: HTMLTextAreaElement | null = null;
+let previewEl: HTMLElement | null = null;
+let isSyncing = false;
+let lastScrollSource: "editor" | "preview" = "editor";
+const previewLineBlocks = ref<{ start: number; end: number; top: number }[]>(
+  [],
+);
 
 /**
  * 是否为编辑模式
@@ -485,6 +507,127 @@ function insertMarkdownAtCursor(textarea: HTMLTextAreaElement, value: string) {
     textarea.focus();
   });
 }
+
+/**
+ * 同步滚动位置
+ */
+function getEditorLineHeight() {
+  if (!editorEl) return 20;
+  const style = window.getComputedStyle(editorEl);
+  let lineHeight = parseFloat(style.lineHeight);
+  if (Number.isNaN(lineHeight)) {
+    const fontSize = parseFloat(style.fontSize) || 14;
+    lineHeight = fontSize * 1.5;
+  }
+  return lineHeight;
+}
+
+function buildPreviewLineMap() {
+  if (!previewEl) return;
+  const nodes = Array.from(
+    previewEl.querySelectorAll<HTMLElement>("[data-line-start]"),
+  );
+  const containerRect = previewEl.getBoundingClientRect();
+  const blocks = nodes
+    .map((node) => {
+      const start = Number(node.dataset.lineStart);
+      const end = Number(node.dataset.lineEnd);
+      const rect = node.getBoundingClientRect();
+      return {
+        start: Number.isFinite(start) ? start : 0,
+        end: Number.isFinite(end) ? end : start,
+        top: rect.top - containerRect.top + previewEl.scrollTop,
+      };
+    })
+    .sort((a, b) => a.top - b.top);
+  previewLineBlocks.value = blocks;
+}
+
+function syncEditorToPreview() {
+  if (!editorEl || !previewEl) return;
+  const lineHeight = getEditorLineHeight();
+  const line = Math.floor(editorEl.scrollTop / lineHeight);
+  const blocks = previewLineBlocks.value;
+  if (!blocks.length) return;
+  let target = blocks[0];
+  for (const block of blocks) {
+    if (block.start <= line) {
+      target = block;
+    } else {
+      break;
+    }
+  }
+  previewEl.scrollTop = target.top;
+}
+
+function syncPreviewToEditor() {
+  if (!editorEl || !previewEl) return;
+  const blocks = previewLineBlocks.value;
+  if (!blocks.length) return;
+  const currentTop = previewEl.scrollTop + 4;
+  let target = blocks[0];
+  for (const block of blocks) {
+    if (block.top <= currentTop) {
+      target = block;
+    } else {
+      break;
+    }
+  }
+  const lineHeight = getEditorLineHeight();
+  editorEl.scrollTop = target.start * lineHeight;
+}
+
+function handleEditorScroll() {
+  if (!editorEl || !previewEl || isSyncing) return;
+  lastScrollSource = "editor";
+  isSyncing = true;
+  syncEditorToPreview();
+  requestAnimationFrame(() => {
+    isSyncing = false;
+  });
+}
+
+function handlePreviewScroll() {
+  if (!editorEl || !previewEl || isSyncing) return;
+  lastScrollSource = "preview";
+  isSyncing = true;
+  syncPreviewToEditor();
+  requestAnimationFrame(() => {
+    isSyncing = false;
+  });
+}
+
+onMounted(async () => {
+  await nextTick();
+  editorEl = editorWrap.value?.querySelector("textarea") || null;
+  previewEl = previewWrap.value;
+  requestAnimationFrame(() => {
+    buildPreviewLineMap();
+  });
+  editorEl?.addEventListener("scroll", handleEditorScroll);
+  previewEl?.addEventListener("scroll", handlePreviewScroll);
+});
+
+onBeforeUnmount(() => {
+  editorEl?.removeEventListener("scroll", handleEditorScroll);
+  previewEl?.removeEventListener("scroll", handlePreviewScroll);
+});
+
+watch(
+  () => form.value.contentMd,
+  async () => {
+    await nextTick();
+    if (!editorEl || !previewEl) return;
+    requestAnimationFrame(() => {
+      buildPreviewLineMap();
+    });
+    if (lastScrollSource === "editor") {
+      syncEditorToPreview();
+    } else {
+      syncPreviewToEditor();
+    }
+  },
+);
 
 /**
  * 分类列表

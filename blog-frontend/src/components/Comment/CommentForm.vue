@@ -16,9 +16,7 @@
           @paste="handlePasteImage"
         />
         <div class="flex items-center justify-between">
-          <span class="text-sm text-ink-light">
-            {{ content.length }}/500
-          </span>
+          <span class="text-sm text-ink-light"> {{ content.length }}/500 </span>
           <div class="flex gap-2">
             <Button
               v-if="parentComment"
@@ -31,7 +29,7 @@
             <Button
               @click="handleSubmit"
               :disabled="!content.trim() || submitting"
-              class="rounded-xl bg-ink text-white hover:bg-clay"
+              class="rounded-xl bg-ink text-paper-bg hover:bg-clay dark:bg-clay dark:text-paper-bg"
             >
               {{ submitting ? "发送中..." : "发送" }}
             </Button>

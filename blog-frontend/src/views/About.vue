@@ -3,10 +3,10 @@
     <div class="mx-auto w-full max-w-5xl space-y-8">
       <header class="text-center space-y-3">
         <h1 class="font-serif text-4xl font-medium text-ink">
-          关于 Mulehang Blog
+          {{ localeStore.t.aboutTitle }}
         </h1>
         <p class="text-ink-light">
-          一个用于学习与分享的现代化博客系统
+          {{ localeStore.t.aboutSubtitle }}
         </p>
       </header>
 
@@ -14,48 +14,83 @@
         <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardHeader>
             <CardTitle class="font-serif text-2xl text-ink">
-              项目简介
+              {{ localeStore.t.aboutIntroTitle }}
             </CardTitle>
           </CardHeader>
           <CardContent class="space-y-3">
             <p class="text-sm text-ink-light">
-              项目以文章发布、标签分类与互动为核心，强调清晰的模块拆分与可扩展性。
+              {{ localeStore.t.aboutIntroLine1 }}
             </p>
             <p class="text-sm text-ink-light">
-              前端采用 Vue 3 与 Tailwind CSS，后端采用 Spring Boot
-              并结合缓存与搜索方案。
+              {{ localeStore.t.aboutIntroLine2 }}
             </p>
           </CardContent>
         </Card>
 
         <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardHeader>
-            <CardTitle class="font-serif text-2xl text-ink">技术栈</CardTitle>
+            <CardTitle class="font-serif text-2xl text-ink">
+              {{ localeStore.t.aboutStackTitle }}
+            </CardTitle>
           </CardHeader>
-          <CardContent class="grid grid-cols-2 gap-3 text-sm">
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              Vue 3 + Vite
+          <CardContent class="space-y-4 text-sm">
+            <div class="space-y-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-light"
+              >
+                {{ localeStore.t.aboutFrontend }}
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  Vue 3 + Vite
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  Pinia + Router
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  Tailwind CSS
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  shadcn-vue
+                </div>
+              </div>
             </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              Pinia + Router
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              Tailwind CSS
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              shadcn-vue
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              Spring Boot 3
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              MyBatis-Plus
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              Redis + Caffeine
-            </div>
-            <div class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink">
-              ElasticSearch
+            <div class="space-y-2">
+              <p
+                class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-light"
+              >
+                {{ localeStore.t.aboutBackend }}
+              </p>
+              <div class="grid grid-cols-2 gap-3">
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  Spring Boot 3
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  MyBatis-Plus
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  Redis + Caffeine
+                </div>
+                <div
+                  class="rounded-full border border-ink/10 bg-paper-dark px-3 py-2 text-ink"
+                >
+                  ElasticSearch
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -63,31 +98,43 @@
 
       <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle class="font-serif text-2xl text-ink">功能亮点</CardTitle>
+          <CardTitle class="font-serif text-2xl text-ink">
+            {{ localeStore.t.aboutHighlightsTitle }}
+          </CardTitle>
         </CardHeader>
         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink">
-            文章发布与 Markdown 渲染
+          <div
+            class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink"
+          >
+            {{ localeStore.t.aboutHighlight1 }}
           </div>
-          <div class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink">
-            标签与分类聚合浏览
+          <div
+            class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink"
+          >
+            {{ localeStore.t.aboutHighlight2 }}
           </div>
-          <div class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink">
-            站点统计与热门文章
+          <div
+            class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink"
+          >
+            {{ localeStore.t.aboutHighlight3 }}
           </div>
-          <div class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink">
-            缓存策略与热点数据优化
+          <div
+            class="rounded-2xl border border-ink/10 bg-paper-dark px-4 py-3 text-ink"
+          >
+            {{ localeStore.t.aboutHighlight4 }}
           </div>
         </CardContent>
       </Card>
 
       <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle class="font-serif text-2xl text-ink">联系与反馈</CardTitle>
+          <CardTitle class="font-serif text-2xl text-ink">
+            {{ localeStore.t.aboutContactTitle }}
+          </CardTitle>
         </CardHeader>
         <CardContent class="space-y-2 text-sm text-ink-light">
-          <p>如果你对项目有建议或想法，欢迎在 GitHub 留言。</p>
-          <p>也可以通过文章评论与作者交流。</p>
+          <p>{{ localeStore.t.aboutContactLine1 }}</p>
+          <p>{{ localeStore.t.aboutContactLine2 }}</p>
         </CardContent>
       </Card>
     </div>
@@ -95,4 +142,7 @@
 </template>
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocaleStore } from "@/stores/locale";
+
+const localeStore = useLocaleStore();
 </script>

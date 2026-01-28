@@ -23,10 +23,7 @@
           <form @submit.prevent="handleRegister" class="space-y-4">
             <!-- 用户名 -->
             <div class="space-y-2">
-              <label
-                for="username"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="username" class="text-sm font-medium text-ink">
                 用户名
               </label>
               <Input
@@ -41,10 +38,7 @@
 
             <!-- 昵称 -->
             <div class="space-y-2">
-              <label
-                for="nickname"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="nickname" class="text-sm font-medium text-ink">
                 昵称
               </label>
               <Input
@@ -59,10 +53,7 @@
 
             <!-- 邮箱 -->
             <div class="space-y-2">
-              <label
-                for="email"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="email" class="text-sm font-medium text-ink">
                 邮箱
               </label>
               <Input
@@ -77,10 +68,7 @@
 
             <!-- 密码 -->
             <div class="space-y-2">
-              <label
-                for="password"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="password" class="text-sm font-medium text-ink">
                 密码
               </label>
               <Input
@@ -95,10 +83,7 @@
 
             <!-- 确认密码 -->
             <div class="space-y-2">
-              <label
-                for="confirmPassword"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="confirmPassword" class="text-sm font-medium text-ink">
                 确认密码
               </label>
               <Input
@@ -119,10 +104,7 @@
                 v-model="formData.agree"
                 class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
-              <label
-                for="agree"
-                class="text-sm font-medium text-ink"
-              >
+              <label for="agree" class="text-sm font-medium text-ink">
                 我已阅读并同意
                 <a
                   href="https://www.bilibili.com/video/BV1UT42167xb/?spm_id_from=333.337.search-card.all.click&vd_source=879771ccf44eae7c71d3d0f3cc895903"
@@ -154,7 +136,7 @@
             <Button
               type="submit"
               :disabled="loading || !formData.agree"
-              class="w-full rounded-xl bg-ink text-white hover:bg-clay"
+              class="w-full rounded-xl bg-ink text-white hover:bg-clay dark:bg-clay dark:text-paper-bg"
               size="lg"
             >
               <span v-if="loading" class="flex items-center gap-2">
@@ -201,7 +183,12 @@
 
       <!-- 返回首页 -->
       <div class="text-center mt-4">
-        <Button variant="ghost" size="sm" class="text-ink-light hover:text-clay" @click="router.push('/')">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="text-ink-light hover:text-clay"
+          @click="router.push('/')"
+        >
           ← 返回首页
         </Button>
       </div>

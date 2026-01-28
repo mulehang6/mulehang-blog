@@ -21,17 +21,16 @@
         <div class="mt-6 flex flex-wrap gap-4">
           <Button
             size="lg"
-            class="h-11 rounded-xl bg-ink px-7 text-sm font-medium text-white shadow-sketch hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-paper-card dark:text-ink dark:hover:bg-paper-dark/80"
+            class="h-11 rounded-xl bg-ink px-7 text-sm font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90"
             @click="scrollToList"
           >
             开始阅读
           </Button>
           <Button
-            variant="outline"
             size="lg"
             @click="loadArticles"
             :disabled="loading"
-            class="h-11 gap-2 rounded-xl border-ink/10 px-7 text-ink hover:bg-paper-dark/60"
+            class="h-11 gap-2 rounded-xl bg-ink px-7 text-sm font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] disabled:opacity-70 dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90"
           >
             <span :class="{ 'animate-spin': loading }">↻</span>
             {{ localeStore.t.refresh }}
@@ -45,7 +44,11 @@
       <div id="article-list" class="lg:col-span-8 space-y-6">
         <!-- 加载中状态 -->
         <div v-if="loading && articles.length === 0" class="space-y-6">
-          <Card v-for="i in 3" :key="i" class="animate-pulse border-ink/10 bg-paper-card shadow-soft">
+          <Card
+            v-for="i in 3"
+            :key="i"
+            class="animate-pulse border-ink/10 bg-paper-card shadow-soft"
+          >
             <CardHeader>
               <div class="h-6 bg-paper-dark rounded w-3/4"></div>
               <div class="h-4 bg-paper-dark rounded w-1/2 mt-2"></div>
@@ -75,9 +78,7 @@
                   >
                     {{ article.title }}
                   </CardTitle>
-                  <div
-                    class="flex items-center gap-2 text-xs text-ink-light"
-                  >
+                  <div class="flex items-center gap-2 text-xs text-ink-light">
                     <Badge
                       v-if="article.category"
                       variant="secondary"
@@ -86,15 +87,11 @@
                       {{ article.category.name }}
                     </Badge>
                     <span v-if="article.author" class="flex items-center gap-1">
-                      <span
-                        class="w-1 h-1 rounded-full bg-ink-lighter"
-                      ></span>
+                      <span class="w-1 h-1 rounded-full bg-ink-lighter"></span>
                       {{ article.author.username }}
                     </span>
                     <span class="flex items-center gap-1">
-                      <span
-                        class="w-1 h-1 rounded-full bg-ink-lighter"
-                      ></span>
+                      <span class="w-1 h-1 rounded-full bg-ink-lighter"></span>
                       {{ formatDate(article.createTime) }}
                     </span>
                   </div>
@@ -119,9 +116,7 @@
                     #{{ tag.name }}
                   </Badge>
                 </div>
-                <div
-                  class="flex items-center gap-4 text-xs text-ink-light"
-                >
+                <div class="flex items-center gap-4 text-xs text-ink-light">
                   <span class="flex items-center gap-1"
                     >👁️ {{ article.readCount || 0 }}</span
                   >
@@ -181,7 +176,9 @@
         <!-- 热门文章 -->
         <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardHeader>
-            <CardTitle class="font-serif text-xl text-ink flex items-center gap-2">
+            <CardTitle
+              class="font-serif text-xl text-ink flex items-center gap-2"
+            >
               🔥 {{ localeStore.t.trending }}
             </CardTitle>
           </CardHeader>
@@ -204,9 +201,7 @@
                   >
                     {{ article.title }}
                   </p>
-                  <div
-                    class="flex items-center gap-2 text-xs text-ink-light"
-                  >
+                  <div class="flex items-center gap-2 text-xs text-ink-light">
                     <span
                       >{{ article.readCount || 0 }}
                       {{ localeStore.t.reads }}</span
@@ -237,13 +232,17 @@
         <!-- 统计信息 -->
         <Card class="border-ink/10 bg-paper-card shadow-soft sketch-hover">
           <CardHeader>
-            <CardTitle class="font-serif text-xl text-ink flex items-center gap-2">
+            <CardTitle
+              class="font-serif text-xl text-ink flex items-center gap-2"
+            >
               📊 {{ localeStore.t.statistics }}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div class="grid grid-cols-2 gap-4">
-              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+              <div
+                class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3"
+              >
                 <p class="text-xs text-ink-light">
                   {{ localeStore.t.statArticles }}
                 </p>
@@ -251,7 +250,9 @@
                   {{ siteStats.totalArticles || 0 }}
                 </p>
               </div>
-              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+              <div
+                class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3"
+              >
                 <p class="text-xs text-ink-light">
                   {{ localeStore.t.statReads }}
                 </p>
@@ -259,7 +260,9 @@
                   {{ siteStats.totalReads || 0 }}
                 </p>
               </div>
-              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+              <div
+                class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3"
+              >
                 <p class="text-xs text-ink-light">
                   {{ localeStore.t.statLikes }}
                 </p>
@@ -267,7 +270,9 @@
                   {{ siteStats.totalLikes || 0 }}
                 </p>
               </div>
-              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+              <div
+                class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3"
+              >
                 <p class="text-xs text-ink-light">
                   {{ localeStore.t.statTodayVisits }}
                 </p>

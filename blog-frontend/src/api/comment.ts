@@ -45,6 +45,20 @@ export const commentApi = {
   },
 
   /**
+   * 编辑评论
+   */
+  update(commentId: number, data: { content: string }): Promise<boolean> {
+    return request.put(`/api/v1/comments/${commentId}`, data)
+  },
+
+  /**
+   * 删除评论
+   */
+  delete(commentId: number): Promise<boolean> {
+    return request.delete(`/api/v1/comments/${commentId}`)
+  },
+
+  /**
    * 查询用户是否已点赞评论
    */
   getLikeStatus(commentId: number): Promise<boolean> {

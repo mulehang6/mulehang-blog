@@ -1,6 +1,7 @@
 package com.mulehang.blog.service;
 
 import com.mulehang.blog.dto.CommentCreateDTO;
+import com.mulehang.blog.dto.CommentUpdateDTO;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.vo.CommentVO;
 
@@ -35,7 +36,7 @@ public interface CommentService {
     /**
      * 点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=点赞成功；false=已点赞或未获取到锁
      */
@@ -44,7 +45,7 @@ public interface CommentService {
     /**
      * 查询用户是否已点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=已点赞；false=未点赞
      */
@@ -53,10 +54,24 @@ public interface CommentService {
     /**
      * 取消点赞评论。
      *
-     * @param userId 用户 ID
+     * @param userId    用户 ID
      * @param commentId 评论 ID
      * @return true=取消成功；false=未点赞或未获取到锁
      */
     boolean unlikeComment(Long userId, Long commentId);
-}
 
+    /**
+     * 编辑评论内容（仅作者本人）。
+     *
+     * @param commentId 评论 ID
+     * @param dto       评论更新 DTO
+     */
+    void update(Long commentId, CommentUpdateDTO dto);
+
+    /**
+     * 删除评论（仅作者本人）。
+     *
+     * @param commentId 评论 ID
+     */
+    void delete(Long commentId);
+}

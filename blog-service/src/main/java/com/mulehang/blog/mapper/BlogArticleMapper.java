@@ -32,6 +32,12 @@ public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
     int incrementCommentCount(@Param("articleId") Long articleId);
 
     /**
+     * 评论数 -1。
+     */
+    @Update("UPDATE blog_article SET comment_count = comment_count - 1 WHERE id = #{articleId} AND comment_count > 0")
+    int decrementCommentCount(@Param("articleId") Long articleId);
+
+    /**
      * 阅读量 +1。
      */
     @Update("UPDATE blog_article SET read_count = read_count + 1 WHERE id = #{articleId}")

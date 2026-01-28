@@ -835,6 +835,35 @@ button.sidebar-nav-item.text-destructive:active * {
     -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%) !important;
     backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%) !important;
   }
+
+  .scrollbar-soft {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ink) 35%, transparent) transparent;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-soft::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--ink) 35%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .dark .scrollbar-soft {
+    scrollbar-color: color-mix(in oklab, var(--ink-light) 55%, transparent) transparent;
+  }
+
+  .dark .scrollbar-soft::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--ink-light) 55%, transparent);
+  }
 }
 
 /* 最高优先级规则：确保退出登录按钮在所有情况下都保持红色 */

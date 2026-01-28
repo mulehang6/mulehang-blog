@@ -1,13 +1,13 @@
 <template>
-  <div class="space-y-6">
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+  <div class="space-y-10">
+    <header class="space-y-3">
+      <h1 class="font-serif text-4xl font-medium text-ink">
         {{ localeStore.t.articleManage }}
       </h1>
-      <p class="text-muted-foreground mt-1">
+      <p class="text-ink-light">
         {{ localeStore.t.articleManageSubtitle }}
       </p>
-    </div>
+    </header>
 
     <div class="flex flex-wrap items-center gap-2">
       <Button
@@ -15,11 +15,11 @@
         :key="option.key"
         size="sm"
         variant="outline"
-        class="transition-all"
+        class="rounded-full border-ink/10 text-ink-light transition-colors hover:bg-paper-dark"
         :class="
           activeStatus === option.key
-            ? 'border-primary/60 text-primary bg-primary/10'
-            : 'border-border/60'
+            ? 'bg-ink text-white border-ink'
+            : 'bg-paper-card'
         "
         @click="setStatusFilter(option.key)"
       >
@@ -37,7 +37,7 @@
       <Card
         v-for="article in articles"
         :key="article.id"
-        class="group hover:border-primary/50 transition-all duration-300 cursor-pointer overflow-hidden border-border/60 hover-lift-sheen"
+        class="group cursor-pointer overflow-hidden border-ink/10 bg-paper-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-none"
         @click="handleOpenArticle(article)"
       >
         <CardHeader class="pb-3">
@@ -45,27 +45,27 @@
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <CardTitle
-                  class="text-xl font-bold group-hover:text-primary transition-colors"
+                  class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay"
                 >
                   {{ article.title }}
                 </CardTitle>
                 <Badge
                   v-if="article.status !== undefined"
                   variant="secondary"
-                  class="text-xs"
+                  class="rounded-full bg-paper-dark text-xs text-ink"
                 >
                   {{ getStatusLabel(article.status) }}
                 </Badge>
               </div>
               <div
-                class="flex items-center gap-2 text-xs text-muted-foreground"
+                class="flex items-center gap-2 text-xs text-ink-light"
               >
                 <span v-if="article.author" class="flex items-center gap-1">
-                  <span class="w-1 h-1 rounded-full bg-muted-foreground"></span>
+                  <span class="w-1 h-1 rounded-full bg-ink-lighter"></span>
                   {{ article.author.username }}
                 </span>
                 <span class="flex items-center gap-1">
-                  <span class="w-1 h-1 rounded-full bg-muted-foreground"></span>
+                  <span class="w-1 h-1 rounded-full bg-ink-lighter"></span>
                   {{ formatDate(article.createTime) }}
                 </span>
               </div>
@@ -75,7 +75,7 @@
                 v-if="isDraft(article.status)"
                 size="sm"
                 variant="ghost"
-                class="text-emerald-500"
+                class="text-clay hover:text-clay-dark"
                 @click.stop="handlePublish(article.id)"
               >
                 {{ localeStore.t.publishArticle }}
@@ -83,6 +83,7 @@
               <Button
                 size="sm"
                 variant="ghost"
+                class="text-ink-light hover:text-clay"
                 @click.stop="handleEdit(article.id)"
               >
                 {{ localeStore.t.editArticle }}
@@ -99,23 +100,23 @@
           </div>
         </CardHeader>
         <CardContent>
-          <p class="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+          <p class="text-sm text-ink-light line-clamp-2 leading-relaxed">
             {{ article.summary }}
           </p>
           <div
-            class="flex items-center justify-between mt-4 pt-4 border-t border-border/40"
+            class="flex items-center justify-between mt-4 pt-4 border-t border-ink/10"
           >
             <div class="flex items-center gap-2">
               <Badge
                 v-for="tag in article.tags?.slice(0, 3)"
                 :key="tag.id"
                 variant="outline"
-                class="text-xs text-muted-foreground border-border/60"
+                class="rounded-full border-ink/20 text-xs text-ink-light"
               >
                 #{{ tag.name }}
               </Badge>
             </div>
-            <div class="flex items-center gap-4 text-xs text-muted-foreground">
+            <div class="flex items-center gap-4 text-xs text-ink-light">
               <span class="flex items-center gap-1"
                 >👁️ {{ article.readCount || 0 }}</span
               >
@@ -131,10 +132,10 @@
       </Card>
     </div>
 
-    <Card v-else class="border-dashed">
+    <Card v-else class="border-dashed border-ink/20 bg-paper-card">
       <CardContent class="py-12 text-center">
         <div class="text-4xl mb-4">🗂️</div>
-        <p class="text-muted-foreground text-lg">
+        <p class="text-ink-light text-lg">
           {{ localeStore.t.emptyArticles }}
         </p>
       </CardContent>

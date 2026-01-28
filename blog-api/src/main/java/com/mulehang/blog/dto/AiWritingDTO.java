@@ -32,4 +32,16 @@ public class AiWritingDTO {
 
     @Schema(description = "AI服务提供商（openai/anthropic，可选，为空则使用默认）", example = "openai")
     private String provider;
+
+    @Schema(description = "自定义 Base URL（BYOK）", example = "https://api.openai.com")
+    @Size(max = 255, message = "Base URL 长度不能超过255字符")
+    private String baseUrl;
+
+    @Schema(description = "自定义模型 ID", example = "gpt-4o-mini")
+    @Size(max = 100, message = "模型 ID 长度不能超过100字符")
+    private String model;
+
+    @Schema(description = "自带 API Key（可选）", example = "sk-xxx")
+    @Size(max = 200, message = "API Key 长度不能超过200字符")
+    private String apiKey;
 }

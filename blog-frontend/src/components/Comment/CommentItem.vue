@@ -13,36 +13,37 @@
       <div class="flex-1 min-w-0">
         <!-- 评论头部 -->
         <div class="flex items-center gap-2 mb-2">
-          <span class="font-medium">{{ comment.nickname }}</span>
+          <span class="font-medium text-ink">{{ comment.nickname }}</span>
           <span
             v-if="comment.replyToUser"
-            class="text-sm text-muted-foreground"
+            class="text-sm text-ink-light"
           >
             回复 @用户{{ comment.replyToUser }}
           </span>
-          <span class="text-sm text-muted-foreground">
+          <span class="text-sm text-ink-light">
             {{ formatDate(comment.createTime) }}
           </span>
         </div>
 
         <!-- 评论内容 -->
-        <div class="mb-2 text-foreground whitespace-pre-wrap wrap-break-word">
+        <div class="mb-2 text-ink whitespace-pre-wrap wrap-break-word">
           <MarkdownRenderer :content="comment.content" />
         </div>
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-4 text-sm">
           <button
-            class="text-muted-foreground hover:text-foreground transition-colors"
+            class="text-ink-light hover:text-clay transition-colors"
             @click="showReplyForm = !showReplyForm"
           >
             💬 回复
           </button>
           <button
-            class="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            class="transition-colors flex items-center gap-1"
+            :class="isLiked ? 'text-clay' : 'text-ink-light hover:text-clay'"
             @click="handleLike"
           >
-            ❤️ {{ comment.likeCount }}
+            ❤️ {{ likeCount }}
           </button>
         </div>
 
@@ -75,8 +76,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 import type { CommentVO } from "@/types/api";
+import { commentApi } from "@/api/comment";
+import { useUserStore } from "@/stores/user";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
 import CommentForm from "./CommentForm.vue";
@@ -96,14 +101,68 @@ const emit = defineEmits<{
   (e: "refresh"): void;
 }>();
 
+const router = useRouter();
+const userStore = useUserStore();
+
 const showReplyForm = ref(false);
+const likeCount = ref(props.comment.likeCount);
+const isLiked = ref(!!props.comment.liked);
+const liking = ref(false);
+
+watch(
+  () => props.comment.likeCount,
+  (value) => {
+    likeCount.value = value;
+  },
+);
+
+watch(
+  () => props.comment.liked,
+  (value) => {
+    isLiked.value = !!value;
+  },
+);
 
 /**
  * 处理点赞
  */
-function handleLike() {
-  // TODO: 实现评论点赞功能
-  console.log("点赞评论:", props.comment.id);
+async function handleLike() {
+  if (!userStore.isLoggedIn) {
+    toast.error("请先登录");
+    router.push("/login");
+    return;
+  }
+  if (liking.value) return;
+  liking.value = true;
+  try {
+    if (isLiked.value) {
+      const success = await commentApi.unlike(props.comment.id);
+      if (success) {
+        likeCount.value = Math.max(0, likeCount.value - 1);
+        isLiked.value = false;
+        toast.success("已取消点赞");
+      } else {
+        toast.error("取消点赞失败");
+      }
+    } else {
+      const success = await commentApi.like(props.comment.id);
+      if (success) {
+        likeCount.value += 1;
+        isLiked.value = true;
+        toast.success("点赞成功");
+      } else {
+        isLiked.value = true;
+        toast.info("您已经点赞过了");
+      }
+    }
+  } catch (err: any) {
+    console.error("评论点赞失败:", err);
+    toast.error("操作失败", {
+      description: err.message || "请稍后重试",
+    });
+  } finally {
+    liking.value = false;
+  }
 }
 
 /**

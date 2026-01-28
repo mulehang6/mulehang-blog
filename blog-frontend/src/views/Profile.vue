@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-transparent">
-    <main class="container mx-auto px-4 py-8 max-w-6xl">
+  <div class="space-y-10">
+    <div class="space-y-8">
       <!-- 用户信息卡片 -->
-      <Card class="mb-8">
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardContent class="pt-6">
           <div
             class="flex flex-col md:flex-row items-center md:items-start gap-6"
@@ -20,20 +20,20 @@
 
             <!-- 用户详细信息 -->
             <div class="flex-1 text-center md:text-left">
-              <h1 class="text-3xl font-bold mb-2">
+              <h1 class="font-serif text-3xl font-medium text-ink mb-2">
                 {{ userStore.userInfo?.nickname }}
               </h1>
-              <p class="text-muted-foreground mb-2">
+              <p class="text-ink-light mb-2">
                 @{{ userStore.userInfo?.username }}
               </p>
-              <p class="text-muted-foreground mb-4">
+              <p class="text-ink-light mb-4">
                 {{ userStore.userInfo?.email }}
               </p>
 
               <!-- 个人简介 -->
               <p
                 v-if="userStore.userInfo?.profile"
-                class="text-foreground mb-4"
+                class="text-ink mb-4"
               >
                 {{ userStore.userInfo.profile }}
               </p>
@@ -44,6 +44,7 @@
                   v-for="role in userStore.userInfo?.roles"
                   :key="role"
                   :variant="role === 'ADMIN' ? 'default' : 'secondary'"
+                  class="rounded-full"
                 >
                   {{ getRoleLabel(role) }}
                 </Badge>
@@ -51,7 +52,11 @@
             </div>
 
             <!-- 编辑按钮 -->
-            <Button @click="router.push('/settings')" variant="outline">
+            <Button
+              @click="router.push('/settings')"
+              variant="outline"
+              class="rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
+            >
               编辑资料
             </Button>
           </div>
@@ -59,43 +64,43 @@
       </Card>
 
       <!-- 统计信息 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardContent class="pt-6">
             <div class="text-center">
-              <p class="text-3xl font-bold text-primary mb-2">
+              <p class="text-3xl font-bold text-clay mb-2">
                 {{ stats.articleCount }}
               </p>
-              <p class="text-sm text-muted-foreground">发表文章</p>
+              <p class="text-sm text-ink-light">发表文章</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardContent class="pt-6">
             <div class="text-center">
-              <p class="text-3xl font-bold text-primary mb-2">
+              <p class="text-3xl font-bold text-clay mb-2">
                 {{ stats.commentCount }}
               </p>
-              <p class="text-sm text-muted-foreground">发表评论</p>
+              <p class="text-sm text-ink-light">发表评论</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardContent class="pt-6">
             <div class="text-center">
-              <p class="text-3xl font-bold text-primary mb-2">
+              <p class="text-3xl font-bold text-clay mb-2">
                 {{ stats.likeCount }}
               </p>
-              <p class="text-sm text-muted-foreground">获得点赞</p>
+              <p class="text-sm text-ink-light">获得点赞</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- 最近文章 -->
-      <Card>
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle>最近文章</CardTitle>
+          <CardTitle class="font-serif text-2xl text-ink">最近文章</CardTitle>
         </CardHeader>
         <CardContent>
           <div v-if="loading" class="flex justify-center py-8">
@@ -107,26 +112,26 @@
             <div
               v-for="article in articles"
               :key="article.id"
-              class="flex items-start gap-4 p-4 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+              class="flex items-start gap-4 rounded-xl border border-transparent p-4 transition-colors cursor-pointer hover:border-ink/10 hover:bg-paper-dark/60"
               @click="router.push(`/articles/${article.slug}`)"
             >
               <img
                 v-if="article.coverUrl"
                 :src="article.coverUrl"
                 :alt="article.title"
-                class="w-20 h-20 rounded object-cover"
+                class="h-20 w-20 rounded-xl object-cover"
               />
               <div class="flex-1 min-w-0">
                 <h3
-                  class="font-semibold mb-1 hover:text-primary transition-colors"
+                  class="font-semibold mb-1 text-ink hover:text-clay transition-colors"
                 >
                   {{ article.title }}
                 </h3>
-                <p class="text-sm text-muted-foreground line-clamp-2 mb-2">
+                <p class="text-sm text-ink-light line-clamp-2 mb-2">
                   {{ article.summary }}
                 </p>
                 <div
-                  class="flex items-center gap-4 text-xs text-muted-foreground"
+                  class="flex items-center gap-4 text-xs text-ink-light"
                 >
                   <span>👁️ {{ article.readCount }}</span>
                   <span>❤️ {{ article.likeCount }}</span>
@@ -138,12 +143,12 @@
               </div>
             </div>
           </div>
-          <div v-else class="text-center py-8 text-muted-foreground">
+          <div v-else class="text-center py-8 text-ink-light">
             暂无文章
           </div>
         </CardContent>
       </Card>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -152,7 +157,8 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { articleApi } from "@/api/article";
-import type { ArticleListItem } from "@/types/api";
+import { userApi } from "@/api/user";
+import type { ArticleListItem, UserStats } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -163,7 +169,7 @@ const userStore = useUserStore();
 
 const articles = ref<ArticleListItem[]>([]);
 const loading = ref(false);
-const stats = ref({
+const stats = ref<UserStats>({
   articleCount: 0,
   commentCount: 0,
   likeCount: 0,
@@ -184,17 +190,27 @@ async function fetchUserArticles() {
       status: 1,
     });
     articles.value = result.list;
-    stats.value.articleCount = result.total;
-
-    // 计算总点赞数
-    stats.value.likeCount = result.list.reduce(
-      (sum, article) => sum + article.likeCount,
-      0,
-    );
   } catch (err) {
     console.error("获取用户文章失败:", err);
   } finally {
     loading.value = false;
+  }
+}
+
+/**
+ * 获取用户统计信息
+ */
+async function fetchUserStats() {
+  if (!userStore.userInfo) return;
+  try {
+    const result = await userApi.getStats();
+    stats.value = {
+      articleCount: result.articleCount || 0,
+      commentCount: result.commentCount || 0,
+      likeCount: result.likeCount || 0,
+    };
+  } catch (err) {
+    console.error("获取用户统计失败:", err);
   }
 }
 
@@ -205,7 +221,6 @@ function getRoleLabel(role: string): string {
   const roleMap: Record<string, string> = {
     ADMIN: "管理员",
     USER: "用户",
-    GUEST: "访客",
   };
   return roleMap[role] || role;
 }
@@ -226,6 +241,7 @@ onMounted(() => {
     return;
   }
 
+  fetchUserStats();
   fetchUserArticles();
 });
 </script>

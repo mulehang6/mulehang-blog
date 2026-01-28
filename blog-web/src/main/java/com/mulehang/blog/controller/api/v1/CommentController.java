@@ -1,5 +1,6 @@
 package com.mulehang.blog.controller.api.v1;
 
+import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
 import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.model.Result;
@@ -8,6 +9,7 @@ import com.mulehang.blog.vo.CommentVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,6 +66,54 @@ public class CommentController {
                                                        Long pageNo,
                                                        Long pageSize) {
         return Result.ok(commentService.listByArticle(articleId, pageNo, pageSize));
+    }
+
+    /**
+     * 点赞评论。
+     *
+     * @param id 评论 ID
+     * @return 点赞结果（true=成功，false=已点赞或未获取到锁）
+     */
+    @PostMapping("/api/v1/comments/{id}/like")
+    @Operation(summary = "点赞评论")
+    public Result<Boolean> like(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        return Result.ok(commentService.likeComment(userId, id));
+    }
+
+    /**
+     * 查询用户是否已点赞评论。
+     *
+     * @param id 评论 ID
+     * @return true=已点赞，false=未点赞
+     */
+    @GetMapping("/api/v1/comments/{id}/like/status")
+    @Operation(summary = "查询用户是否已点赞评论")
+    public Result<Boolean> getLikeStatus(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.ok(false);
+        }
+        return Result.ok(commentService.hasLiked(userId, id));
+    }
+
+    /**
+     * 取消点赞评论。
+     *
+     * @param id 评论 ID
+     * @return 取消结果（true=成功，false=未点赞或未获取到锁）
+     */
+    @DeleteMapping("/api/v1/comments/{id}/like")
+    @Operation(summary = "取消点赞评论")
+    public Result<Boolean> unlike(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        return Result.ok(commentService.unlikeComment(userId, id));
     }
 }
 

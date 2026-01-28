@@ -31,6 +31,8 @@ public class CommentVO {
 
     private Integer likeCount;// 点赞数
 
+    private Boolean liked;// 当前用户是否已点赞
+
     private Integer status;// 评论状态，0表示待审核，1表示已通过，2表示已拒绝/屏蔽
 
     private String location;// IP 归属地

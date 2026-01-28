@@ -45,4 +45,22 @@ public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
      */
     @Select("SELECT COUNT(*) FROM blog_article WHERE category_id = #{categoryId} AND status = 1")
     int countByCategoryId(@Param("categoryId") Long categoryId);
+
+    /**
+     * 统计指定作者已发布文章数量。
+     *
+     * @param authorId 作者 ID
+     * @return 文章数量
+     */
+    @Select("SELECT COUNT(*) FROM blog_article WHERE author_id = #{authorId} AND status = 1 AND is_deleted = 0")
+    Long countPublishedByAuthor(@Param("authorId") Long authorId);
+
+    /**
+     * 统计指定作者已发布文章的点赞总数。
+     *
+     * @param authorId 作者 ID
+     * @return 点赞总数
+     */
+    @Select("SELECT COALESCE(SUM(like_count), 0) FROM blog_article WHERE author_id = #{authorId} AND status = 1 AND is_deleted = 0")
+    Long sumLikeCountByAuthor(@Param("authorId") Long authorId);
 }

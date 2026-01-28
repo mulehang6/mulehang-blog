@@ -11,8 +11,25 @@ export const useUserStore = defineStore('user', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
   const userInfo = ref<UserInfo | null>(null)
 
+  /**
+   * 判断 Token 是否过期
+   */
+  function isTokenExpired(tokenValue: string): boolean {
+    try {
+      const payload = tokenValue.split('.')[1]
+      if (!payload) return true
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+      const decoded = JSON.parse(atob(padded)) as { exp?: number }
+      if (!decoded.exp || typeof decoded.exp !== 'number') return true
+      return Date.now() >= decoded.exp * 1000
+    } catch (error) {
+      return true
+    }
+  }
+
   // 计算属性
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!token.value && !isTokenExpired(token.value))
   const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN') || false)
 
   /**
@@ -41,21 +58,6 @@ export const useUserStore = defineStore('user', () => {
       return res
     } catch (error) {
       console.error('注册失败:', error)
-      throw error
-    }
-  }
-
-  /**
-   * 访客登录
-   */
-  async function guestLogin() {
-    try {
-      const res: LoginResponse = await authApi.guestLogin()
-      setToken(res.token)
-      setUserInfo(res.userInfo)
-      return res
-    } catch (error) {
-      console.error('访客登录失败:', error)
       throw error
     }
   }
@@ -99,6 +101,10 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('user')
   }
 
+  if (token.value && isTokenExpired(token.value)) {
+    clearUserData()
+  }
+
   /**
    * 从 localStorage 恢复用户信息
    */
@@ -124,7 +130,6 @@ export const useUserStore = defineStore('user', () => {
     isAdmin,
     login,
     register,
-    guestLogin,
     logout,
     setToken,
     setUserInfo,

@@ -37,15 +37,15 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <DialogContent
       data-slot="sheet-content"
       :class="cn(
-        'bg-popover/70 data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg backdrop-blur-xl transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
+        'bg-popover data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-soft transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
         side === 'right'
-          && 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l border-border/60 sm:max-w-sm',
+          && 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l border-ink/10 sm:max-w-sm',
         side === 'left'
-          && 'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r border-border/60 sm:max-w-sm',
+          && 'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r border-ink/10 sm:max-w-sm',
         side === 'top'
-          && 'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b border-border/60',
+          && 'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b border-ink/10',
         side === 'bottom'
-          && 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t border-border/60',
+          && 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t border-ink/10',
         props.class)"
       v-bind="{ ...$attrs, ...forwarded }"
     >

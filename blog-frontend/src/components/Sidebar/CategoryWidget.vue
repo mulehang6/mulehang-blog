@@ -1,7 +1,9 @@
 <template>
-  <Card class="hover-lift-sheen">
+  <Card class="border-ink/10 bg-paper-card shadow-soft">
     <CardHeader>
-      <CardTitle class="text-lg">{{ localeStore.t.categories }}</CardTitle>
+      <CardTitle class="font-serif text-xl font-medium text-ink">
+        {{ localeStore.t.categories }}
+      </CardTitle>
     </CardHeader>
     <CardContent>
       <!-- 加载状态 -->
@@ -16,15 +18,15 @@
         <li
           v-for="category in categories"
           :key="category.id"
-          class="flex items-center justify-between p-2 rounded-md hover:bg-muted cursor-pointer transition-colors group hover-lift-sheen-sm"
+          class="sketch-item flex items-center justify-between rounded-2xl px-3 py-2.5 group cursor-pointer"
           @click="goToCategory(category.id)"
         >
           <span
-            class="text-sm font-medium group-hover:text-primary transition-colors"
+            class="text-sm font-medium text-ink group-hover:text-clay transition-colors"
             >{{ category.name }}</span
           >
           <span
-            class="text-xs text-muted-foreground bg-muted group-hover:bg-background px-2 py-0.5 rounded-full transition-colors"
+            class="rounded-full border border-transparent bg-paper-bg/80 px-2.5 py-0.5 text-xs text-ink-light transition-colors group-hover:border-clay/40 group-hover:text-clay"
             >{{ category.articleCount }}</span
           >
         </li>
@@ -33,21 +35,18 @@
       <!-- 查看全部 -->
       <div
         v-if="categories.length > 0"
-        class="mt-4 text-center border-t border-border pt-4"
+        class="mt-4 text-center border-t border-ink/10 pt-4"
       >
         <router-link
           to="/categories"
-          class="text-xs font-medium text-primary hover:underline"
+          class="text-xs font-medium text-clay hover:underline"
         >
           {{ localeStore.t.viewAllCategories }}
         </router-link>
       </div>
 
       <!-- 空状态 -->
-      <div
-        v-else-if="!loading"
-        class="text-center py-4 text-muted-foreground text-sm"
-      >
+      <div v-else-if="!loading" class="text-center py-4 text-sm text-ink-light">
         {{ localeStore.t.noCategories }}
       </div>
     </CardContent>

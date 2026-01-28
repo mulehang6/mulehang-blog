@@ -20,13 +20,6 @@ export const authApi = {
   },
 
   /**
-   * 访客登录
-   */
-  guestLogin(): Promise<LoginResponse> {
-    return request.post('/api/v1/auth/guest')
-  },
-
-  /**
    * 退出登录
    */
   logout(): Promise<void> {

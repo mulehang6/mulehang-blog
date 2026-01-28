@@ -1,8 +1,8 @@
 <template>
   <div class="comment-form">
-    <Card class="hover-lift-sheen">
+    <Card class="border-ink/10 bg-paper-card shadow-soft">
       <CardHeader>
-        <CardTitle class="text-lg">
+        <CardTitle class="font-serif text-xl text-ink">
           {{ parentComment ? `回复 @${parentComment.nickname}` : "发表评论" }}
         </CardTitle>
       </CardHeader>
@@ -16,13 +16,14 @@
           @paste="handlePasteImage"
         />
         <div class="flex items-center justify-between">
-          <span class="text-sm text-muted-foreground">
+          <span class="text-sm text-ink-light">
             {{ content.length }}/500
           </span>
           <div class="flex gap-2">
             <Button
               v-if="parentComment"
               variant="outline"
+              class="rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
               @click="handleCancel"
             >
               取消
@@ -30,6 +31,7 @@
             <Button
               @click="handleSubmit"
               :disabled="!content.trim() || submitting"
+              class="rounded-xl bg-ink text-white hover:bg-clay"
             >
               {{ submitting ? "发送中..." : "发送" }}
             </Button>

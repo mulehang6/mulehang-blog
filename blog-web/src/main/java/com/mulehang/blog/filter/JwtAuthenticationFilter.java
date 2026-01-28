@@ -2,6 +2,8 @@ package com.mulehang.blog.filter;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mulehang.blog.context.UserContext;
+import com.mulehang.blog.entity.SysUser;
+import com.mulehang.blog.mapper.SysUserMapper;
 import com.mulehang.blog.util.JwtUtil;
 import com.mulehang.blog.vo.UserInfoVO;
 import jakarta.servlet.FilterChain;
@@ -31,6 +33,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final SysUserMapper userMapper;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -41,6 +44,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (token != null) {
                 DecodedJWT jwt = jwtUtil.verifyToken(token);
                 Long userId = jwt.getClaim("userId").asLong();
+                if (!isUserActive(userId)) {
+                    log.debug("JWT 用户已禁用或不存在: {}", userId);
+                    SecurityContextHolder.clearContext();
+                    return;
+                }
                 String username = jwt.getClaim("username").asString();
                 List<String> roles = jwt.getClaim("roles").asList(String.class);
 
@@ -81,6 +89,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilterAsyncDispatch() {
         return false;
+    }
+
+    /**
+     * 校验用户状态是否可用。
+     *
+     * @param userId 用户 ID
+     * @return true=用户存在且启用
+     */
+    private boolean isUserActive(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        SysUser user = userMapper.selectById(userId);
+        return user != null && user.getStatus() != null && user.getStatus() == 1;
     }
 
     /**

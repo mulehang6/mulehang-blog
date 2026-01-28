@@ -31,5 +31,32 @@ public interface CommentService {
      * @return 分页结果
      */
     PageResult<CommentVO> listByArticle(Long articleId, Long pageNo, Long pageSize);
+
+    /**
+     * 点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=点赞成功；false=已点赞或未获取到锁
+     */
+    boolean likeComment(Long userId, Long commentId);
+
+    /**
+     * 查询用户是否已点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=已点赞；false=未点赞
+     */
+    boolean hasLiked(Long userId, Long commentId);
+
+    /**
+     * 取消点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=取消成功；false=未点赞或未获取到锁
+     */
+    boolean unlikeComment(Long userId, Long commentId);
 }
 

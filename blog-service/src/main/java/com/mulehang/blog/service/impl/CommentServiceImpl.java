@@ -15,18 +15,23 @@ import com.mulehang.blog.mapper.SysUserMapper;
 import com.mulehang.blog.metrics.BlogMetrics;
 import com.mulehang.blog.mq.producer.CommentNotifyProducer;
 import com.mulehang.blog.model.PageResult;
+import com.mulehang.blog.redis.RedisKeys;
 import com.mulehang.blog.security.SensitiveWordService;
 import com.mulehang.blog.service.CommentService;
 import com.mulehang.blog.service.WebSocketNotificationService;
 import com.mulehang.blog.util.IpRegionService;
 import com.mulehang.blog.vo.CommentVO;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 评论 Service 实现。
@@ -45,6 +50,8 @@ public class CommentServiceImpl implements CommentService {
     private final IpRegionService ipRegionService;
     private final BlogMetrics blogMetrics;
     private final WebSocketNotificationService wsNotificationService;
+    private final RedissonClient redissonClient;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final SysUserMapper userMapper;
 
     /**
@@ -57,6 +64,8 @@ public class CommentServiceImpl implements CommentService {
      * @param ipRegionService       IP 归属地服务
      * @param blogMetrics           业务指标
      * @param wsNotificationService WebSocket 通知服务
+     * @param redissonClient        Redisson 客户端
+     * @param redisTemplate         Redis 操作模板
      * @param userMapper            用户 Mapper
      */
     public CommentServiceImpl(BlogCommentMapper commentMapper,
@@ -66,6 +75,8 @@ public class CommentServiceImpl implements CommentService {
             IpRegionService ipRegionService,
             BlogMetrics blogMetrics,
             WebSocketNotificationService wsNotificationService,
+            RedissonClient redissonClient,
+            RedisTemplate<String, Object> redisTemplate,
             SysUserMapper userMapper) {
         this.commentMapper = commentMapper;
         this.articleMapper = articleMapper;
@@ -74,6 +85,8 @@ public class CommentServiceImpl implements CommentService {
         this.ipRegionService = ipRegionService;
         this.blogMetrics = blogMetrics;
         this.wsNotificationService = wsNotificationService;
+        this.redissonClient = redissonClient;
+        this.redisTemplate = redisTemplate;
         this.userMapper = userMapper;
     }
 
@@ -98,6 +111,11 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("content 为空");
         }
 
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalStateException("未登录或登录已过期");
+        }
+
         BlogArticle article = articleMapper.selectById(dto.getArticleId());
         if (article == null) {
             throw new IllegalArgumentException("文章未找到: " + dto.getArticleId());
@@ -116,7 +134,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setStatus(CommentStatusEnum.APPROVED.getCode());
         comment.setLikeCount(0);
         comment.setIsTop(0);
-        comment.setUserId(UserContext.getCurrentUserId());
+        comment.setUserId(userId);
         comment.setIpAddress(ipAddress);
         comment.setUserAgent(userAgent);
         comment.setLocation(resolveLocation(ipAddress));
@@ -177,7 +195,10 @@ public class CommentServiceImpl implements CommentService {
                 .orderByDesc(BlogComment::getIsTop)
                 .orderByDesc(BlogComment::getCreateTime));
 
-        List<CommentVO> list = result.getRecords().stream().map(this::toVO).toList();
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<CommentVO> list = result.getRecords().stream()
+                .map(comment -> toVO(comment, currentUserId))
+                .toList();
         PageResult<CommentVO> pageResult = new PageResult<>();
         pageResult.setList(list);
         pageResult.setPageNo(pn);
@@ -187,12 +208,109 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
+     * 点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=点赞成功；false=已点赞或未获取到锁
+     */
+    @Override
+    public boolean likeComment(Long userId, Long commentId) {
+        if (userId == null || commentId == null) {
+            throw new IllegalArgumentException("参数 userId/commentId 不能为空");
+        }
+
+        String lockKey = RedisKeys.LOCK_COMMENT_LIKE_PREFIX + commentId + ":" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(3, 10, TimeUnit.SECONDS)) {
+                try {
+                    String likeKey = RedisKeys.COMMENT_LIKE_SET_PREFIX + commentId;
+                    Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, userId.toString());
+                    if (Boolean.TRUE.equals(hasLiked)) {
+                        return false;
+                    }
+
+                    redisTemplate.opsForSet().add(likeKey, userId.toString());
+                    commentMapper.incrementLikeCount(commentId);
+                    return true;
+                } finally {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return false;
+    }
+
+    /**
+     * 查询用户是否已点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=已点赞；false=未点赞
+     */
+    @Override
+    public boolean hasLiked(Long userId, Long commentId) {
+        if (userId == null || commentId == null) {
+            throw new IllegalArgumentException("参数 userId/commentId 不能为空");
+        }
+
+        String likeKey = RedisKeys.COMMENT_LIKE_SET_PREFIX + commentId;
+        Boolean isMember = redisTemplate.opsForSet().isMember(likeKey, userId.toString());
+        return Boolean.TRUE.equals(isMember);
+    }
+
+    /**
+     * 取消点赞评论。
+     *
+     * @param userId 用户 ID
+     * @param commentId 评论 ID
+     * @return true=取消成功；false=未点赞或未获取到锁
+     */
+    @Override
+    public boolean unlikeComment(Long userId, Long commentId) {
+        if (userId == null || commentId == null) {
+            throw new IllegalArgumentException("参数 userId/commentId 不能为空");
+        }
+
+        String lockKey = RedisKeys.LOCK_COMMENT_LIKE_PREFIX + commentId + ":" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(3, 10, TimeUnit.SECONDS)) {
+                try {
+                    String likeKey = RedisKeys.COMMENT_LIKE_SET_PREFIX + commentId;
+                    Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, userId.toString());
+                    if (!Boolean.TRUE.equals(hasLiked)) {
+                        return false;
+                    }
+
+                    redisTemplate.opsForSet().remove(likeKey, userId.toString());
+                    commentMapper.decrementLikeCount(commentId);
+                    return true;
+                } finally {
+                    if (lock.isHeldByCurrentThread()) {
+                        lock.unlock();
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return false;
+    }
+
+    /**
      * 将评论实体转换为 VO。
      *
      * @param comment 评论实体
+     * @param currentUserId 当前用户 ID（可为空）
      * @return 评论 VO
      */
-    private CommentVO toVO(BlogComment comment) {
+    private CommentVO toVO(BlogComment comment, Long currentUserId) {
         CommentVO vo = new CommentVO();
         vo.setId(comment.getId());
         vo.setArticleId(comment.getArticleId());
@@ -206,6 +324,13 @@ public class CommentServiceImpl implements CommentService {
         vo.setLocation(comment.getLocation());
         vo.setIsTop(comment.getIsTop());
         vo.setCreateTime(comment.getCreateTime());
+        if (currentUserId != null) {
+            String likeKey = RedisKeys.COMMENT_LIKE_SET_PREFIX + comment.getId();
+            Boolean hasLiked = redisTemplate.opsForSet().isMember(likeKey, currentUserId.toString());
+            vo.setLiked(Boolean.TRUE.equals(hasLiked));
+        } else {
+            vo.setLiked(false);
+        }
         
         // 查询并填充用户信息
         if (comment.getUserId() != null) {

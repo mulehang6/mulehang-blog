@@ -43,6 +43,18 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '分类列表' }
   },
   {
+    path: '/columns',
+    name: 'ColumnList',
+    component: () => import('@/views/ColumnList.vue'),
+    meta: { title: '专栏列表' }
+  },
+  {
+    path: '/columns/:id',
+    name: 'ColumnArticles',
+    component: () => import('@/views/ColumnArticles.vue'),
+    meta: { title: '专栏文章' }
+  },
+  {
     path: '/categories/:id',
     name: 'CategoryArticles',
     component: () => import('@/views/CategoryArticles.vue'),
@@ -65,6 +77,12 @@ const routes: RouteRecordRaw[] = [
     name: 'Search',
     component: () => import('@/views/Search.vue'),
     meta: { title: '搜索结果' }
+  },
+  {
+    path: '/ai',
+    name: 'AiStudio',
+    component: () => import('@/views/AiStudio.vue'),
+    meta: { title: 'AI 工作台' }
   },
   {
     path: '/about',

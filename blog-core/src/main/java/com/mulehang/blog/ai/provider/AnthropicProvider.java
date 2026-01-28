@@ -13,6 +13,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
@@ -36,12 +37,14 @@ public class AnthropicProvider implements AiService {
 
     public AnthropicProvider(AiProperties.ProviderConfig config) {
         this.config = config;
-        this.webClient = WebClient.builder()
+        WebClient.Builder builder = WebClient.builder()
                 .baseUrl(config.getBaseUrl() != null && !config.getBaseUrl().isEmpty() 
                         ? config.getBaseUrl() : "https://api.anthropic.com")
-                .defaultHeader("x-api-key", config.getApiKey())
-                .defaultHeader("anthropic-version", "2023-06-01")
-                .build();
+                .defaultHeader("anthropic-version", "2023-06-01");
+        if (StringUtils.hasText(config.getApiKey())) {
+            builder.defaultHeader("x-api-key", config.getApiKey());
+        }
+        this.webClient = builder.build();
     }
 
     /**

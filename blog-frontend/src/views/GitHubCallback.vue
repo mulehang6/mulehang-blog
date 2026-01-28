@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+  <div class="min-h-screen flex items-center justify-center bg-transparent py-16">
     <div class="w-full max-w-md">
-      <Card class="shadow-xl">
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardContent class="py-12">
           <div class="text-center space-y-4">
             <!-- Loading 动画 -->
             <div v-if="loading" class="flex flex-col items-center gap-4">
-              <svg class="animate-spin h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin h-12 w-12 text-clay" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <p class="text-lg font-medium">正在处理 GitHub 登录...</p>
-              <p class="text-sm text-muted-foreground">请稍候</p>
+              <p class="text-lg font-medium text-ink">正在处理 GitHub 登录...</p>
+              <p class="text-sm text-ink-light">请稍候</p>
             </div>
 
             <!-- 错误提示 -->
@@ -20,8 +20,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p class="text-lg font-medium text-destructive">登录失败</p>
-              <p class="text-sm text-muted-foreground">{{ error }}</p>
-              <Button @click="router.push('/login')" class="mt-4">
+              <p class="text-sm text-ink-light">{{ error }}</p>
+              <Button
+                @click="router.push('/login')"
+                class="mt-4 rounded-xl bg-ink text-white hover:bg-clay"
+              >
                 返回登录
               </Button>
             </div>

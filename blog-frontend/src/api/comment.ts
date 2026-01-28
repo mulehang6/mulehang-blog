@@ -28,5 +28,26 @@ export const commentApi = {
     return request.get(`/api/v1/articles/${articleId}/comments`, {
       params: { pageNo, pageSize }
     })
+  },
+
+  /**
+   * 点赞评论
+   */
+  like(commentId: number): Promise<boolean> {
+    return request.post(`/api/v1/comments/${commentId}/like`)
+  },
+
+  /**
+   * 取消点赞评论
+   */
+  unlike(commentId: number): Promise<boolean> {
+    return request.delete(`/api/v1/comments/${commentId}/like`)
+  },
+
+  /**
+   * 查询用户是否已点赞评论
+   */
+  getLikeStatus(commentId: number): Promise<boolean> {
+    return request.get(`/api/v1/comments/${commentId}/like/status`)
   }
 }

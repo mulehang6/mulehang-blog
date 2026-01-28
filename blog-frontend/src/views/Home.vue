@@ -1,43 +1,59 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-10">
     <!-- 顶部标题区域 -->
-    <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">
+    <section class="relative overflow-hidden pb-10">
+      <div class="max-w-3xl">
+        <div class="mb-6 inline-flex items-center gap-2">
+          <span
+            class="rounded-full bg-clay/10 px-3 py-1 text-xs font-mono font-medium text-clay"
+          >
+            v2.0
+          </span>
+        </div>
+        <h1
+          class="font-serif text-4xl font-medium tracking-tight leading-[1.3] text-ink selection:bg-clay/30 selection:text-ink md:text-5xl"
+        >
           {{ localeStore.t.latestArticles }}
         </h1>
-        <p class="text-muted-foreground mt-1">
+        <p class="mt-3 text-base text-ink-light md:text-lg">
           {{ localeStore.t.latestSubtitle }}
         </p>
+        <div class="mt-6 flex flex-wrap gap-4">
+          <Button
+            size="lg"
+            class="h-11 rounded-xl bg-ink px-7 text-sm font-medium text-white shadow-sketch hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-paper-card dark:text-ink dark:hover:bg-paper-dark/80"
+            @click="scrollToList"
+          >
+            开始阅读
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            @click="loadArticles"
+            :disabled="loading"
+            class="h-11 gap-2 rounded-xl border-ink/10 px-7 text-ink hover:bg-paper-dark/60"
+          >
+            <span :class="{ 'animate-spin': loading }">↻</span>
+            {{ localeStore.t.refresh }}
+          </Button>
+        </div>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        @click="loadArticles"
-        :disabled="loading"
-        class="gap-2 glass-button"
-      >
-        <span :class="{ 'animate-spin': loading }">↻</span>
-        {{ localeStore.t.refresh }}
-      </Button>
-    </div>
+    </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
       <!-- 文章列表 (左侧) -->
-      <div class="lg:col-span-8 space-y-6">
+      <div id="article-list" class="lg:col-span-8 space-y-6">
         <!-- 加载中状态 -->
         <div v-if="loading && articles.length === 0" class="space-y-6">
-          <Card v-for="i in 3" :key="i" class="animate-pulse">
+          <Card v-for="i in 3" :key="i" class="animate-pulse border-ink/10 bg-paper-card shadow-soft">
             <CardHeader>
-              <div class="h-6 bg-muted rounded w-3/4"></div>
-              <div class="h-4 bg-muted rounded w-1/2 mt-2"></div>
+              <div class="h-6 bg-paper-dark rounded w-3/4"></div>
+              <div class="h-4 bg-paper-dark rounded w-1/2 mt-2"></div>
             </CardHeader>
             <CardContent>
               <div class="space-y-2">
-                <div class="h-4 bg-muted rounded"></div>
-                <div class="h-4 bg-muted rounded w-5/6"></div>
+                <div class="h-4 bg-paper-dark rounded"></div>
+                <div class="h-4 bg-paper-dark rounded w-5/6"></div>
               </div>
             </CardContent>
           </Card>
@@ -48,36 +64,36 @@
           <Card
             v-for="article in articles"
             :key="article.id"
-            class="group hover:border-primary/50 transition-all duration-300 cursor-pointer overflow-hidden border-border/60 hover-lift-sheen"
+            class="group cursor-pointer overflow-hidden border-ink/10 bg-paper-card shadow-soft sketch-hover"
             @click="router.push(`/articles/${article.slug}`)"
           >
             <CardHeader class="pb-3">
               <div class="flex items-start justify-between gap-4">
                 <div class="space-y-1">
                   <CardTitle
-                    class="text-xl font-bold group-hover:text-primary transition-colors"
+                    class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay"
                   >
                     {{ article.title }}
                   </CardTitle>
                   <div
-                    class="flex items-center gap-2 text-xs text-muted-foreground"
+                    class="flex items-center gap-2 text-xs text-ink-light"
                   >
                     <Badge
                       v-if="article.category"
                       variant="secondary"
-                      class="rounded-sm font-normal"
+                      class="rounded-full bg-paper-dark text-ink font-normal"
                     >
                       {{ article.category.name }}
                     </Badge>
                     <span v-if="article.author" class="flex items-center gap-1">
                       <span
-                        class="w-1 h-1 rounded-full bg-muted-foreground"
+                        class="w-1 h-1 rounded-full bg-ink-lighter"
                       ></span>
                       {{ article.author.username }}
                     </span>
                     <span class="flex items-center gap-1">
                       <span
-                        class="w-1 h-1 rounded-full bg-muted-foreground"
+                        class="w-1 h-1 rounded-full bg-ink-lighter"
                       ></span>
                       {{ formatDate(article.createTime) }}
                     </span>
@@ -86,27 +102,25 @@
               </div>
             </CardHeader>
             <CardContent>
-              <p
-                class="text-muted-foreground text-sm line-clamp-2 leading-relaxed"
-              >
+              <p class="text-sm text-ink-light line-clamp-2 leading-relaxed">
                 {{ article.summary }}
               </p>
 
               <div
-                class="flex items-center justify-between mt-4 pt-4 border-t border-border/40"
+                class="flex items-center justify-between mt-4 pt-4 border-t border-ink/10"
               >
                 <div class="flex items-center gap-2">
                   <Badge
                     v-for="tag in article.tags?.slice(0, 3)"
                     :key="tag.id"
                     variant="outline"
-                    class="text-xs text-muted-foreground border-border/60"
+                    class="text-xs rounded-full border-ink/20 text-ink-light"
                   >
                     #{{ tag.name }}
                   </Badge>
                 </div>
                 <div
-                  class="flex items-center gap-4 text-xs text-muted-foreground"
+                  class="flex items-center gap-4 text-xs text-ink-light"
                 >
                   <span class="flex items-center gap-1"
                     >👁️ {{ article.readCount || 0 }}</span
@@ -124,10 +138,10 @@
         </div>
 
         <!-- 空状态 -->
-        <Card v-else class="border-dashed">
+        <Card v-else class="border-dashed border-ink/20 bg-paper-card">
           <CardContent class="py-12 text-center">
             <div class="text-4xl mb-4">📭</div>
-            <p class="text-muted-foreground text-lg">
+            <p class="text-ink-light text-lg">
               {{ localeStore.t.emptyArticles }}
             </p>
           </CardContent>
@@ -142,17 +156,19 @@
             variant="outline"
             size="sm"
             :disabled="currentPage === 1"
+            class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
             @click="changePage(currentPage - 1)"
           >
             {{ localeStore.t.previous }}
           </Button>
-          <span class="text-sm text-muted-foreground px-2">
+          <span class="text-sm text-ink-light px-2">
             Page {{ currentPage }} of {{ totalPages }}
           </span>
           <Button
             variant="outline"
             size="sm"
             :disabled="currentPage === totalPages"
+            class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
             @click="changePage(currentPage + 1)"
           >
             {{ localeStore.t.next }}
@@ -163,9 +179,9 @@
       <!-- 侧边栏 (右侧) -->
       <div class="lg:col-span-4 space-y-6">
         <!-- 热门文章 -->
-        <Card>
+        <Card class="border-ink/10 bg-paper-card shadow-soft">
           <CardHeader>
-            <CardTitle class="text-lg flex items-center gap-2">
+            <CardTitle class="font-serif text-xl text-ink flex items-center gap-2">
               🔥 {{ localeStore.t.trending }}
             </CardTitle>
           </CardHeader>
@@ -174,22 +190,22 @@
               <div
                 v-for="(article, index) in hotArticles"
                 :key="article.id"
-                class="flex items-start gap-3 group cursor-pointer hover-lift-sheen-sm"
+                class="sketch-item flex items-start gap-3 group cursor-pointer rounded-2xl px-3 py-2.5"
                 @click="router.push(`/articles/${article.slug}`)"
               >
                 <span
-                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-paper-card text-xs font-medium text-ink-light transition-colors group-hover:bg-clay group-hover:text-white"
                 >
                   {{ index + 1 }}
                 </span>
                 <div class="space-y-1">
                   <p
-                    class="text-sm font-medium leading-none group-hover:text-primary transition-colors line-clamp-2"
+                    class="text-sm font-medium leading-snug text-ink group-hover:text-clay transition-colors line-clamp-2"
                   >
                     {{ article.title }}
                   </p>
                   <div
-                    class="flex items-center gap-2 text-xs text-muted-foreground"
+                    class="flex items-center gap-2 text-xs text-ink-light"
                   >
                     <span
                       >{{ article.readCount || 0 }}
@@ -203,7 +219,7 @@
                 </div>
               </div>
             </div>
-            <p v-else class="text-sm text-muted-foreground text-center py-4">
+            <p v-else class="text-sm text-ink-light text-center py-4">
               {{ localeStore.t.noTrending }}
             </p>
           </CardContent>
@@ -212,47 +228,52 @@
         <!-- 文章分类 -->
         <CategoryWidget />
 
+        <!-- 专栏 -->
+        <ColumnWidget />
+
         <!-- 热门标签 -->
         <TagCloud />
 
         <!-- 统计信息 -->
-        <Card class="hover-lift-sheen">
+        <Card class="border-ink/10 bg-paper-card shadow-soft sketch-hover">
           <CardHeader>
-            <CardTitle class="text-lg flex items-center gap-2">
+            <CardTitle class="font-serif text-xl text-ink flex items-center gap-2">
               📊 {{ localeStore.t.statistics }}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-1">
-                <p class="text-xs text-muted-foreground">
+              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+                <p class="text-xs text-ink-light">
                   {{ localeStore.t.statArticles }}
                 </p>
-                <p class="text-2xl font-bold">
+                <p class="text-2xl font-bold text-clay">
                   {{ siteStats.totalArticles || 0 }}
                 </p>
               </div>
-              <div class="space-y-1">
-                <p class="text-xs text-muted-foreground">
+              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+                <p class="text-xs text-ink-light">
                   {{ localeStore.t.statReads }}
                 </p>
-                <p class="text-2xl font-bold">
+                <p class="text-2xl font-bold text-clay">
                   {{ siteStats.totalReads || 0 }}
                 </p>
               </div>
-              <div class="space-y-1">
-                <p class="text-xs text-muted-foreground">
+              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+                <p class="text-xs text-ink-light">
                   {{ localeStore.t.statLikes }}
                 </p>
-                <p class="text-2xl font-bold">
+                <p class="text-2xl font-bold text-clay">
                   {{ siteStats.totalLikes || 0 }}
                 </p>
               </div>
-              <div class="space-y-1">
-                <p class="text-xs text-muted-foreground">
+              <div class="stats-tile space-y-1 rounded-xl border border-ink/10 bg-paper-dark/30 p-3">
+                <p class="text-xs text-ink-light">
                   {{ localeStore.t.statTodayVisits }}
                 </p>
-                <p class="text-2xl font-bold">{{ siteStats.todayPV || 0 }}</p>
+                <p class="text-2xl font-bold text-clay">
+                  {{ siteStats.todayPV || 0 }}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -270,6 +291,7 @@ import { recordPageView, getSiteStats } from "@/api/stats";
 import { useLocaleStore } from "@/stores/locale";
 import type { ArticleListItem, SiteStats } from "@/types/api";
 import CategoryWidget from "@/components/Sidebar/CategoryWidget.vue";
+import ColumnWidget from "@/components/Sidebar/ColumnWidget.vue";
 import TagCloud from "@/components/Sidebar/TagCloud.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -298,6 +320,18 @@ const siteStats = ref<SiteStats>({
   totalPV: 0,
   totalUV: 0,
 });
+
+/**
+ * 滚动到文章列表区域。
+ */
+function scrollToList() {
+  const target = document.getElementById("article-list");
+  if (!target) return;
+  const navbar = document.getElementById("app-navbar");
+  const offset = navbar ? navbar.getBoundingClientRect().height : 0;
+  const top = target.getBoundingClientRect().top + window.scrollY - offset - 12;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
 
 /**
  * 加载文章列表

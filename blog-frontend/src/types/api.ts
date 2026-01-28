@@ -123,11 +123,7 @@ export interface ArticleDetail {
     name: string
     slug: string
   } | null
-  column?: {
-    id: number
-    name: string
-    slug: string
-  }
+  column?: Column
   tags: Array<{
     id: number
     name: string
@@ -170,6 +166,19 @@ export interface Tag {
 }
 
 /**
+ * 专栏
+ */
+export interface Column {
+  id: number
+  name: string
+  slug: string
+  coverUrl?: string
+  description?: string
+  sort?: number
+  status?: number
+}
+
+/**
  * 评论
  */
 export interface CommentVO {
@@ -184,11 +193,21 @@ export interface CommentVO {
   content: string
   parentId: number | null
   likeCount: number
+  liked?: boolean
   status: number
   location?: string | null
   isTop?: number
   createTime: string
   children?: CommentVO[]
+}
+
+/**
+ * 用户统计数据
+ */
+export interface UserStats {
+  articleCount: number
+  commentCount: number
+  likeCount: number
 }
 
 /**
@@ -216,4 +235,54 @@ export interface UploadFile {
   originalFilename?: string
   ext?: string
   size?: number
+}
+
+/**
+ * AI 对话消息
+ */
+export type AiRole = 'system' | 'user' | 'assistant'
+
+export interface AiMessage {
+  role: AiRole
+  content: string
+}
+
+/**
+ * AI 对话请求
+ */
+export interface AiChatRequest {
+  messages: AiMessage[]
+  temperature?: number
+  maxTokens?: number
+  provider?: string
+  baseUrl?: string
+  model?: string
+  apiKey?: string
+}
+
+/**
+ * AI 助手请求
+ */
+export interface AiAssistantRequest {
+  content: string
+  maxLength?: number
+  count?: number
+  provider?: string
+  baseUrl?: string
+  model?: string
+  apiKey?: string
+}
+
+/**
+ * AI 写作请求
+ */
+export interface AiWritingRequest {
+  topic?: string
+  content?: string
+  targetLanguage?: string
+  targetLength?: number
+  provider?: string
+  baseUrl?: string
+  model?: string
+  apiKey?: string
 }

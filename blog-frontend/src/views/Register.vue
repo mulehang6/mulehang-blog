@@ -1,23 +1,23 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-linear-to-br from-background to-muted/20"
+    class="min-h-screen flex items-center justify-center bg-transparent py-16"
   >
     <div class="w-full max-w-md">
       <!-- Logo 区域 -->
       <div class="text-center mb-8">
-        <h1
-          class="text-4xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2"
-        >
+        <h1 class="font-serif text-4xl font-medium text-ink mb-2">
           Mulehang Blog
         </h1>
-        <p class="text-muted-foreground">创建您的账户，开始写作之旅</p>
+        <p class="text-ink-light">创建您的账户，开始写作之旅</p>
       </div>
 
       <!-- 注册表单卡片 -->
-      <Card class="shadow-xl">
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle class="text-2xl">注册</CardTitle>
-          <CardDescription> 填写以下信息创建您的账户 </CardDescription>
+          <CardTitle class="font-serif text-2xl text-ink">注册</CardTitle>
+          <CardDescription class="text-ink-light">
+            填写以下信息创建您的账户
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form @submit.prevent="handleRegister" class="space-y-4">
@@ -25,7 +25,7 @@
             <div class="space-y-2">
               <label
                 for="username"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 用户名
               </label>
@@ -43,7 +43,7 @@
             <div class="space-y-2">
               <label
                 for="nickname"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 昵称
               </label>
@@ -61,7 +61,7 @@
             <div class="space-y-2">
               <label
                 for="email"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 邮箱
               </label>
@@ -79,7 +79,7 @@
             <div class="space-y-2">
               <label
                 for="password"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 密码
               </label>
@@ -97,7 +97,7 @@
             <div class="space-y-2">
               <label
                 for="confirmPassword"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 确认密码
               </label>
@@ -117,20 +117,20 @@
                 id="agree"
                 type="checkbox"
                 v-model="formData.agree"
-                class="h-4 w-4 rounded border-input text-primary focus:ring-primary focus:ring-offset-2"
+                class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
               <label
                 for="agree"
-                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                class="text-sm font-medium text-ink"
               >
                 我已阅读并同意
                 <a
                   href="https://www.bilibili.com/video/BV1UT42167xb/?spm_id_from=333.337.search-card.all.click&vd_source=879771ccf44eae7c71d3d0f3cc895903"
-                  class="text-primary hover:underline"
+                  class="text-clay hover:underline"
                   >用户协议</a
                 >
                 和
-                <a href="#" class="text-primary hover:underline">隐私政策</a>
+                <a href="#" class="text-clay hover:underline">隐私政策</a>
               </label>
             </div>
 
@@ -154,7 +154,7 @@
             <Button
               type="submit"
               :disabled="loading || !formData.agree"
-              class="w-full"
+              class="w-full rounded-xl bg-ink text-white hover:bg-clay"
               size="lg"
             >
               <span v-if="loading" class="flex items-center gap-2">
@@ -188,11 +188,11 @@
 
       <!-- 登录链接 -->
       <div class="text-center mt-6">
-        <p class="text-sm text-muted-foreground">
+        <p class="text-sm text-ink-light">
           已有账户？
           <router-link
             to="/login"
-            class="text-primary font-medium hover:underline"
+            class="text-clay font-medium hover:underline"
           >
             立即登录
           </router-link>
@@ -201,7 +201,7 @@
 
       <!-- 返回首页 -->
       <div class="text-center mt-4">
-        <Button variant="ghost" size="sm" @click="router.push('/')">
+        <Button variant="ghost" size="sm" class="text-ink-light hover:text-clay" @click="router.push('/')">
           ← 返回首页
         </Button>
       </div>

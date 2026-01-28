@@ -24,9 +24,19 @@ public final class RedisKeys {
     public static final String ARTICLE_LIKE_SET_PREFIX = "blog:like:article:";
 
     /**
+     * 评论点赞用户集合 Key 前缀（Set）：member=userId。
+     */
+    public static final String COMMENT_LIKE_SET_PREFIX = "blog:like:comment:";
+
+    /**
      * 分布式锁：点赞防重 Key 前缀。
      */
     public static final String LOCK_LIKE_PREFIX = "lock:like:";
+
+    /**
+     * 分布式锁：评论点赞防重 Key 前缀。
+     */
+    public static final String LOCK_COMMENT_LIKE_PREFIX = "lock:like:comment:";
 
     /**
      * Redisson RDelayedQueue：邮件通知（配合 RBlockingQueue 使用）。

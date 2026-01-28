@@ -13,6 +13,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
@@ -35,11 +36,13 @@ public class OpenAiProvider implements AiService {
 
     public OpenAiProvider(AiProperties.ProviderConfig config) {
         this.config = config;
-        this.webClient = WebClient.builder()
+        WebClient.Builder builder = WebClient.builder()
                 .baseUrl(config.getBaseUrl() != null && !config.getBaseUrl().isEmpty() 
-                        ? config.getBaseUrl() : "https://api.openai.com")
-                .defaultHeader("Authorization", "Bearer " + config.getApiKey())
-                .build();
+                        ? config.getBaseUrl() : "https://api.openai.com");
+        if (StringUtils.hasText(config.getApiKey())) {
+            builder.defaultHeader("Authorization", "Bearer " + config.getApiKey());
+        }
+        this.webClient = builder.build();
     }
 
     @Override

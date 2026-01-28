@@ -1,6 +1,5 @@
 package com.mulehang.blog.service;
 
-import com.mulehang.blog.dto.GuestLoginRequest;
 import com.mulehang.blog.dto.LoginRequest;
 import com.mulehang.blog.dto.RegisterRequest;
 import com.mulehang.blog.vo.LoginResponse;
@@ -33,12 +32,4 @@ public interface AuthService {
      */
     void logout(Long userId);
 
-    /**
-     * 访客登录（生成临时访问令牌，用于测试）
-     *
-     * @param request 访客登录请求
-     * @return 登录响应（包含临时 Token）
-     */
-    LoginResponse guestLogin(GuestLoginRequest request);
 }
-

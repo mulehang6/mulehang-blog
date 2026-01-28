@@ -14,12 +14,34 @@ const instance: AxiosInstance = axios.create({
 })
 
 /**
+ * 判断 Token 是否过期
+ */
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return true
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const decoded = JSON.parse(atob(padded)) as { exp?: number }
+    if (!decoded.exp || typeof decoded.exp !== 'number') return true
+    return Date.now() >= decoded.exp * 1000
+  } catch (error) {
+    return true
+  }
+}
+
+/**
  * 请求拦截器：自动添加 JWT Token
  */
 instance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token')
-    if (token && config.headers) {
+    const expired = token ? isTokenExpired(token) : false
+    if (token && expired) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    }
+    if (token && config.headers && !expired) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
@@ -45,9 +67,12 @@ instance.interceptors.response.use(
       
       // 40100 未授权：跳转登录页
       if (code === 40100) {
+        const hasToken = !!localStorage.getItem('token')
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        window.location.href = '/login'
+        if (hasToken) {
+          window.location.href = '/login'
+        }
       }
       
       return Promise.reject(new Error(errorMsg || '请求失败'))
@@ -62,9 +87,14 @@ instance.interceptors.response.use(
       switch (status) {
         case 401:
           console.error('未授权，请重新登录')
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          window.location.href = '/login'
+          {
+            const hasToken = !!localStorage.getItem('token')
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            if (hasToken) {
+              window.location.href = '/login'
+            }
+          }
           break
         case 403:
           console.error('拒绝访问')

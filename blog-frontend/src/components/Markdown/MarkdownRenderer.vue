@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
+import 'highlight.js/styles/github.css'
 
 /**
  * 组件 Props
@@ -52,19 +52,19 @@ const renderedHtml = computed(() => {
 }
 
 .markdown-body :deep(h1) {
-  @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-border;
+  @apply text-3xl font-semibold mt-8 mb-4 pb-2 border-b border-border font-serif;
 }
 
 .markdown-body :deep(h2) {
-  @apply text-2xl font-bold mt-6 mb-3 pb-2 border-b border-border;
+  @apply text-2xl font-semibold mt-6 mb-3 pb-2 border-b border-border font-serif;
 }
 
 .markdown-body :deep(h3) {
-  @apply text-xl font-semibold mt-5 mb-2;
+  @apply text-xl font-semibold mt-5 mb-2 font-serif;
 }
 
 .markdown-body :deep(h4) {
-  @apply text-lg font-semibold mt-4 mb-2;
+  @apply text-lg font-semibold mt-4 mb-2 font-serif;
 }
 
 .markdown-body :deep(p) {
@@ -88,15 +88,15 @@ const renderedHtml = computed(() => {
 }
 
 .markdown-body :deep(blockquote) {
-  @apply border-l-4 border-muted pl-4 py-2 my-4 text-muted-foreground italic bg-muted/50;
+  @apply border-l-4 border-muted pl-4 py-2 my-4 text-muted-foreground italic bg-muted;
 }
 
 .markdown-body :deep(code) {
-  @apply bg-muted px-2 py-1 rounded text-sm font-mono text-destructive;
+  @apply bg-muted px-2 py-1 rounded text-sm font-mono text-primary;
 }
 
 .markdown-body :deep(pre) {
-  @apply bg-card text-card-foreground p-4 rounded-lg overflow-x-auto my-4 border border-border;
+  @apply bg-card text-card-foreground p-4 rounded-xl overflow-x-auto my-4 border border-border;
 }
 
 .markdown-body :deep(pre code) {

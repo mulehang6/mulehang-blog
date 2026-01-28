@@ -1,68 +1,70 @@
 <template>
-  <div class="min-h-screen bg-transparent text-foreground">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- 面包屑导航 -->
-      <nav class="mb-6 flex items-center text-sm text-muted-foreground">
-        <router-link to="/" class="hover:text-foreground">首页</router-link>
-        <span class="mx-2">/</span>
-        <router-link to="/tags" class="hover:text-foreground">标签</router-link>
-        <span class="mx-2">/</span>
-        <span class="text-foreground">{{ tag?.name || "加载中..." }}</span>
-      </nav>
+  <div class="space-y-10">
+    <!-- 面包屑导航 -->
+    <nav class="flex items-center text-sm text-ink-light">
+      <router-link to="/" class="hover:text-ink">首页</router-link>
+      <span class="mx-2">/</span>
+      <router-link to="/tags" class="hover:text-ink">标签</router-link>
+      <span class="mx-2">/</span>
+      <span class="text-ink">{{ tag?.name || "加载中..." }}</span>
+    </nav>
 
-      <!-- 标签信息 -->
-      <div
-        v-if="tag"
-        class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm p-6 mb-8"
-      >
-        <div class="flex items-center space-x-3">
-          <h1 class="text-3xl font-bold text-foreground">#{{ tag.name }}</h1>
-          <span
-            class="px-3 py-1 bg-primary/15 text-primary text-sm rounded-full"
-          >
-            {{ tagArticleCount }} 篇文章
-          </span>
-        </div>
-      </div>
-
-      <!-- 文章列表 -->
-      <div v-if="loading" class="flex justify-center items-center py-12">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
-        ></div>
-      </div>
-
-      <div v-else-if="articles.length > 0" class="space-y-6">
-        <div
-          v-for="article in articles"
-          :key="article.id"
-          class="bg-card/70 backdrop-blur-md border border-border/70 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 cursor-pointer"
-          @click="goToArticle(article.slug)"
+    <!-- 标签信息 -->
+    <section
+      v-if="tag"
+      class="rounded-2xl border border-ink/10 bg-paper-card p-6 shadow-soft"
+    >
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="font-serif text-3xl font-medium text-ink">#{{ tag.name }}</h1>
+        <span
+          class="rounded-full bg-clay/10 px-3 py-1 text-sm font-medium text-clay"
         >
-          <h2
-            class="text-xl font-semibold text-foreground mb-2 hover:text-primary"
+          {{ tagArticleCount }} 篇文章
+        </span>
+      </div>
+    </section>
+
+    <!-- 文章列表 -->
+    <div v-if="loading" class="flex justify-center items-center py-12">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <div v-else-if="articles.length > 0" class="space-y-5">
+      <Card
+        v-for="article in articles"
+        :key="article.id"
+        class="group cursor-pointer border-ink/10 bg-paper-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-none"
+        @click="goToArticle(article.slug)"
+      >
+        <CardHeader class="pb-3">
+          <CardTitle
+            class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay"
           >
             {{ article.title }}
-          </h2>
-          <p class="text-muted-foreground text-sm mb-4 line-clamp-2">
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p class="text-sm text-ink-light mb-4 line-clamp-2">
             {{ article.summary }}
           </p>
 
           <!-- 标签列表 -->
-          <div class="flex flex-wrap gap-2 mb-4">
+          <div class="mb-4 flex flex-wrap gap-2">
             <span
               v-for="tag in article.tags"
               :key="tag.id"
-              class="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
+              class="rounded-full bg-paper-dark px-2.5 py-1 text-xs text-ink-light"
             >
               #{{ tag.name }}
             </span>
           </div>
 
           <div
-            class="flex items-center justify-between text-sm text-muted-foreground"
+            class="flex flex-wrap items-center justify-between gap-3 text-sm text-ink-light"
           >
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center gap-4">
               <span>{{
                 article.author?.nickname || article.author?.username || "匿名"
               }}</span>
@@ -70,45 +72,45 @@
                 formatDate(article.publishTime || article.createTime)
               }}</span>
             </div>
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center gap-4">
               <span>👁️ {{ article.readCount }}</span>
               <span>❤️ {{ article.likeCount }}</span>
               <span>💬 {{ article.commentCount }}</span>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+    </div>
 
-      <div v-else class="text-center py-12">
-        <p class="text-muted-foreground">该标签下暂无文章</p>
-      </div>
+    <div v-else class="text-center py-12">
+      <p class="text-ink-light">该标签下暂无文章</p>
+    </div>
 
-      <!-- 分页 -->
-      <div v-if="pagination.totalPages > 1" class="mt-8 flex justify-center">
-        <div class="flex space-x-2">
-          <button
-            v-for="page in pagination.totalPages"
-            :key="page"
-            @click="goToPage(page)"
-            class="px-4 py-2 rounded-md transition-colors"
-            :class="
-              page === pagination.pageNo
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-card/70 text-foreground hover:bg-muted'
-            "
-          >
-            {{ page }}
-          </button>
-        </div>
+    <!-- 分页 -->
+    <div v-if="pagination.totalPages > 1" class="flex justify-center">
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="page in pagination.totalPages"
+          :key="page"
+          @click="goToPage(page)"
+          class="rounded-full border border-ink/10 px-4 py-2 text-sm transition-colors"
+          :class="
+            page === pagination.pageNo
+              ? 'bg-ink text-white'
+              : 'bg-paper-card text-ink hover:bg-paper-dark'
+          "
+        >
+          {{ page }}
+        </button>
       </div>
+    </div>
 
-      <!-- 错误提示 -->
-      <div
-        v-if="error"
-        class="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-md"
-      >
-        <p class="text-destructive">{{ error }}</p>
-      </div>
+    <!-- 错误提示 -->
+    <div
+      v-if="error"
+      class="rounded-xl border border-destructive/30 bg-destructive/10 p-4"
+    >
+      <p class="text-destructive">{{ error }}</p>
     </div>
   </div>
 </template>
@@ -119,6 +121,7 @@ import { useRoute, useRouter } from "vue-router";
 import { tagApi } from "@/api/tag";
 import { articleApi } from "@/api/article";
 import type { Tag, ArticleListItem } from "@/types/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const route = useRoute();
 const router = useRouter();

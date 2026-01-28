@@ -1,10 +1,15 @@
 <template>
   <div class="comment-list">
-    <Card class="hover-lift-sheen">
+    <Card class="border-ink/10 bg-paper-card shadow-soft">
       <CardHeader>
         <CardTitle class="flex items-center justify-between">
-          <span>评论 ({{ total }})</span>
-          <Button variant="ghost" size="sm" @click="fetchComments">
+          <span class="font-serif text-2xl text-ink">评论 ({{ total }})</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-ink-light hover:text-clay"
+            @click="fetchComments"
+          >
             刷新
           </Button>
         </CardTitle>
@@ -17,9 +22,13 @@
             @success="handleCommentSuccess"
           />
         </div>
-        <div v-else class="mb-6 p-4 bg-muted rounded-md text-center">
-          <p class="text-muted-foreground mb-2">登录后可发表评论</p>
-          <Button variant="outline" @click="router.push('/login')">
+        <div v-else class="mb-6 rounded-xl border border-ink/10 bg-paper-dark p-4 text-center">
+          <p class="text-ink-light mb-2">登录后可发表评论</p>
+          <Button
+            variant="outline"
+            class="rounded-xl border-ink/20 text-ink hover:bg-paper-card"
+            @click="router.push('/login')"
+          >
             立即登录
           </Button>
         </div>
@@ -41,7 +50,7 @@
           />
         </div>
 
-        <div v-else class="text-center py-8 text-muted-foreground">
+        <div v-else class="text-center py-8 text-ink-light">
           暂无评论，快来发表第一条评论吧！
         </div>
 
@@ -54,17 +63,19 @@
             variant="outline"
             size="sm"
             :disabled="currentPage === 1"
+            class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
             @click="changePage(currentPage - 1)"
           >
             上一页
           </Button>
-          <span class="text-sm text-muted-foreground">
+          <span class="text-sm text-ink-light">
             第 {{ currentPage }} / {{ totalPages }} 页
           </span>
           <Button
             variant="outline"
             size="sm"
             :disabled="currentPage === totalPages"
+            class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
             @click="changePage(currentPage + 1)"
           >
             下一页

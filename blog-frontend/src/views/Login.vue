@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+  <div class="min-h-screen flex items-center justify-center bg-transparent py-16">
     <div class="w-full max-w-md">
       <!-- Logo 区域 -->
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
+        <h1 class="font-serif text-4xl font-medium text-ink mb-2">
           Mulehang Blog
         </h1>
-        <p class="text-muted-foreground">欢迎回来，请登录您的账户</p>
+        <p class="text-ink-light">欢迎回来，请登录您的账户</p>
       </div>
 
       <!-- 登录表单卡片 -->
-      <Card class="shadow-xl">
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
         <CardHeader>
-          <CardTitle class="text-2xl">登录</CardTitle>
-          <CardDescription>
+          <CardTitle class="font-serif text-2xl text-ink">登录</CardTitle>
+          <CardDescription class="text-ink-light">
             输入您的用户名和密码以登录系统
           </CardDescription>
         </CardHeader>
@@ -21,7 +21,7 @@
           <form @submit.prevent="handleLogin" class="space-y-4">
             <!-- 用户名输入 -->
             <div class="space-y-2">
-              <label for="username" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label for="username" class="text-sm font-medium text-ink">
                 用户名
               </label>
               <Input
@@ -37,10 +37,10 @@
             <!-- 密码输入 -->
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label for="password" class="text-sm font-medium text-ink">
                   密码
                 </label>
-                <a href="#" class="text-xs text-primary hover:underline">
+                <a href="#" class="text-xs text-clay hover:underline">
                   忘记密码？
                 </a>
               </div>
@@ -60,9 +60,9 @@
                 id="remember" 
                 type="checkbox" 
                 v-model="remember"
-                class="h-4 w-4 rounded border-input text-primary focus:ring-primary focus:ring-offset-2"
+                class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
-              <label for="remember" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label for="remember" class="text-sm font-medium text-ink">
                 记住我
               </label>
             </div>
@@ -76,7 +76,7 @@
             <Button
               type="submit"
               :disabled="loading"
-              class="w-full"
+              class="w-full rounded-xl bg-ink text-white hover:bg-clay"
               size="lg"
             >
               <span v-if="loading" class="flex items-center gap-2">
@@ -93,10 +93,10 @@
           <!-- 分割线 -->
           <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
-              <span class="w-full border-t"></span>
+              <span class="w-full border-t border-ink/10"></span>
             </div>
             <div class="relative flex justify-center text-xs uppercase">
-              <span class="bg-card px-2 text-muted-foreground">或</span>
+              <span class="bg-paper-card px-2 text-ink-light">或</span>
             </div>
           </div>
 
@@ -106,7 +106,7 @@
             type="button" 
             :disabled="loading"
             @click="handleGitHubLogin"
-            class="w-full"
+            class="w-full rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
           >
             <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
@@ -118,9 +118,9 @@
 
       <!-- 注册链接 -->
       <div class="text-center mt-6">
-        <p class="text-sm text-muted-foreground">
+        <p class="text-sm text-ink-light">
           还没有账户？
-          <router-link to="/register" class="text-primary font-medium hover:underline">
+          <router-link to="/register" class="text-clay font-medium hover:underline">
             立即注册
           </router-link>
         </p>
@@ -128,7 +128,7 @@
 
       <!-- 返回首页 -->
       <div class="text-center mt-4">
-        <Button variant="ghost" size="sm" @click="router.push('/')">
+        <Button variant="ghost" size="sm" class="text-ink-light hover:text-clay" @click="router.push('/')">
           ← 返回首页
         </Button>
       </div>

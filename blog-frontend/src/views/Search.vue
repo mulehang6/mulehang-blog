@@ -1,174 +1,162 @@
 <template>
-  <div class="min-h-screen bg-transparent">
-    <main class="container mx-auto px-4 py-8">
-      <!-- 搜索头部 -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">搜索结果</h1>
-        <div class="flex items-center gap-4">
-          <div class="flex-1 relative">
-            <Input
-              v-model="keyword"
-              placeholder="搜索文章..."
-              class="pr-10"
-              @keyup.enter="handleSearch"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              class="absolute right-0 top-0"
-              @click="handleSearch"
+  <div class="space-y-10">
+    <!-- 搜索头部 -->
+    <section class="space-y-4">
+      <h1 class="font-serif text-4xl font-medium text-ink">搜索结果</h1>
+      <div class="flex items-center gap-4">
+        <div class="relative flex-1">
+          <Input
+            v-model="keyword"
+            placeholder="搜索文章..."
+            class="rounded-xl border-ink/10 bg-paper-card pr-10 text-ink placeholder:text-ink-lighter"
+            @keyup.enter="handleSearch"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            class="absolute right-0 top-0 text-ink-light hover:text-clay"
+            @click="handleSearch"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </Button>
-          </div>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </Button>
         </div>
+      </div>
 
-        <!-- 搜索历史 -->
-        <div v-if="searchHistory.length > 0" class="mt-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm text-muted-foreground">搜索历史</span>
-            <Button variant="ghost" size="sm" @click="clearHistory">
-              清除
-            </Button>
+      <!-- 搜索历史 -->
+      <div v-if="searchHistory.length > 0" class="rounded-2xl border border-ink/10 bg-paper-card p-4">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-sm text-ink-light">搜索历史</span>
+          <Button variant="ghost" size="sm" class="text-ink-light hover:text-clay" @click="clearHistory">
+            清除
+          </Button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <Badge
+            v-for="(item, index) in searchHistory"
+            :key="index"
+            variant="secondary"
+            class="cursor-pointer rounded-full bg-paper-dark text-ink"
+            @click="handleHistoryClick(item)"
+          >
+            {{ item }}
+          </Badge>
+        </div>
+      </div>
+    </section>
+
+    <!-- 搜索结果信息 -->
+    <div v-if="currentKeyword" class="text-ink-light">
+      搜索 "<span class="font-medium text-ink">{{ currentKeyword }}</span>"
+      找到 <span class="font-medium text-ink">{{ total }}</span> 篇文章
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="loading" class="flex justify-center items-center py-20">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- 搜索结果列表 -->
+    <div v-else-if="articles.length > 0" class="space-y-5">
+      <Card
+        v-for="article in articles"
+        :key="article.id"
+        class="group cursor-pointer border-ink/10 bg-paper-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-none"
+        @click="router.push(`/articles/${article.slug}`)"
+      >
+        <CardHeader>
+          <CardTitle class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay">
+            <span v-if="article.highlightTitle" v-html="article.highlightTitle"></span>
+            <span v-else>{{ article.title }}</span>
+          </CardTitle>
+          <CardDescription class="mt-2 line-clamp-2 text-base text-ink-light">
+            <span v-if="article.highlightSummary" v-html="article.highlightSummary"></span>
+            <span v-else>{{ article.summary }}</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-ink-light">
+            <div class="flex items-center gap-4">
+              <Badge variant="secondary" class="rounded-full bg-paper-dark text-ink">
+                {{ article.categoryName || "未分类" }}
+              </Badge>
+              <span>{{ article.authorName || "匿名" }}</span>
+              <span>{{ formatDate(article.publishTime || article.createTime) }}</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span>👁️ {{ article.readCount }}</span>
+              <span>❤️ {{ article.likeCount }}</span>
+              <span>💬 {{ article.commentCount }}</span>
+            </div>
           </div>
-          <div class="flex flex-wrap gap-2">
+          <div v-if="article.tags && article.tags.length > 0" class="mt-3 flex flex-wrap gap-2">
             <Badge
-              v-for="(item, index) in searchHistory"
-              :key="index"
-              variant="secondary"
-              class="cursor-pointer"
-              @click="handleHistoryClick(item)"
+              v-for="tag in article.tags"
+              :key="tag"
+              variant="outline"
+              class="rounded-full border-ink/20 text-xs text-ink-light"
             >
-              {{ item }}
+              # {{ tag }}
             </Badge>
           </div>
-        </div>
-      </div>
-
-      <!-- 搜索结果信息 -->
-      <div v-if="currentKeyword" class="mb-4">
-        <p class="text-muted-foreground">
-          搜索 "<span class="text-foreground font-medium">{{
-            currentKeyword
-          }}</span
-          >" 找到
-          <span class="text-foreground font-medium">{{ total }}</span> 篇文章
-        </p>
-      </div>
-
-      <!-- 加载状态 -->
-      <div v-if="loading" class="flex justify-center items-center py-20">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
-        ></div>
-      </div>
-
-      <!-- 搜索结果列表 -->
-      <div v-else-if="articles.length > 0" class="space-y-6">
-        <Card
-          v-for="article in articles"
-          :key="article.id"
-          class="hover:shadow-lg transition-shadow cursor-pointer"
-          @click="router.push(`/articles/${article.slug}`)"
-        >
-          <CardHeader>
-            <CardTitle class="text-xl hover:text-primary transition-colors">
-              <span v-if="article.highlightTitle" v-html="article.highlightTitle"></span>
-              <span v-else>{{ article.title }}</span>
-            </CardTitle>
-            <CardDescription class="line-clamp-2 text-base mt-2">
-              <span v-if="article.highlightSummary" v-html="article.highlightSummary"></span>
-              <span v-else>{{ article.summary }}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div
-              class="flex items-center justify-between text-sm text-muted-foreground"
-            >
-              <div class="flex items-center gap-4">
-                <Badge variant="secondary">{{
-                  article.categoryName || "未分类"
-                }}</Badge>
-                <span>{{ article.authorName || "匿名" }}</span>
-                <span>{{
-                  formatDate(article.publishTime || article.createTime)
-                }}</span>
-              </div>
-              <div class="flex items-center gap-4">
-                <span>👁️ {{ article.readCount }}</span>
-                <span>❤️ {{ article.likeCount }}</span>
-                <span>💬 {{ article.commentCount }}</span>
-              </div>
-            </div>
-            <div
-              v-if="article.tags && article.tags.length > 0"
-              class="flex items-center gap-2 mt-3"
-            >
-              <Badge
-                v-for="tag in article.tags"
-                :key="tag"
-                variant="outline"
-                class="text-xs"
-              >
-                # {{ tag }}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <!-- 空状态 -->
-      <Card v-else-if="currentKeyword">
-        <CardContent class="py-12 text-center">
-          <p class="text-muted-foreground text-lg mb-4">没有找到相关文章</p>
-          <p class="text-sm text-muted-foreground mb-6">
-            试试其他关键词或浏览
-            <router-link to="/" class="text-primary hover:underline">
-              所有文章
-            </router-link>
-          </p>
         </CardContent>
       </Card>
+    </div>
 
-      <!-- 分页 -->
-      <div
-        v-if="totalPages > 1"
-        class="mt-8 flex items-center justify-center gap-2"
+    <!-- 空状态 -->
+    <Card v-else-if="currentKeyword" class="border-ink/10 bg-paper-card shadow-soft">
+      <CardContent class="py-12 text-center">
+        <p class="text-ink-light text-lg mb-4">没有找到相关文章</p>
+        <p class="text-sm text-ink-light mb-6">
+          试试其他关键词或浏览
+          <router-link to="/" class="text-clay hover:underline">
+            所有文章
+          </router-link>
+        </p>
+      </CardContent>
+    </Card>
+
+    <!-- 分页 -->
+    <div
+      v-if="totalPages > 1"
+      class="flex items-center justify-center gap-2"
+    >
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="currentPage === 1"
+        class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
+        @click="changePage(currentPage - 1)"
       >
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage === 1"
-          @click="changePage(currentPage - 1)"
-        >
-          上一页
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          第 {{ currentPage }} / {{ totalPages }} 页
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage === totalPages"
-          @click="changePage(currentPage + 1)"
-        >
-          下一页
-        </Button>
-      </div>
-    </main>
+        上一页
+      </Button>
+      <span class="text-sm text-ink-light">
+        第 {{ currentPage }} / {{ totalPages }} 页
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="currentPage === totalPages"
+        class="rounded-full border-ink/20 text-ink hover:bg-paper-dark"
+        @click="changePage(currentPage + 1)"
+      >
+        下一页
+      </Button>
+    </div>
   </div>
 </template>
 

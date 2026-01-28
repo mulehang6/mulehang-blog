@@ -1,20 +1,20 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-10">
     <!-- 页面标题 -->
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+    <header class="space-y-3">
+      <h1 class="font-serif text-4xl font-medium text-ink">
         {{ localeStore.t.tags }}
       </h1>
-      <p class="text-muted-foreground mt-1">
+      <p class="text-ink-light">
         {{ localeStore.t.tagsSubtitle }}
       </p>
-    </div>
+    </header>
 
     <!-- 管理面板 -->
-    <Card v-if="userStore.isLoggedIn" class="hover-lift-sheen">
+    <Card v-if="userStore.isLoggedIn" class="border-ink/10 bg-paper-card shadow-soft">
       <CardContent class="p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-semibold">
+          <h3 class="text-sm font-semibold text-ink">
             {{ editingId ? localeStore.t.editTag : localeStore.t.createTag }}
           </h3>
         </div>
@@ -23,13 +23,13 @@
             v-model="form.name"
             type="text"
             :placeholder="localeStore.t.name"
-            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+            class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
           />
           <input
             v-model="form.slug"
             type="text"
             :placeholder="localeStore.t.slug"
-            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+            class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
           />
         </div>
         <div class="mt-4 flex items-center gap-2">
@@ -51,17 +51,16 @@
     </div>
 
     <!-- 标签云 -->
-    <Card v-else-if="tags.length > 0" class="hover-lift-sheen">
+    <Card v-else-if="tags.length > 0" class="border-ink/10 bg-paper-card shadow-soft">
       <CardContent class="p-8">
         <div class="flex flex-wrap gap-3">
           <span
             v-for="tag in tags"
             :key="tag.id"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/50 hover:bg-muted hover-lift-sheen-sm"
+            class="inline-flex items-center gap-2 rounded-full border border-transparent bg-paper-dark/70 px-4 py-2 text-sm cursor-pointer transition-all duration-300 hover:border-clay/40 hover:bg-paper-dark hover:-translate-y-0.5"
             :style="{
               fontSize: getTagSize(getArticleCount(tag)) + 'px',
-              backgroundColor: 'var(--muted)',
-              color: 'var(--foreground)',
+              color: 'var(--ink)',
             }"
             :title="
               userStore.isAdmin
@@ -70,9 +69,9 @@
             "
             @click="goToTagArticles(tag.id)"
           >
-            <span class="mr-2 text-primary">#</span>{{ tag.name }}
+            <span class="mr-2 text-clay">#</span>{{ tag.name }}
             <span
-              class="ml-2 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-full"
+              class="ml-2 rounded-full bg-paper-card px-2 py-0.5 text-xs text-ink-light"
               >{{ getArticleCount(tag) }}</span
             >
             <button
@@ -84,7 +83,7 @@
             </button>
             <button
               v-if="canManage(tag)"
-              class="ml-1 text-[11px] text-primary hover:underline"
+              class="ml-1 text-[11px] text-clay hover:underline"
               @click.stop="startEdit(tag)"
             >
               {{ localeStore.t.editTag }}
@@ -95,10 +94,10 @@
     </Card>
 
     <!-- 空状态 -->
-    <Card v-else class="border-dashed">
+    <Card v-else class="border-dashed border-ink/20 bg-paper-card">
       <CardContent class="py-12 text-center">
         <div class="text-4xl mb-4">🏷️</div>
-        <p class="text-muted-foreground text-lg">No tags found</p>
+        <p class="text-ink-light text-lg">{{ localeStore.t.noTags }}</p>
       </CardContent>
     </Card>
 

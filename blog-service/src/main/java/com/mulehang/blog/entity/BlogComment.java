@@ -23,9 +23,9 @@ public class BlogComment extends BaseEntity {
 
     private Long parentId;// 父评论ID,0表示直接评论文章
 
-    private Long userId;// 逻辑外键，关联 sys_user.id，未登录访客可为空
+    private Long userId;// 逻辑外键，关联 sys_user.id
 
-    private Long replyToUser;// 逻辑外键，被回复的用户ID，未登录访客可为空
+    private Long replyToUser;// 逻辑外键，被回复的用户ID，可为空
 
     private String content;// 评论内容
 

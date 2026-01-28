@@ -13,6 +13,7 @@ export const articleApi = {
     pageSize?: number
     status?: number
     categoryId?: number
+    columnId?: number
     tagId?: number
     authorId?: number
     keyword?: string

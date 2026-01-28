@@ -1,11 +1,20 @@
 package com.mulehang.blog.controller;
 
 import com.mulehang.blog.context.UserContext;
+import com.mulehang.blog.dto.UserPasswordUpdateDTO;
+import com.mulehang.blog.dto.UserUpdateDTO;
 import com.mulehang.blog.model.Result;
+import com.mulehang.blog.service.UserService;
 import com.mulehang.blog.vo.UserInfoVO;
+import com.mulehang.blog.vo.UserStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,7 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "用户管理", description = "用户信息相关接口")
 @RestController
 @RequestMapping("/api/v1/users")  // 修复：改为 users（复数）与文档一致
+@RequiredArgsConstructor
 public class UserController {
+
+    private final UserService userService;
 
     /**
      * 获取当前登录用户信息
@@ -25,11 +37,74 @@ public class UserController {
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息（需要认证）")
     @GetMapping("/current")
     public Result<UserInfoVO> getCurrentUser() {
-        UserInfoVO currentUser = UserContext.getCurrentUser();
-        if (currentUser == null) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
             return Result.fail("未登录或登录已过期");
         }
-        return Result.ok(currentUser);
+        return Result.ok(userService.getUserInfo(userId));
+    }
+
+    /**
+     * 更新当前用户资料
+     *
+     * @param dto 用户资料更新 DTO
+     * @return 更新后的用户信息
+     */
+    @Operation(summary = "更新当前用户资料", description = "修改昵称、头像、邮箱、个人简介（需要认证）")
+    @PutMapping("/current")
+    public Result<UserInfoVO> updateCurrentUser(@Valid @RequestBody UserUpdateDTO dto) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        return Result.ok(userService.updateProfile(userId, dto));
+    }
+
+    /**
+     * 修改当前用户密码
+     *
+     * @param dto 密码修改 DTO
+     * @return 操作结果
+     */
+    @Operation(summary = "修改当前用户密码", description = "校验旧密码后更新为新密码（需要认证）")
+    @PutMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody UserPasswordUpdateDTO dto) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        userService.changePassword(userId, dto);
+        return Result.ok();
+    }
+
+    /**
+     * 删除当前账号
+     *
+     * @return 操作结果
+     */
+    @Operation(summary = "删除当前账号", description = "删除当前登录用户（需要认证）")
+    @DeleteMapping("/current")
+    public Result<Void> deleteCurrentUser() {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        userService.deleteAccount(userId);
+        return Result.ok();
+    }
+
+    /**
+     * 获取当前用户统计信息
+     *
+     * @return 用户统计信息
+     */
+    @Operation(summary = "获取当前用户统计信息", description = "获取当前登录用户的文章/评论/点赞统计（需要认证）")
+    @GetMapping("/current/stats")
+    public Result<UserStatsVO> getCurrentUserStats() {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        return Result.ok(userService.getUserStats(userId));
     }
 }
-

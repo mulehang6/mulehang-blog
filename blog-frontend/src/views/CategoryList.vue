@@ -1,20 +1,20 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-10">
     <!-- 页面标题 -->
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+    <header class="space-y-3">
+      <h1 class="font-serif text-4xl font-medium text-ink">
         {{ localeStore.t.categories }}
       </h1>
-      <p class="text-muted-foreground mt-1">
+      <p class="text-ink-light">
         {{ localeStore.t.categoriesSubtitle }}
       </p>
-    </div>
+    </header>
 
     <!-- 管理面板 -->
-    <Card v-if="userStore.isLoggedIn" class="hover-lift-sheen">
+    <Card v-if="userStore.isLoggedIn" class="border-ink/10 bg-paper-card shadow-soft">
       <CardContent class="p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-semibold">
+          <h3 class="text-sm font-semibold text-ink">
             {{
               editingId
                 ? localeStore.t.editCategory
@@ -27,13 +27,13 @@
             v-model="form.name"
             type="text"
             :placeholder="localeStore.t.name"
-            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+            class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
           />
           <input
             v-model="form.description"
             type="text"
             :placeholder="localeStore.t.description"
-            class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm"
+            class="flex h-10 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
           />
         </div>
         <div class="mt-4 flex items-center gap-2">
@@ -62,7 +62,7 @@
       <Card
         v-for="category in categories"
         :key="category.id"
-        class="group cursor-pointer hover:border-primary/50 transition-all duration-300 hover-lift-sheen"
+        class="group cursor-pointer border-ink/10 bg-paper-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-none"
         :title="
           userStore.isAdmin
             ? `id: ${category.id} | ${localeStore.t.slug}: ${category.slug} | ${localeStore.t.creatorId}: ${category.creatorId ?? '-'}`
@@ -73,14 +73,14 @@
         <CardHeader>
           <div class="flex items-start justify-between gap-2">
             <CardTitle
-              class="text-xl group-hover:text-primary transition-colors"
+              class="font-serif text-2xl font-medium text-ink transition-colors group-hover:text-clay"
             >
               {{ category.name }}
             </CardTitle>
             <div class="flex items-center gap-2 text-xs">
               <button
                 v-if="canManage(category)"
-                class="text-primary hover:underline"
+                class="text-clay hover:underline"
                 @click.stop="startEdit(category)"
               >
                 {{ localeStore.t.editCategory }}
@@ -96,15 +96,15 @@
           </div>
         </CardHeader>
         <CardContent>
-          <p class="text-muted-foreground text-sm mb-4 line-clamp-2 h-10">
+          <p class="text-sm text-ink-light mb-4 line-clamp-2 h-10">
             {{ category.description || localeStore.t.noDescription }}
           </p>
           <div class="flex items-center justify-between text-sm">
-            <Badge variant="secondary">
+            <Badge variant="secondary" class="rounded-full bg-paper-dark text-ink">
               {{ category.articleCount }} {{ localeStore.t.statArticles }}
             </Badge>
             <span
-              class="text-primary group-hover:underline text-xs font-medium"
+              class="text-clay group-hover:underline text-xs font-medium"
             >
               {{ localeStore.t.viewArticles }}
             </span>
@@ -114,10 +114,10 @@
     </div>
 
     <!-- 空状态 -->
-    <Card v-else class="border-dashed">
+    <Card v-else class="border-dashed border-ink/20 bg-paper-card">
       <CardContent class="py-12 text-center">
         <div class="text-4xl mb-4">📭</div>
-        <p class="text-muted-foreground text-lg">No categories found</p>
+        <p class="text-ink-light text-lg">{{ localeStore.t.noCategories }}</p>
       </CardContent>
     </Card>
 

@@ -1,36 +1,35 @@
 <template>
-  <div class="min-h-screen bg-transparent">
-    <div class="container mx-auto px-4 py-8">
-      <div class="max-w-4xl mx-auto">
-        <!-- 页面标题 -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold">
-            {{ isEditMode ? "编辑文章" : "写文章" }}
-          </h1>
-          <p class="text-muted-foreground mt-2">
-            {{ isEditMode ? "修改文章内容" : "创作你的新文章" }}
-          </p>
-        </div>
+  <div class="space-y-8">
+    <div class="mx-auto w-full max-w-4xl space-y-8">
+      <!-- 页面标题 -->
+      <header class="space-y-2">
+        <h1 class="font-serif text-4xl font-medium text-ink">
+          {{ isEditMode ? "编辑文章" : "写文章" }}
+        </h1>
+        <p class="text-ink-light">
+          {{ isEditMode ? "修改文章内容" : "创作你的新文章" }}
+        </p>
+      </header>
 
         <!-- 文章表单 -->
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <!-- 标题 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium"
+            <label class="text-sm font-medium text-ink"
               >标题 <span class="text-destructive">*</span></label
             >
             <input
               v-model="form.title"
               type="text"
               placeholder="请输入文章标题"
-              class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
               required
             />
           </div>
 
           <!-- 摘要 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium">摘要</label>
+            <label class="text-sm font-medium text-ink">摘要</label>
             <Textarea
               v-model="form.summary"
               placeholder="请输入文章摘要（可选）"
@@ -40,18 +39,18 @@
 
           <!-- 封面图片 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium">封面图片</label>
+            <label class="text-sm font-medium text-ink">封面图片</label>
             <input
               v-model="form.coverUrl"
               type="url"
               placeholder="请输入封面图片 URL（可选）"
-              class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
             />
             <div v-if="form.coverUrl" class="mt-2">
               <img
                 :src="form.coverUrl"
                 alt="封面预览"
-                class="max-w-xs rounded-md border"
+                class="max-w-xs rounded-xl border border-ink/10"
               />
             </div>
           </div>
@@ -60,28 +59,28 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- 分类 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium">分类</label>
+              <label class="text-sm font-medium text-ink">分类</label>
               <div class="space-y-2">
                 <div class="relative">
                   <input
                     v-model="categorySearchKeyword"
                     type="text"
                     placeholder="搜索或输入新分类名称..."
-                    class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
                     @focus="showCategoryDropdown = true"
                   />
                   <!-- 分类下拉列表 -->
                   <div
                     v-if="showCategoryDropdown"
-                    class="absolute z-10 w-full mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-auto"
+                    class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
                   >
                     <!-- 已选分类 -->
                     <div
                       v-if="form.categoryId"
-                      class="p-2 border-b bg-muted/50"
+                      class="border-b border-ink/10 bg-paper-dark/70 p-2"
                     >
                       <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium"
+                        <span class="font-medium text-ink"
                           >已选：{{ getCategoryName(form.categoryId) }}</span
                         >
                         <button
@@ -103,7 +102,7 @@
                       "
                       type="button"
                       @click="createNewCategory"
-                      class="w-full text-left px-3 py-2 hover:bg-muted transition-colors text-sm flex items-center gap-2 text-primary"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
                     >
                       <span>+ 创建分类 "{{ categorySearchKeyword }}"</span>
                     </button>
@@ -113,9 +112,9 @@
                       :key="category.id"
                       type="button"
                       @click="selectCategory(category.id)"
-                      class="w-full text-left px-3 py-2 hover:bg-muted transition-colors text-sm flex items-center justify-between group"
+                      class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
                       :class="{
-                        'bg-primary/10': form.categoryId === category.id,
+                        'bg-clay/10': form.categoryId === category.id,
                       }"
                     >
                       <span>{{ category.name }}</span>
@@ -138,7 +137,7 @@
                         filteredCategories.length === 0 &&
                         !categorySearchKeyword
                       "
-                      class="px-3 py-2 text-sm text-muted-foreground"
+                      class="px-3 py-2 text-sm text-ink-light"
                     >
                       暂无分类
                     </div>
@@ -147,7 +146,7 @@
                 <!-- 已选分类显示 -->
                 <div
                   v-if="form.categoryId && !showCategoryDropdown"
-                  class="text-sm text-muted-foreground"
+                  class="text-sm text-ink-light"
                 >
                   已选：{{ getCategoryName(form.categoryId) }}
                 </div>
@@ -156,17 +155,17 @@
 
             <!-- 标签 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium">标签</label>
+              <label class="text-sm font-medium text-ink">标签</label>
               <div class="space-y-2">
                 <!-- 已选标签 -->
                 <div
-                  class="flex flex-wrap gap-2 p-2 border rounded-md min-h-10"
+                  class="flex min-h-10 flex-wrap gap-2 rounded-xl border border-ink/10 bg-paper-card p-2"
                 >
                   <Badge
                     v-for="tagId in form.tagIds"
                     :key="tagId"
                     variant="secondary"
-                    class="cursor-pointer"
+                    class="cursor-pointer rounded-full bg-paper-dark text-ink"
                     @click="removeTag(tagId)"
                   >
                     {{ getTagName(tagId) }}
@@ -174,7 +173,7 @@
                   </Badge>
                   <span
                     v-if="form.tagIds.length === 0"
-                    class="text-sm text-muted-foreground"
+                    class="text-sm text-ink-light"
                     >点击下方添加标签</span
                   >
                 </div>
@@ -184,13 +183,13 @@
                     v-model="tagSearchKeyword"
                     type="text"
                     placeholder="搜索或输入新标签名称..."
-                    class="glass-input flex h-10 w-full rounded-md border border-input/60 bg-background/40 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
                     @focus="showTagDropdown = true"
                   />
                   <!-- 标签下拉列表 -->
                   <div
                     v-if="showTagDropdown"
-                    class="absolute z-10 w-full mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-auto"
+                    class="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-xl border border-ink/10 bg-paper-card shadow-soft"
                   >
                     <!-- 创建新标签 -->
                     <button
@@ -200,7 +199,7 @@
                       "
                       type="button"
                       @click="createNewTag"
-                      class="w-full text-left px-3 py-2 hover:bg-muted transition-colors text-sm flex items-center gap-2 text-primary"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-clay transition-colors hover:bg-paper-dark/60"
                     >
                       <span>+ 创建标签 "{{ tagSearchKeyword }}"</span>
                     </button>
@@ -210,14 +209,14 @@
                       :key="tag.id"
                       type="button"
                       @click="addTag(tag.id)"
-                      class="w-full text-left px-3 py-2 hover:bg-muted transition-colors text-sm flex items-center justify-between group"
-                      :class="{ 'bg-muted': form.tagIds.includes(tag.id) }"
+                      class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-paper-dark/60 group"
+                      :class="{ 'bg-clay/10': form.tagIds.includes(tag.id) }"
                     >
                       <span>
                         <span>{{ tag.name }}</span>
                         <span
                           v-if="form.tagIds.includes(tag.id)"
-                          class="ml-2 text-primary"
+                          class="ml-2 text-clay"
                           >✓</span
                         >
                       </span>
@@ -237,7 +236,7 @@
                     </button>
                     <div
                       v-if="filteredTags.length === 0 && !tagSearchKeyword"
-                      class="px-3 py-2 text-sm text-muted-foreground"
+                      class="px-3 py-2 text-sm text-ink-light"
                     >
                       暂无标签
                     </div>
@@ -247,9 +246,26 @@
             </div>
           </div>
 
+          <!-- 专栏 -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-ink">专栏</label>
+            <select
+              v-model="form.columnId"
+              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+            >
+              <option :value="null">不选择</option>
+              <option v-for="column in columns" :key="column.id" :value="column.id">
+                {{ column.name }}{{ column.status === 0 ? "（隐藏）" : "" }}
+              </option>
+            </select>
+            <p v-if="columns.length === 0" class="text-xs text-ink-light">
+              暂无专栏，可先在专栏页面创建
+            </p>
+          </div>
+
           <!-- 文章设置 -->
           <div class="space-y-4">
-            <label class="text-sm font-medium">文章设置</label>
+            <label class="text-sm font-medium text-ink">文章设置</label>
             <div class="flex flex-wrap gap-4">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
@@ -257,9 +273,9 @@
                   v-model="form.allowComment"
                   :true-value="1"
                   :false-value="0"
-                  class="rounded"
+                  class="accent-clay"
                 />
-                <span class="text-sm">允许评论</span>
+                <span class="text-sm text-ink">允许评论</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
@@ -267,23 +283,23 @@
                   v-model="form.isPinned"
                   :true-value="1"
                   :false-value="0"
-                  class="rounded"
+                  class="accent-clay"
                 />
-                <span class="text-sm">置顶文章</span>
+                <span class="text-sm text-ink">置顶文章</span>
               </label>
             </div>
           </div>
 
           <!-- Markdown 编辑器 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium"
+            <label class="text-sm font-medium text-ink"
               >文章内容 (Markdown)
               <span class="text-destructive">*</span></label
             >
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <!-- 编辑区 -->
               <div class="space-y-2">
-                <div class="text-xs text-muted-foreground">编辑</div>
+                <div class="text-xs text-ink-lighter">编辑</div>
                 <Textarea
                   v-model="form.contentMd"
                   placeholder="请使用 Markdown 格式编写文章内容..."
@@ -294,15 +310,15 @@
               </div>
               <!-- 预览区 -->
               <div class="space-y-2">
-                <div class="text-xs text-muted-foreground">预览</div>
+                <div class="text-xs text-ink-lighter">预览</div>
                 <div
-                  class="border rounded-md p-4 min-h-125 overflow-auto bg-card"
+                  class="min-h-125 overflow-auto rounded-xl border border-ink/10 bg-paper-card p-4"
                 >
                   <MarkdownRenderer
                     v-if="form.contentMd"
                     :content="form.contentMd"
                   />
-                  <div v-else class="text-muted-foreground text-sm">
+                  <div v-else class="text-ink-light text-sm">
                     暂无内容
                   </div>
                 </div>
@@ -311,8 +327,13 @@
           </div>
 
           <!-- 操作按钮 -->
-          <div class="flex gap-4 justify-end pt-6 border-t">
-            <Button type="button" variant="outline" @click="router.back()">
+          <div class="flex flex-wrap gap-4 justify-end pt-6 border-t border-ink/10">
+            <Button
+              type="button"
+              variant="outline"
+              class="rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
+              @click="router.back()"
+            >
               取消
             </Button>
             <Button
@@ -320,15 +341,19 @@
               variant="secondary"
               @click="handleSaveDraft"
               :disabled="loading"
+              class="rounded-xl bg-paper-dark text-ink hover:bg-paper-dark/80"
             >
               保存草稿
             </Button>
-            <Button type="submit" :disabled="loading">
+            <Button
+              type="submit"
+              :disabled="loading"
+              class="rounded-xl bg-ink text-white hover:bg-clay"
+            >
               {{ isEditMode && form.status === 1 ? "更新文章" : "发布文章" }}
             </Button>
           </div>
         </form>
-      </div>
     </div>
 
     <!-- 删除确认对话框 -->
@@ -364,6 +389,7 @@ import { toast } from "vue-sonner";
 import { useUserStore } from "@/stores/user";
 import { articleApi } from "@/api/article";
 import { categoryApi } from "@/api/category";
+import { columnApi } from "@/api/column";
 import { tagApi } from "@/api/tag";
 import { fileApi } from "@/api/file";
 import { Button } from "@/components/ui/button";
@@ -380,7 +406,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
-import type { Category, Tag } from "@/types/api";
+import type { Category, Tag, Column } from "@/types/api";
 
 const router = useRouter();
 const route = useRoute();
@@ -470,6 +496,10 @@ const categories = ref<Category[]>([]);
  */
 const tags = ref<Tag[]>([]);
 
+/**
+ * 专栏列表
+ */
+const columns = ref<Column[]>([]);
 /**
  * 分类搜索关键词
  */
@@ -757,14 +787,16 @@ async function deleteTagConfirmed(tagId: number, tagName: string) {
  */
 async function loadCategoriesAndTags() {
   try {
-    const [categoryList, tagList] = await Promise.all([
+    const [categoryList, tagList, columnList] = await Promise.all([
       categoryApi.getAll(),
       tagApi.getAll(),
+      columnApi.getAll(),
     ]);
     categories.value = categoryList;
     tags.value = tagList;
+    columns.value = columnList;
   } catch (error) {
-    console.error("加载分类和标签失败:", error);
+    console.error("加载分类、标签与专栏失败:", error);
   }
 }
 
@@ -783,6 +815,7 @@ async function loadArticle() {
     form.value.summary = article.summary || "";
     form.value.coverUrl = article.coverUrl || "";
     form.value.categoryId = article.category?.id || null;
+    form.value.columnId = article.column?.id || null;
     form.value.tagIds = article.tags?.map((t) => t.id) || [];
     form.value.contentMd = article.contentMd || "";
     form.value.status = article.status;

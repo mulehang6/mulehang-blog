@@ -21,8 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +52,7 @@ public class AiController {
             fallback = "chatFallback"
     )
     public Result<String> chat(@Valid @RequestBody AiChatDTO dto) {
-        AiService aiService = getAiService(dto.getProvider());
+        AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
         
         List<AiMessage> messages = dto.getMessages().stream()
                 .map(m -> new AiMessage(m.getRole(), m.getContent()))
@@ -60,6 +62,7 @@ public class AiController {
                 .messages(messages)
                 .temperature(dto.getTemperature())
                 .maxTokens(dto.getMaxTokens())
+                .model(normalizeOptional(dto.getModel()))
                 .build();
 
         AiResponse response = aiService.chat(request);
@@ -94,7 +97,7 @@ public class AiController {
             fallback = "chatStreamFallback"
     )
     public Flux<ServerSentEvent<String>> chatStream(@Valid @RequestBody AiChatDTO dto) {
-        AiService aiService = getAiService(dto.getProvider());
+        AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
 
         List<AiMessage> messages = dto.getMessages().stream()
                 .map(m -> new AiMessage(m.getRole(), m.getContent()))
@@ -104,6 +107,7 @@ public class AiController {
                 .messages(messages)
                 .temperature(dto.getTemperature())
                 .maxTokens(dto.getMaxTokens())
+                .model(normalizeOptional(dto.getModel()))
                 .stream(true)
                 .build();
 
@@ -157,10 +161,16 @@ public class AiController {
             fallback = "assistantFallback"
     )
     public Result<String> generateSummary(@Valid @RequestBody AiAssistantDTO dto) {
-        AiService aiService = aiServiceFactory.getDefaultService();
+        AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
         int maxLength = dto.getMaxLength() != null ? dto.getMaxLength() : 200;
-        String summary = aiService.generateSummary(dto.getContent(), maxLength);
-        return Result.ok(summary);
+        String prompt = String.format("请为以下文章生成一段不超过%d字的摘要：\n\n%s", maxLength, dto.getContent());
+        AiRequest request = AiRequest.builder()
+                .messages(List.of(new AiMessage("user", prompt)))
+                .maxTokens(Math.max(maxLength * 2, 500))
+                .model(normalizeOptional(dto.getModel()))
+                .build();
+        AiResponse response = aiService.chat(request);
+        return Result.ok(response.getContent());
     }
 
     /**
@@ -174,9 +184,20 @@ public class AiController {
             fallback = "assistantFallback"
     )
     public Result<List<String>> suggestTitles(@Valid @RequestBody AiAssistantDTO dto) {
-        AiService aiService = aiServiceFactory.getDefaultService();
+        AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
         int count = dto.getCount() != null ? dto.getCount() : 3;
-        List<String> titles = aiService.suggestTitles(dto.getContent(), count);
+        String prompt = String.format(
+                "请为以下文章推荐%d个具有吸引力的标题，每行一个，不要包含序号或引导语：\n\n%s",
+                count, dto.getContent());
+        AiRequest request = AiRequest.builder()
+                .messages(List.of(new AiMessage("user", prompt)))
+                .model(normalizeOptional(dto.getModel()))
+                .build();
+        AiResponse response = aiService.chat(request);
+        List<String> titles = Arrays.stream(response.getContent().split("\n"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
         return Result.ok(titles);
     }
 
@@ -191,9 +212,20 @@ public class AiController {
             fallback = "assistantFallback"
     )
     public Result<List<String>> suggestTags(@Valid @RequestBody AiAssistantDTO dto) {
-        AiService aiService = aiServiceFactory.getDefaultService();
+        AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
         int count = dto.getCount() != null ? dto.getCount() : 5;
-        List<String> tags = aiService.suggestTags(dto.getContent(), count);
+        String prompt = String.format(
+                "请为以下文章提取%d个最相关的标签，用英文逗号分隔，不要包含引导语：\n\n%s",
+                count, dto.getContent());
+        AiRequest request = AiRequest.builder()
+                .messages(List.of(new AiMessage("user", prompt)))
+                .model(normalizeOptional(dto.getModel()))
+                .build();
+        AiResponse response = aiService.chat(request);
+        List<String> tags = Arrays.stream(response.getContent().split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
         return Result.ok(tags);
     }
 
@@ -230,7 +262,13 @@ public class AiController {
         if (dto.getTopic() == null || dto.getTopic().trim().isEmpty()) {
             return Result.fail("主题不能为空");
         }
-        List<String> outline = aiWritingAssistant.generateOutline(dto.getTopic());
+        List<String> outline = aiWritingAssistant.generateOutline(
+                dto.getTopic(),
+                dto.getProvider(),
+                dto.getBaseUrl(),
+                dto.getApiKey(),
+                dto.getModel()
+        );
         return Result.ok(outline);
     }
 
@@ -252,7 +290,13 @@ public class AiController {
             return Result.fail("内容不能为空");
         }
         // 同步版本：收集完整结果
-        String result = aiWritingAssistant.continueWriting(dto.getContent())
+        String result = aiWritingAssistant.continueWriting(
+                        dto.getContent(),
+                        dto.getProvider(),
+                        dto.getBaseUrl(),
+                        dto.getApiKey(),
+                        dto.getModel()
+                )
                 .collectList()
                 .map(chunks -> String.join("", chunks))
                 .block();
@@ -281,7 +325,13 @@ public class AiController {
                     .build());
         }
         
-        return aiWritingAssistant.continueWriting(dto.getContent())
+        return aiWritingAssistant.continueWriting(
+                        dto.getContent(),
+                        dto.getProvider(),
+                        dto.getBaseUrl(),
+                        dto.getApiKey(),
+                        dto.getModel()
+                )
                 .map(chunk -> ServerSentEvent.<String>builder()
                         .data(chunk)
                         .build())
@@ -315,7 +365,13 @@ public class AiController {
         if (dto.getContent() == null || dto.getContent().trim().isEmpty()) {
             return Result.fail("内容不能为空");
         }
-        String polished = aiWritingAssistant.polish(dto.getContent());
+        String polished = aiWritingAssistant.polish(
+                dto.getContent(),
+                dto.getProvider(),
+                dto.getBaseUrl(),
+                dto.getApiKey(),
+                dto.getModel()
+        );
         return Result.ok(polished);
     }
 
@@ -339,7 +395,14 @@ public class AiController {
         if (dto.getTargetLanguage() == null || dto.getTargetLanguage().trim().isEmpty()) {
             return Result.fail("目标语言不能为空");
         }
-        String translated = aiWritingAssistant.translate(dto.getContent(), dto.getTargetLanguage());
+        String translated = aiWritingAssistant.translate(
+                dto.getContent(),
+                dto.getTargetLanguage(),
+                dto.getProvider(),
+                dto.getBaseUrl(),
+                dto.getApiKey(),
+                dto.getModel()
+        );
         return Result.ok(translated);
     }
 
@@ -381,10 +444,31 @@ public class AiController {
                 .build());
     }
 
-    private AiService getAiService(String provider) {
-        if (provider != null && !provider.isEmpty()) {
-            return aiServiceFactory.getService(provider);
+    /**
+     * 解析并返回 AI 服务实例（支持 BYOK 覆盖）。
+     *
+     * @param provider AI 服务提供商
+     * @param baseUrl  自定义 Base URL
+     * @param apiKey   自带 API Key
+     * @return AI 服务
+     */
+    private AiService resolveAiService(String provider, String baseUrl, String apiKey) {
+        if (StringUtils.hasText(provider)) {
+            return aiServiceFactory.getService(provider, baseUrl, apiKey);
         }
-        return aiServiceFactory.getDefaultService();
+        return aiServiceFactory.getDefaultService(baseUrl, apiKey);
+    }
+
+    /**
+     * 规范化可选字符串参数。
+     *
+     * @param value 原始值
+     * @return 处理后的值
+     */
+    private String normalizeOptional(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.trim();
     }
 }

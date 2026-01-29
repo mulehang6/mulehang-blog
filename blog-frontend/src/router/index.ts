@@ -121,6 +121,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '文章管理', requiresAuth: true }
   },
   {
+    path: '/admin',
+    name: 'AdminConsole',
+    component: () => import('@/views/AdminConsole.vue'),
+    meta: { title: '管理控制台', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),

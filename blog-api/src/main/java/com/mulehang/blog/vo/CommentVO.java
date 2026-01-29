@@ -13,6 +13,10 @@ public class CommentVO {
 
     private Long articleId;// 文章 ID
 
+    private String articleTitle;// 文章标题
+
+    private String articleSlug;// 文章 slug
+
     private Long rootId;// 根评论 ID
 
     private Long parentId;// 父评论 ID

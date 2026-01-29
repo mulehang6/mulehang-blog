@@ -119,6 +119,8 @@
                 v-if="article.coverUrl"
                 :src="article.coverUrl"
                 :alt="article.title"
+                loading="lazy"
+                decoding="async"
                 class="h-20 w-20 rounded-xl object-cover"
               />
               <div class="flex-1 min-w-0">
@@ -148,6 +150,44 @@
           </div>
         </CardContent>
       </Card>
+
+      <!-- 最近评论 -->
+      <Card class="border-ink/10 bg-paper-card shadow-soft">
+        <CardHeader>
+          <CardTitle class="font-serif text-2xl text-ink">最近评论</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div v-if="commentsLoading" class="flex justify-center py-8">
+            <div
+              class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+            ></div>
+          </div>
+          <div v-else-if="comments.length > 0" class="space-y-4">
+            <div
+              v-for="comment in comments"
+              :key="comment.id"
+              class="rounded-xl border border-transparent p-4 transition-colors cursor-pointer hover:border-ink/10 hover:bg-paper-dark/60"
+              @click="goToCommentArticle(comment)"
+            >
+              <p class="text-sm text-ink line-clamp-2">{{ comment.content }}</p>
+              <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-ink-light">
+                <span v-if="comment.articleTitle">《{{ comment.articleTitle }}》</span>
+                <span v-else-if="comment.articleSlug">{{ comment.articleSlug }}</span>
+                <span>{{ formatDate(comment.createTime) }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-center py-8 text-ink-light">
+            暂无评论
+          </div>
+          <p
+            v-if="commentsError"
+            class="mt-2 text-center text-xs text-destructive"
+          >
+            {{ commentsError }}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>
@@ -157,8 +197,9 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { articleApi } from "@/api/article";
+import { commentApi } from "@/api/comment";
 import { userApi } from "@/api/user";
-import type { ArticleListItem, UserStats } from "@/types/api";
+import type { ArticleListItem, CommentVO, UserStats } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -169,6 +210,9 @@ const userStore = useUserStore();
 
 const articles = ref<ArticleListItem[]>([]);
 const loading = ref(false);
+const comments = ref<CommentVO[]>([]);
+const commentsLoading = ref(false);
+const commentsError = ref("");
 const stats = ref<UserStats>({
   articleCount: 0,
   commentCount: 0,
@@ -215,6 +259,24 @@ async function fetchUserStats() {
 }
 
 /**
+ * 获取用户评论列表
+ */
+async function fetchUserComments() {
+  if (!userStore.userInfo) return;
+
+  commentsLoading.value = true;
+  commentsError.value = "";
+  try {
+    const result = await commentApi.getCurrentUserComments(1, 10);
+    comments.value = result.list;
+  } catch (err: any) {
+    commentsError.value = err.message || "获取评论失败";
+  } finally {
+    commentsLoading.value = false;
+  }
+}
+
+/**
  * 获取角色标签
  */
 function getRoleLabel(role: string): string {
@@ -223,6 +285,14 @@ function getRoleLabel(role: string): string {
     USER: "用户",
   };
   return roleMap[role] || role;
+}
+
+/**
+ * 跳转到评论对应文章
+ */
+function goToCommentArticle(comment: CommentVO) {
+  if (!comment.articleSlug) return;
+  router.push(`/articles/${comment.articleSlug}`);
 }
 
 /**
@@ -243,5 +313,6 @@ onMounted(() => {
 
   fetchUserStats();
   fetchUserArticles();
+  fetchUserComments();
 });
 </script>

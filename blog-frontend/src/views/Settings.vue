@@ -11,21 +11,34 @@
         <CardContent>
           <form @submit.prevent="handleSubmit" class="space-y-6">
             <!-- 头像 -->
-            <div class="flex items-center gap-4">
+            <div class="flex flex-col gap-4 md:flex-row md:items-start">
               <Avatar class="h-20 w-20">
                 <AvatarImage :src="form.avatar" :alt="form.nickname" />
                 <AvatarFallback class="text-xl">{{
                   form.nickname?.charAt(0) || "U"
                 }}</AvatarFallback>
               </Avatar>
-              <div class="flex-1">
-                <label class="block text-sm font-medium text-ink mb-2">头像 URL</label>
-                <input
+              <div class="flex-1 space-y-3">
+                <ImageUpload
                   v-model="form.avatar"
-                  type="url"
-                  placeholder="https://example.com/avatar.jpg"
-                  class="w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+                  label="上传头像"
+                  helper="支持拖拽或点击上传"
+                  drop-text="点击或拖拽上传头像"
+                  upload-text="选择图片"
+                  remove-text="移除"
+                  preview-alt="头像预览"
                 />
+                <div>
+                  <label class="block text-sm font-medium text-ink mb-2">
+                    头像 URL（可手动填写）
+                  </label>
+                  <input
+                    v-model="form.avatar"
+                    type="url"
+                    placeholder="https://example.com/avatar.jpg"
+                    class="w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
+                  />
+                </div>
               </div>
             </div>
 
@@ -220,6 +233,7 @@ import { userApi } from "@/api/user";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import ImageUpload from "@/components/Upload/ImageUpload.vue";
 import {
   AlertDialog,
   AlertDialogAction,

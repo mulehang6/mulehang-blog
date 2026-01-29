@@ -18,6 +18,8 @@
         <img
           :src="column.coverUrl"
           :alt="column.name"
+          loading="lazy"
+          decoding="async"
           class="h-full w-full object-cover"
         />
       </div>

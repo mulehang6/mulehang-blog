@@ -3,8 +3,11 @@ package com.mulehang.blog.controller;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.UserPasswordUpdateDTO;
 import com.mulehang.blog.dto.UserUpdateDTO;
+import com.mulehang.blog.model.PageResult;
 import com.mulehang.blog.model.Result;
+import com.mulehang.blog.service.CommentService;
 import com.mulehang.blog.service.UserService;
+import com.mulehang.blog.vo.CommentVO;
 import com.mulehang.blog.vo.UserInfoVO;
 import com.mulehang.blog.vo.UserStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final CommentService commentService;
 
     /**
      * 获取当前登录用户信息
@@ -106,5 +110,22 @@ public class UserController {
             return Result.fail("未登录或登录已过期");
         }
         return Result.ok(userService.getUserStats(userId));
+    }
+
+    /**
+     * 获取当前用户评论列表
+     *
+     * @param pageNo   页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 评论分页列表
+     */
+    @Operation(summary = "获取当前用户评论列表", description = "分页查询当前登录用户发表的评论（需要认证）")
+    @GetMapping("/current/comments")
+    public Result<PageResult<CommentVO>> getCurrentUserComments(Long pageNo, Long pageSize) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
+        return Result.ok(commentService.listByUser(userId, pageNo, pageSize));
     }
 }

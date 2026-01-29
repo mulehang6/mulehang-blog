@@ -34,6 +34,16 @@ public interface CommentService {
     PageResult<CommentVO> listByArticle(Long articleId, Long pageNo, Long pageSize);
 
     /**
+     * 按用户分页查询评论列表。
+     *
+     * @param userId   用户 ID
+     * @param pageNo   页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    PageResult<CommentVO> listByUser(Long userId, Long pageNo, Long pageSize);
+
+    /**
      * 点赞评论。
      *
      * @param userId    用户 ID

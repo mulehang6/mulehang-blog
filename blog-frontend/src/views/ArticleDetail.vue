@@ -92,6 +92,8 @@
         <img
           :src="article.coverUrl"
           :alt="article.title"
+          loading="lazy"
+          decoding="async"
           class="w-full object-cover"
         />
       </div>

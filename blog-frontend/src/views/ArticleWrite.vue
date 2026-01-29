@@ -37,23 +37,24 @@
           />
         </div>
 
-        <!-- 封面图片 -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-ink">封面图片</label>
-          <input
-            v-model="form.coverUrl"
-            type="url"
-            placeholder="请输入封面图片 URL（可选）"
-            class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
-          />
-          <div v-if="form.coverUrl" class="mt-2">
-            <img
-              :src="form.coverUrl"
-              alt="封面预览"
-              class="max-w-xs rounded-xl border border-ink/10"
+          <!-- 封面图片 -->
+          <div class="space-y-3">
+            <label class="text-sm font-medium text-ink">封面图片</label>
+            <ImageUpload
+              v-model="form.coverUrl"
+              helper="支持拖拽或点击上传"
+              drop-text="点击或拖拽上传封面"
+              upload-text="选择图片"
+              remove-text="移除"
+              preview-alt="封面预览"
+            />
+            <input
+              v-model="form.coverUrl"
+              type="url"
+              placeholder="或手动输入封面图片 URL（可选）"
+              class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
             />
           </div>
-        </div>
 
         <!-- 分类和标签 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -407,6 +408,7 @@ import { fileApi } from "@/api/file";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import ImageUpload from "@/components/Upload/ImageUpload.vue";
 import {
   AlertDialog,
   AlertDialogAction,

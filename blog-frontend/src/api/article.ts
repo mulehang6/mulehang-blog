@@ -135,5 +135,24 @@ export const articleApi = {
    */
   delete(id: number): Promise<void> {
     return request.delete(`/api/v1/articles/${id}`)
+  },
+
+  /**
+   * 重建搜索索引
+   */
+  rebuildSearchIndex(): Promise<number> {
+    return request.post('/api/v1/articles/rebuild-search-index')
+  },
+
+  /**
+   * 发送测试邮件（延迟队列）
+   */
+  sendTestEmail(params: {
+    to: string
+    subject?: string
+    content?: string
+    delaySeconds?: number
+  }): Promise<void> {
+    return request.post('/api/v1/articles/email/test', null, { params })
   }
 }

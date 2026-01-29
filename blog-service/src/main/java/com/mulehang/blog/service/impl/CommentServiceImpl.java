@@ -30,9 +30,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 评论 Service 实现。
@@ -202,6 +206,53 @@ public class CommentServiceImpl implements CommentService {
         List<CommentVO> list = result.getRecords().stream()
                 .map(comment -> toVO(comment, currentUserId))
                 .toList();
+        PageResult<CommentVO> pageResult = new PageResult<>();
+        pageResult.setList(list);
+        pageResult.setPageNo(pn);
+        pageResult.setPageSize(ps);
+        pageResult.setTotal(result.getTotal());
+        return pageResult;
+    }
+
+    /**
+     * 按用户分页查询评论列表。
+     *
+     * @param userId   用户 ID
+     * @param pageNo   页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    @Override
+    public PageResult<CommentVO> listByUser(Long userId, Long pageNo, Long pageSize) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId 为空");
+        }
+        long pn = pageNo == null ? 1L : pageNo;
+        long ps = pageSize == null ? 10L : pageSize;
+
+        Page<BlogComment> page = new Page<>(pn, ps);
+        Page<BlogComment> result = commentMapper.selectPage(page, new LambdaQueryWrapper<BlogComment>()
+                .eq(BlogComment::getUserId, userId)
+                .in(BlogComment::getStatus,
+                        CommentStatusEnum.APPROVED.getCode(),
+                        CommentStatusEnum.DELETED.getCode())
+                .orderByDesc(BlogComment::getCreateTime));
+
+        List<BlogComment> records = result.getRecords();
+        Map<Long, BlogArticle> articleMap = loadArticleMap(records);
+
+        List<CommentVO> list = records.stream()
+                .map(comment -> {
+                    CommentVO vo = toVO(comment, userId);
+                    BlogArticle article = articleMap.get(comment.getArticleId());
+                    if (article != null) {
+                        vo.setArticleTitle(article.getTitle());
+                        vo.setArticleSlug(article.getSlug());
+                    }
+                    return vo;
+                })
+                .toList();
+
         PageResult<CommentVO> pageResult = new PageResult<>();
         pageResult.setList(list);
         pageResult.setPageNo(pn);
@@ -426,6 +477,30 @@ public class CommentServiceImpl implements CommentService {
         }
 
         return vo;
+    }
+
+    /**
+     * 批量加载评论关联的文章信息。
+     *
+     * @param comments 评论列表
+     * @return 文章映射
+     */
+    private Map<Long, BlogArticle> loadArticleMap(List<BlogComment> comments) {
+        if (comments == null || comments.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Set<Long> articleIds = comments.stream()
+                .map(BlogComment::getArticleId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (articleIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return articleMapper.selectList(new LambdaQueryWrapper<BlogArticle>()
+                        .in(BlogArticle::getId, articleIds))
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(BlogArticle::getId, article -> article));
     }
 
     /**

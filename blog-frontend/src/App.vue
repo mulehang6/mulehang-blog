@@ -16,12 +16,35 @@ import { Toaster } from "@/components/ui/sonner";
 import MainLayout from "@/layouts/MainLayout.vue";
 import BeamBackground from "@/components/BeamBackground.vue";
 import { useRoute } from "vue-router";
-import { computed } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
+import { useUserStore } from "@/stores/user";
+import { useNotificationStore } from "@/stores/notifications";
 
 const route = useRoute();
+const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 
 const isStandalonePage = computed(() => {
   const name = route.name as string;
   return ["Login", "Register", "GitHubCallback"].includes(name);
+});
+
+/**
+ * 根据登录状态自动连接/断开 WebSocket 通知。
+ */
+watch(
+  () => ({ loggedIn: userStore.isLoggedIn, token: userStore.token }),
+  ({ loggedIn, token }) => {
+    if (loggedIn && token) {
+      notificationStore.connect(token);
+      return;
+    }
+    notificationStore.disconnect();
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  notificationStore.disconnect();
 });
 </script>

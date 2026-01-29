@@ -540,6 +540,15 @@
               :class="resultSections.summary ? 'sketch-open' : 'sketch-closed'"
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(assistantSummary)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3 text-sm text-ink-light whitespace-pre-wrap"
                 >
@@ -569,6 +578,15 @@
               :class="resultSections.titles ? 'sketch-open' : 'sketch-closed'"
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(assistantTitles)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -606,6 +624,15 @@
               :class="resultSections.tags ? 'sketch-open' : 'sketch-closed'"
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(assistantTags)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -643,6 +670,15 @@
               :class="resultSections.outline ? 'sketch-open' : 'sketch-closed'"
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(outline)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -676,6 +712,16 @@
               "
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    v-if="continueOutput"
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(continueOutput)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -712,6 +758,15 @@
               :class="resultSections.polish ? 'sketch-open' : 'sketch-closed'"
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(polishOutput)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -743,6 +798,15 @@
               "
             >
               <div class="sketch-collapse-inner">
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="text-xs text-clay transition-colors hover:text-ink"
+                    @click="appendToWritingContent(translateOutput)"
+                  >
+                    {{ localeStore.t.aiInsertToWriting }}
+                  </button>
+                </div>
                 <div
                   class="mt-2 rounded-xl border border-ink/10 bg-paper-card p-3"
                 >
@@ -824,7 +888,44 @@ const storageKeys = {
   model: "ai.model",
   apiKey: "ai.apiKey",
   rememberKey: "ai.rememberKey",
+  chatHistory: "ai.chatHistory",
 };
+
+const chatHistoryLimit = 60;
+
+/**
+ * 从本地存储恢复对话历史。
+ */
+function loadChatHistory(): AiMessage[] {
+  const raw = localStorage.getItem(storageKeys.chatHistory);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item) =>
+          item &&
+          typeof item.content === "string" &&
+          ["system", "user", "assistant"].includes(item.role),
+      )
+      .slice(-chatHistoryLimit);
+  } catch (error) {
+    return [];
+  }
+}
+
+/**
+ * 持久化对话历史。
+ */
+function persistChatHistory(messages: AiMessage[]) {
+  const trimmed = messages.slice(-chatHistoryLimit);
+  if (trimmed.length === 0) {
+    localStorage.removeItem(storageKeys.chatHistory);
+    return;
+  }
+  localStorage.setItem(storageKeys.chatHistory, JSON.stringify(trimmed));
+}
 
 const aiBaseUrl = ref(localStorage.getItem(storageKeys.baseUrl) || "");
 const aiModel = ref(localStorage.getItem(storageKeys.model) || "");
@@ -837,7 +938,7 @@ const aiApiKey = ref(
     : sessionStorage.getItem(storageKeys.apiKey) || "",
 );
 
-const chatMessages = ref<AiMessage[]>([]);
+const chatMessages = ref<AiMessage[]>(loadChatHistory());
 const chatInput = ref("");
 const chatProvider = ref("");
 const chatTemperature = ref(0.7);
@@ -898,6 +999,17 @@ const hasResults = computed(
     Boolean(continueOutput.value) ||
     Boolean(polishOutput.value) ||
     Boolean(translateOutput.value),
+);
+
+/**
+ * 监听聊天记录变化并持久化。
+ */
+watch(
+  chatMessages,
+  (value) => {
+    persistChatHistory(value);
+  },
+  { deep: true },
 );
 
 watch(
@@ -1049,9 +1161,24 @@ function clearResults() {
   isResultMinimized.value = false;
 }
 
+/**
+ * 将生成结果插入到写作输入区。
+ */
+function appendToWritingContent(content: string | string[]) {
+  const text = Array.isArray(content) ? content.join("\n") : content;
+  if (!text || !text.trim()) return;
+  const separator = writingContent.value.trim() ? "\n\n" : "";
+  writingContent.value = `${writingContent.value}${separator}${text.trim()}`;
+  toast.success(localeStore.t.aiInsertSuccess);
+}
+
+/**
+ * 清空对话记录。
+ */
 function resetChat() {
   chatMessages.value = [];
   chatInput.value = "";
+  persistChatHistory([]);
   stopChatStream();
 }
 

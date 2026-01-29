@@ -31,6 +31,18 @@ export const commentApi = {
   },
 
   /**
+   * 获取当前用户评论列表
+   */
+  getCurrentUserComments(
+    pageNo: number = 1,
+    pageSize: number = 10
+  ): Promise<PageResult<CommentVO>> {
+    return request.get('/api/v1/users/current/comments', {
+      params: { pageNo, pageSize }
+    })
+  },
+
+  /**
    * 点赞评论
    */
   like(commentId: number): Promise<boolean> {

@@ -184,6 +184,8 @@ export interface Column {
 export interface CommentVO {
   id: number
   articleId: number
+  articleTitle?: string
+  articleSlug?: string
   rootId: number | null
   userId: number
   username: string
@@ -199,6 +201,24 @@ export interface CommentVO {
   isTop?: number
   createTime: string
   children?: CommentVO[]
+}
+
+/**
+ * WebSocket 通知消息
+ */
+export interface Notification {
+  type: string
+  title?: string
+  content?: string
+  articleId?: number
+  articleTitle?: string
+  commentId?: number
+  senderId?: number
+  senderName?: string
+  receiverId?: number
+  url?: string
+  timestamp?: string
+  read?: boolean
 }
 
 /**

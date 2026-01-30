@@ -43,5 +43,12 @@ export const userApi = {
    */
   getStats(): Promise<UserStats> {
     return request.get('/api/v1/users/current/stats')
+  },
+
+  /**
+   * 获取用户列表（管理员）
+   */
+  listAll(): Promise<UserInfo[]> {
+    return request.get('/api/v1/admin/users')
   }
 }

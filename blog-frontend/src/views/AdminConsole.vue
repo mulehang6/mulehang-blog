@@ -50,6 +50,95 @@
           </Button>
         </CardContent>
       </Card>
+
+      <Card class="border-ink/10 bg-paper-card shadow-soft lg:col-span-2">
+        <CardHeader>
+          <CardTitle class="font-serif text-2xl text-ink">用户列表</CardTitle>
+          <CardAction>
+            <Button
+              variant="outline"
+              class="rounded-xl border-ink/20 text-ink"
+              :disabled="usersLoading"
+              @click="fetchUsers"
+            >
+              {{ usersLoading ? "刷新中..." : "刷新" }}
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <p class="text-sm text-ink-light">共 {{ users.length }} 位用户</p>
+
+          <p v-if="usersLoading" class="text-sm text-ink-light">加载中...</p>
+          <p v-else-if="users.length === 0" class="text-sm text-ink-light">
+            暂无用户
+          </p>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="user in users"
+              :key="user.id"
+              class="flex flex-col gap-4 rounded-2xl border border-ink/10 bg-paper-dark/30 p-4 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-4">
+                <Avatar class="h-12 w-12">
+                  <AvatarImage
+                    :src="user.avatar"
+                    :alt="user.nickname || user.username"
+                  />
+                  <AvatarFallback>{{
+                    (user.nickname || user.username || "?").charAt(0)
+                  }}</AvatarFallback>
+                </Avatar>
+                <div class="space-y-1">
+                  <p class="text-base font-semibold text-ink">
+                    {{ user.nickname || user.username }}
+                  </p>
+                  <p class="text-xs text-ink-light">
+                    @{{ user.username }} · ID {{ user.id }}
+                  </p>
+                  <p class="text-xs text-ink-light">
+                    {{ user.email || "—" }}
+                  </p>
+                  <p
+                    v-if="user.profile"
+                    class="text-xs text-ink-light line-clamp-1"
+                  >
+                    {{ user.profile }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <Badge
+                  v-for="role in user.roles || []"
+                  :key="role"
+                  variant="secondary"
+                  class="rounded-full bg-paper-dark text-ink"
+                >
+                  {{ role }}
+                </Badge>
+                <span
+                  v-if="!user.roles?.length"
+                  class="text-xs text-ink-light"
+                >
+                  暂无角色
+                </span>
+              </div>
+
+              <div class="text-xs text-ink-light md:text-right">
+                <p>最近登录</p>
+                <p class="text-sm text-ink">
+                  {{ user.lastLoginTime || "—" }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p v-if="usersError" class="text-sm text-destructive">
+            {{ usersError }}
+          </p>
+        </CardContent>
+      </Card>
     </div>
 
     <Card class="border-ink/10 bg-paper-card shadow-soft">
@@ -135,9 +224,19 @@
 import { onMounted, ref } from "vue";
 import { toast } from "vue-sonner";
 import { articleApi } from "@/api/article";
+import { userApi } from "@/api/user";
 import { wsApi } from "@/api/ws";
+import type { UserInfo } from "@/types/api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -167,6 +266,10 @@ const onlineCount = ref<number | null>(null);
 const wsCheckLoading = ref(false);
 const wsCheckUserId = ref<number | undefined>();
 const onlineStatus = ref<boolean | null>(null);
+
+const usersLoading = ref(false);
+const users = ref<UserInfo[]>([]);
+const usersError = ref("");
 
 /**
  * 重建文章搜索索引。
@@ -295,7 +398,23 @@ async function handleCheckUserOnline() {
   }
 }
 
+/**
+ * 获取用户列表。
+ */
+async function fetchUsers() {
+  usersLoading.value = true;
+  usersError.value = "";
+  try {
+    users.value = await userApi.listAll();
+  } catch (error: any) {
+    usersError.value = error?.message || "获取用户列表失败";
+  } finally {
+    usersLoading.value = false;
+  }
+}
+
 onMounted(() => {
   refreshOnlineCount();
+  fetchUsers();
 });
 </script>

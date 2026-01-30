@@ -99,16 +99,16 @@ spring:
   # 说明：
   # - 默认使用日志模拟（LogEmailServiceImpl），spring.mail.enabled=false
   # - 若需真实发信，请设置 spring.mail.enabled=true 并配置以下参数
-  # - 支持 QQ 邮箱、163 邮箱、Gmail、阿里云邮件推送等 SMTP 服务
+  # - 默认切换为 163 邮箱，其他服务可通过环境变量覆盖
   mail:
     # 是否启用真实邮件发送（false=日志模拟，true=真实发送）
     enabled: ${SPRING_MAIL_ENABLED:true}
-    # SMTP 服务器地址（QQ 邮箱: smtp.qq.com, 163 邮箱: smtp.163.com）
-    host: ${SPRING_MAIL_HOST:smtp.qq.com}
-    # SMTP 端口（QQ/Gmail: 587, 163 SSL: 465）
-    port: ${SPRING_MAIL_PORT:587}
+    # SMTP 服务器地址（163 邮箱: smtp.163.com）
+    host: ${SPRING_MAIL_HOST:smtp.163.com}
+    # SMTP 端口（163 SSL: 465）
+    port: ${SPRING_MAIL_PORT:465}
     # 发件人邮箱
-    username: ${SPRING_MAIL_USERNAME:your-email@qq.com}
+    username: ${SPRING_MAIL_USERNAME:your-email@163.com}
     # 邮箱授权码（不是邮箱密码！是在邮箱设置里生成的 SMTP 授权码）
     password: ${SPRING_MAIL_PASSWORD:}
     # 邮件编码
@@ -119,17 +119,17 @@ spring:
         smtp:
           # 启用 SMTP 认证
           auth: true
-          # 启用 STARTTLS（QQ/Gmail 需要）
+          # 163 邮箱使用 SSL（可通过环境变量覆盖）
+          ssl:
+            enable: ${SPRING_MAIL_SSL_ENABLE:true}
+          # 163 不需要 STARTTLS（可通过环境变量覆盖）
           starttls:
-            enable: true
-            required: true
+            enable: ${SPRING_MAIL_STARTTLS_ENABLE:false}
+            required: ${SPRING_MAIL_STARTTLS_REQUIRED:false}
           # 连接超时（毫秒）
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-          # 如果使用 163 邮箱，需要开启 SSL（注释掉 starttls，改为以下配置）
-          # ssl:
-          #   enable: true
 
   # Thymeleaf 配置
   thymeleaf:

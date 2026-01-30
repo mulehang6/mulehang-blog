@@ -157,6 +157,20 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * 获取用户列表（管理员）。
+     *
+     * @return 用户信息列表
+     */
+    @Override
+    public List<UserInfoVO> listUsers() {
+        List<SysUser> users = userMapper.selectList(new LambdaQueryWrapper<SysUser>()
+                .orderByDesc(SysUser::getId));
+        return users.stream()
+                .map(this::toUserInfo)
+                .toList();
+    }
+
+    /**
      * 规范化文本字段（trim + 空值处理）。
      *
      * @param value 原始值

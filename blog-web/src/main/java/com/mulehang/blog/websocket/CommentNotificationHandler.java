@@ -2,6 +2,7 @@ package com.mulehang.blog.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mulehang.blog.dto.NotificationDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CommentNotificationHandler extends TextWebSocketHandler {
 
     /**
@@ -33,7 +35,7 @@ public class CommentNotificationHandler extends TextWebSocketHandler {
     /**
      * JSON 序列化工具
      */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * WebSocket 连接建立后调用

@@ -5,6 +5,8 @@ import com.mulehang.blog.dto.UserUpdateDTO;
 import com.mulehang.blog.vo.UserInfoVO;
 import com.mulehang.blog.vo.UserStatsVO;
 
+import java.util.List;
+
 /**
  * 用户服务
  */
@@ -49,4 +51,11 @@ public interface UserService {
      * @return 用户统计
      */
     UserStatsVO getUserStats(Long userId);
+
+    /**
+     * 获取用户列表（管理员）。
+     *
+     * @return 用户信息列表
+     */
+    List<UserInfoVO> listUsers();
 }

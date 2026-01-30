@@ -1257,7 +1257,12 @@ async function sendChat() {
     isChatting.value = true;
     chatController.value = aiApi.chatStream(payload, {
       onMessage: (chunk) => {
-        chatMessages.value[assistantIndex].content += chunk;
+        const currentMessage = chatMessages.value[assistantIndex];
+        if (currentMessage) {
+          currentMessage.content += chunk;
+        } else {
+          chatMessages.value.push({ role: "assistant", content: chunk });
+        }
         scrollChatToBottom();
       },
       onDone: () => {

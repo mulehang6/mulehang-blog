@@ -82,8 +82,8 @@
               <div class="flex items-center gap-4">
                 <Avatar class="h-12 w-12">
                   <AvatarImage
-                    :src="user.avatar"
-                    :alt="user.nickname || user.username"
+                    :src="user.avatar || ''"
+                    :alt="user.nickname || user.username || ''"
                   />
                   <AvatarFallback>{{
                     (user.nickname || user.username || "?").charAt(0)

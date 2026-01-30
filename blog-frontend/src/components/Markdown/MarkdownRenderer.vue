@@ -70,8 +70,10 @@ const getLineAttrs = (token: any) => {
 lineTrackedTokens.forEach((ruleName) => {
   const defaultRender =
     md.renderer.rules[ruleName] ||
-    ((tokens, idx, options, env, self) =>
-      self.renderToken(tokens, idx, options));
+    ((tokens, idx, options, env, self) => {
+      void env;
+      return self.renderToken(tokens, idx, options);
+    });
   md.renderer.rules[ruleName] = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
     if (token?.map) {
@@ -101,7 +103,11 @@ const mermaidApi =
   (mermaid as unknown as { default?: typeof mermaid })?.default ?? mermaid;
 
 md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  void options;
+  void env;
+  void self;
   const token = tokens[idx];
+  if (!token) return "";
   const lang = (token.info || "").trim().toLowerCase();
   const lineAttrs = getLineAttrs(token);
   if (lang === "mermaid") {
@@ -124,6 +130,7 @@ md.renderer.rules.fence = (tokens, idx, options, env, self) => {
 
 md.renderer.rules.code_block = (tokens, idx) => {
   const token = tokens[idx];
+  if (!token) return "";
   const lineAttrs = getLineAttrs(token);
   const escaped = md.utils.escapeHtml(token.content);
   return `<pre class="hljs"${lineAttrs}><code>${escaped}</code></pre>`;

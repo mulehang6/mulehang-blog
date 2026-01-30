@@ -525,11 +525,12 @@ function getEditorLineHeight() {
 }
 
 function buildPreviewLineMap() {
-  if (!previewEl) return;
+  const currentPreviewEl = previewEl;
+  if (!currentPreviewEl) return;
   const nodes = Array.from(
-    previewEl.querySelectorAll<HTMLElement>("[data-line-start]"),
+    currentPreviewEl.querySelectorAll<HTMLElement>("[data-line-start]"),
   );
-  const containerRect = previewEl.getBoundingClientRect();
+  const containerRect = currentPreviewEl.getBoundingClientRect();
   const blocks = nodes
     .map((node) => {
       const start = Number(node.dataset.lineStart);
@@ -538,7 +539,7 @@ function buildPreviewLineMap() {
       return {
         start: Number.isFinite(start) ? start : 0,
         end: Number.isFinite(end) ? end : start,
-        top: rect.top - containerRect.top + previewEl.scrollTop,
+        top: rect.top - containerRect.top + currentPreviewEl.scrollTop,
       };
     })
     .sort((a, b) => a.top - b.top);
@@ -546,12 +547,15 @@ function buildPreviewLineMap() {
 }
 
 function syncEditorToPreview() {
-  if (!editorEl || !previewEl) return;
+  const currentEditorEl = editorEl;
+  const currentPreviewEl = previewEl;
+  if (!currentEditorEl || !currentPreviewEl) return;
   const lineHeight = getEditorLineHeight();
-  const line = Math.floor(editorEl.scrollTop / lineHeight);
+  const line = Math.floor(currentEditorEl.scrollTop / lineHeight);
   const blocks = previewLineBlocks.value;
-  if (!blocks.length) return;
-  let target = blocks[0];
+  const [firstBlock] = blocks;
+  if (!firstBlock) return;
+  let target = firstBlock;
   for (const block of blocks) {
     if (block.start <= line) {
       target = block;
@@ -559,15 +563,18 @@ function syncEditorToPreview() {
       break;
     }
   }
-  previewEl.scrollTop = target.top;
+  currentPreviewEl.scrollTop = target.top;
 }
 
 function syncPreviewToEditor() {
-  if (!editorEl || !previewEl) return;
+  const currentEditorEl = editorEl;
+  const currentPreviewEl = previewEl;
+  if (!currentEditorEl || !currentPreviewEl) return;
   const blocks = previewLineBlocks.value;
-  if (!blocks.length) return;
-  const currentTop = previewEl.scrollTop + 4;
-  let target = blocks[0];
+  const [firstBlock] = blocks;
+  if (!firstBlock) return;
+  const currentTop = currentPreviewEl.scrollTop + 4;
+  let target = firstBlock;
   for (const block of blocks) {
     if (block.top <= currentTop) {
       target = block;
@@ -576,7 +583,7 @@ function syncPreviewToEditor() {
     }
   }
   const lineHeight = getEditorLineHeight();
-  editorEl.scrollTop = target.start * lineHeight;
+  currentEditorEl.scrollTop = target.start * lineHeight;
 }
 
 function handleEditorScroll() {

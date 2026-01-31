@@ -46,14 +46,27 @@
                   忘记密码？
                 </a>
               </div>
-              <Input
-                id="password"
-                v-model="password"
-                type="password"
-                placeholder="请输入密码"
-                required
-                :disabled="loading"
-              />
+              <div class="relative">
+                <Input
+                  id="password"
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="请输入密码"
+                  required
+                  :disabled="loading"
+                  class="pr-10"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-lighter transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="loading"
+                  :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                  @click="showPassword = !showPassword"
+                >
+                  <Eye v-if="!showPassword" class="h-4 w-4" />
+                  <EyeOff v-else class="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <!-- 记住我 -->
@@ -171,6 +184,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { Eye, EyeOff } from "lucide-vue-next";
 import { useUserStore } from "@/stores/user";
 import { authApi } from "@/api/auth";
 import { Button } from "@/components/ui/button";
@@ -189,6 +203,7 @@ const userStore = useUserStore();
 // 表单状态
 const username = ref("");
 const password = ref("");
+const showPassword = ref(false);
 const remember = ref(false);
 const loading = ref(false);
 const errorMessage = ref("");

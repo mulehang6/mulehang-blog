@@ -49,8 +49,8 @@ public class UserDataInitializer implements CommandLineRunner {
      * 创建默认管理员用户
      */
     private void createDefaultAdmin() {
-        // 生成密码（默认密码：admin123）
-        String rawPassword = "admin123";
+        // 生成密码（默认密码：mulehang）
+        String rawPassword = "mulehang";
         String salt = passwordUtil.generateSalt();
         String passwordHash = passwordUtil.encryptPassword(rawPassword, salt);
 
@@ -64,7 +64,7 @@ public class UserDataInitializer implements CommandLineRunner {
         admin.setStatus(1);
         userMapper.insert(admin);
 
-        log.info("创建默认管理员用户成功，用户名：admin，密码：admin123");
+        log.info("创建默认管理员用户成功，用户名：admin，密码：mulehang");
 
         // 查询管理员角色
         SysRole adminRole = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()
@@ -80,4 +80,3 @@ public class UserDataInitializer implements CommandLineRunner {
         }
     }
 }
-

@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mulehang.blog.dto.GitHubAccessTokenDTO;
 import com.mulehang.blog.dto.GitHubEmailDTO;
 import com.mulehang.blog.dto.GitHubUserInfoDTO;
+import com.mulehang.blog.entity.SysRole;
 import com.mulehang.blog.entity.SysUser;
+import com.mulehang.blog.entity.SysUserRole;
+import com.mulehang.blog.mapper.SysRoleMapper;
 import com.mulehang.blog.mapper.SysUserMapper;
 import com.mulehang.blog.mapper.SysUserRoleMapper;
 import com.mulehang.blog.service.GitHubOAuthService;
@@ -37,6 +40,7 @@ import java.util.UUID;
 public class GitHubOAuthServiceImpl implements GitHubOAuthService {
     
     private final SysUserMapper userMapper;
+    private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -269,6 +273,9 @@ public class GitHubOAuthServiceImpl implements GitHubOAuthService {
             
             log.info("GitHub OAuth 登录：更新用户 {}", user.getUsername());
         }
+
+        // 确保 GitHub 登录用户拥有 USER 角色
+        ensureDefaultUserRole(user);
         
         // 4. 检查用户状态
         if (user.getStatus() == 0) {
@@ -299,5 +306,36 @@ public class GitHubOAuthServiceImpl implements GitHubOAuthService {
                 .expiresIn(jwtUtil.getExpiration())
                 .userInfo(userInfo)
                 .build();
+    }
+
+    /**
+     * 确保用户拥有默认 USER 角色
+     *
+     * @param user 当前用户
+     */
+    private void ensureDefaultUserRole(SysUser user) {
+        if (user == null || user.getId() == null) {
+            return;
+        }
+
+        List<String> roleCodes = userRoleMapper.selectRoleCodesByUserId(user.getId());
+        if (roleCodes.contains("USER")) {
+            return;
+        }
+
+        SysRole userRole = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getCode, "USER")
+                .eq(SysRole::getIsDeleted, 0)
+        );
+        if (userRole == null) {
+            log.warn("GitHub OAuth 登录：未找到 USER 角色，无法为用户 {} 分配默认角色", user.getUsername());
+            return;
+        }
+
+        SysUserRole userRoleLink = new SysUserRole();
+        userRoleLink.setUserId(user.getId());
+        userRoleLink.setRoleId(userRole.getId());
+        userRoleMapper.insert(userRoleLink);
+        log.info("GitHub OAuth 登录：为用户 {} 分配默认 USER 角色", user.getUsername());
     }
 }

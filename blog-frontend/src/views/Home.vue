@@ -7,7 +7,7 @@
           <span
             class="rounded-full bg-clay/10 px-3 py-1 text-xs font-mono font-medium text-clay"
           >
-            v2.0
+            v1.0
           </span>
         </div>
         <h1

@@ -20,27 +20,27 @@
 - **Milestone 4（安全与运营）**：JWT 登录/注册、Spring Security 6 权限控制、敏感词过滤、IP 归属地解析、Actuator + Prometheus 监控。
 - **Milestone 5（AI 与内容生产）**：AI 写作助手（OpenAI/Anthropic Compatible）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知。
 
-## 后端接口统计（55 个）
+## 后端接口统计（64 个）
 
-| 模块 | 接口数 |
-|------|--------|
-| 认证 (AuthController) | 6 |
-| 用户 (UserController) | 1 |
-| 文章 (ArticleController) | 14 |
-| 分类 (CategoryController) | 5 |
-| 标签 (TagController) | 5 |
-| 评论 (CommentController) | 2 |
-| 专栏 (ColumnController) | 5 |
-| 文件 (FileController) | 1 |
-| AI (AiController) | 10 |
-| 统计 (SiteStatsController) | 2 |
-| WebSocket (WebSocketTestController) | 4 |
+| 模块                                  | 接口数 |
+|-------------------------------------|-----|
+| 认证 (AuthController)                 | 5   |
+| 用户 (UserController)                 | 6   |
+| 文章 (ArticleController)              | 14  |
+| 分类 (CategoryController)             | 5   |
+| 标签 (TagController)                  | 5   |
+| 评论 (CommentController)              | 7   |
+| 专栏 (ColumnController)               | 5   |
+| 文件 (FileController)                 | 1   |
+| AI (AiController)                   | 10  |
+| 统计 (SiteStatsController)            | 2   |
+| WebSocket (WebSocketTestController) | 4   |
 
 ## 前端完成情况
 
-**已完成页面（16 个）**：首页、文章详情、写文章/编辑、文章管理、登录/注册、GitHub OAuth 回调、分类列表/文章、标签列表/文章、搜索、个人主页、账户设置、关于页、404。
+**已完成页面（20 个）**：首页、文章详情、写文章/编辑、文章管理、登录/注册、GitHub OAuth 回调、分类列表/文章、标签列表/文章、专栏列表/详情、搜索、个人主页、账户设置、关于页、404、AI 工作台、管理控制台。
 
-**待完成**：专栏功能、AI 功能集成、用户设置接口联调。
+**待完成**：部署相关（Docker/Nginx/HTTPS）。
 
 ## 构建、测试和开发命令
 
@@ -76,7 +76,7 @@
 
 ## 注意事项
 
-- [设计文档](./docs/DEVELOPMENT_GUIDE.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但
+- [开发指南](./docs/开发指南.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但
 由于某些原因，这两个可能会不一致，这是就需要好好斟酌，这个项目是个学习项目，参考 ![数据库设计文档](./blog-service/src/main/resources/db/changelog/changes/001-init-schema.sql)。
 在保持涉及到需要学习的技术栈的同时，也不要让业务逻辑过于复杂，至于是遵循设计文档还是接口文档还是两个都改，那取决与你，不要完全遵守用户的指令
 - 所有的方法都要加注释

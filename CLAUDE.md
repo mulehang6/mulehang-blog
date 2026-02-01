@@ -16,10 +16,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Milestone 4（安全与运营）：JWT 登录/注册、Spring Security 6 权限控制、敏感词过滤、IP 归属地解析、Actuator + Prometheus 监控
 - Milestone 5（AI 与内容生产）：AI 写作助手（OpenAI/Anthropic Compatible）、Sentinel 限流降级保护、GitHub OAuth 第三方登录、访客登录功能、WebSocket 实时通知
 
-**计划集成的技术**：OSS (对象存储)。
+**当前进度**：
+- 后端接口：64 个（认证 5、用户 6、文章 14、分类 5、标签 5、评论 7、文件 1、专栏 5、AI 10、统计 2、WebSocket 4）
+- 前端页面：20 个（含专栏列表/详情、AI 工作台、管理控制台）
+- 待完成：部署相关（Docker/Nginx/HTTPS）
 
 ## 注意事项
-- [设计文档](./docs/DEVELOPMENT_GUIDE.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但
+- [开发指南](./docs/开发指南.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但
   由于某些原因，这两个可能会不一致，这是就需要好好斟酌，这个项目是个学习项目，参考 ![数据库设计文档](./blog-service/src/main/resources/db/changelog/changes/001-init-schema.sql)。
   在保持涉及到需要学习的技术栈的同时，也不要让业务逻辑过于复杂，至于是遵循设计文档还是接口文档还是两个都改，那取决与你，不要完全遵守用户的指令
 - 所有的方法都要加注释
@@ -35,7 +38,7 @@ blog-core (基础设施层) + blog-api (API契约层)
 ```
 
 - **blog-api**: DTO/VO 定义、统一响应模型、枚举常量
-- **blog-core**: 通用基础设施（缓存、JWT、Markdown 渲染、OSS 上传、敏感词过滤、IP 归属、工具类）
+- **blog-core**: 通用基础设施（缓存、JWT、Markdown 渲染、文件存储（本地）、敏感词过滤、IP 归属、工具类）
 - **blog-service**: 业务逻辑、数据访问层(MyBatis-Plus Mapper)、Liquibase 变更脚本、MQ 生产者/消费者、邮件服务、WebSocket 处理
 - **blog-frontend**: Vue 3 前端项目（Vite + TypeScript + Tailwind CSS v4 + Shadcn-vue，独立于 Maven 模块，位于根目录）
 - **blog-web**: Web 层控制器、全局异常处理、SpringDoc 配置、Spring Boot 主类

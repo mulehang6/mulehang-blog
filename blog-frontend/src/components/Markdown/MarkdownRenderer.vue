@@ -16,7 +16,7 @@ import {
   watch,
 } from "vue";
 import MarkdownIt from "markdown-it";
-import * as markdownItEmoji from "markdown-it-emoji";
+import { full as markdownItEmoji } from "markdown-it-emoji";
 import markdownItKatex from "markdown-it-katex";
 import hljs from "highlight.js";
 import mermaid from "mermaid";
@@ -84,13 +84,7 @@ lineTrackedTokens.forEach((ruleName) => {
   };
 });
 
-const emojiPlugin =
-  (markdownItEmoji as unknown as { full?: unknown; default?: unknown })?.full ??
-  (markdownItEmoji as unknown as { default?: unknown })?.default ??
-  markdownItEmoji;
-if (emojiPlugin) {
-  md.use(emojiPlugin as never);
-}
+md.use(markdownItEmoji as never);
 
 const katexPlugin =
   (markdownItKatex as unknown as { default?: unknown })?.default ??

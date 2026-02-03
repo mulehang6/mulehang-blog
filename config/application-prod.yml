@@ -1,4 +1,4 @@
- blog:
+blog:
   elasticsearch:
     enabled: ${ELASTICSEARCH_ENABLED:true}
 

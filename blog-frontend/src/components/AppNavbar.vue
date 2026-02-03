@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { Bell, Menu, Search, X } from "lucide-vue-next";
+import { Bell, Menu, PenLine, Search, X } from "lucide-vue-next";
 import { useUserStore } from "@/stores/user";
 import { useLocaleStore } from "@/stores/locale";
 import { useNotificationStore } from "@/stores/notifications";
@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
           </button>
           <button
             type="button"
-            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:flex"
+            class="hidden h-10 items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:inline-flex"
             @click="router.push('/register')"
           >
             {{ registerLabel }}
@@ -297,10 +297,19 @@ onBeforeUnmount(() => {
         <template v-else>
           <button
             type="button"
-            class="hidden h-10 inline-flex items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:flex"
+            class="hidden h-10 items-center justify-center rounded-xl bg-ink px-4 text-[14px] font-medium text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:inline-flex"
             @click="router.push('/write')"
           >
             写文章
+          </button>
+
+          <button
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white shadow-sketch transition-all hover:bg-clay hover:shadow-none hover:translate-y-[2px] dark:bg-clay dark:text-paper-bg dark:hover:bg-clay/90 md:hidden"
+            aria-label="写文章"
+            @click="router.push('/write')"
+          >
+            <PenLine :size="18" :stroke-width="1.8" />
           </button>
 
           <div class="relative" ref="notificationPanelRef">

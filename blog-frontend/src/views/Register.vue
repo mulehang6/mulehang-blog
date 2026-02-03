@@ -112,7 +112,9 @@
                   >用户协议</a
                 >
                 和
-                <a href="#" class="text-clay hover:underline">隐私政策</a>
+                <router-link to="/privacy" class="text-clay hover:underline">
+                  隐私政策
+                </router-link>
               </label>
             </div>
 

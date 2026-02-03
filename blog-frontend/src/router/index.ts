@@ -31,6 +31,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '注册' }
   },
   {
+    path: '/privacy',
+    name: 'PrivacyByd',
+    component: () => import('@/views/PrankByd.vue'),
+    meta: { title: '隐私政策' }
+  },
+  {
     path: '/oauth/github/callback',
     name: 'GitHubCallback',
     component: () => import('@/views/GitHubCallback.vue'),

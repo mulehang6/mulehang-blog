@@ -1,0 +1,3 @@
+mulehang.top {
+  reverse_proxy blog-frontend:80
+}

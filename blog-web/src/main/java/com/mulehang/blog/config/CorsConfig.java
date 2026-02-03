@@ -29,7 +29,9 @@ public class CorsConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",      // 本地开发
             "http://127.0.0.1:*",      // 本地开发
-            "https://*.cpolar.top"      // cpolar 内网穿透域名
+            "https://*.cpolar.top",     // cpolar 内网穿透域名
+            "http://mulehang.top",      // 线上 HTTP 访问
+            "https://mulehang.top"      // 线上 HTTPS 访问
         ));
         
         // 允许的 HTTP 方法

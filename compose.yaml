@@ -91,6 +91,8 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /home/mulehang/cf/mulehang-blog.pem:/etc/caddy/certs/mulehang-blog.pem:ro
+      - /home/mulehang/cf/mulehang-blog.key:/etc/caddy/certs/mulehang-blog.key:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

@@ -57,9 +57,7 @@
                   {{ getStatusLabel(article.status) }}
                 </Badge>
               </div>
-              <div
-                class="flex items-center gap-2 text-xs text-ink-light"
-              >
+              <div class="flex items-center gap-2 text-xs text-ink-light">
                 <span v-if="article.author" class="flex items-center gap-1">
                   <span class="w-1 h-1 rounded-full bg-ink-lighter"></span>
                   {{ article.author.username }}
@@ -289,11 +287,7 @@ function openDeleteDialog(article: ArticleListItem) {
  * 处理删除对话框开关
  */
 function handleDeleteDialogOpen(open: boolean) {
-  if (!open) {
-    closeDeleteDialog();
-    return;
-  }
-  deleteDialog.value.open = true;
+  deleteDialog.value.open = open;
 }
 
 /**

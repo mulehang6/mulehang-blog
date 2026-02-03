@@ -92,7 +92,7 @@
                 size="sm"
                 variant="ghost"
                 class="text-destructive"
-                @click.stop="handleDelete(article.id)"
+                @click.stop="handleDelete(article)"
               >
                 {{ localeStore.t.deleteArticle }}
               </Button>
@@ -140,6 +140,32 @@
         </p>
       </CardContent>
     </Card>
+
+    <AlertDialog
+      :open="deleteDialog.open"
+      @update:open="handleDeleteDialogOpen"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>确认删除</AlertDialogTitle>
+          <AlertDialogDescription>
+            {{ localeStore.t.confirmDeleteArticle }}
+            <span
+              v-if="deleteDialog.target"
+              class="font-medium text-foreground"
+            >
+              「{{ deleteDialog.target.title }}」
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDeleteArticle">
+            确认删除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -151,6 +177,16 @@ import type { ArticleListItem } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUserStore } from "@/stores/user";
 import { useLocaleStore } from "@/stores/locale";
 
@@ -162,6 +198,13 @@ const articles = ref<ArticleListItem[]>([]);
 const loading = ref(false);
 type StatusFilter = "all" | "published" | "draft";
 const activeStatus = ref<StatusFilter>("all");
+const deleteDialog = ref<{
+  open: boolean;
+  target: ArticleListItem | null;
+}>({
+  open: false,
+  target: null,
+});
 
 const statusOptions = computed(
   () =>
@@ -227,14 +270,52 @@ function handleOpenArticle(article: ArticleListItem) {
 /**
  * 删除文章
  */
-async function handleDelete(id: number) {
-  const ok = window.confirm(localeStore.t.confirmDeleteArticle);
-  if (!ok) return;
+async function handleDelete(article: ArticleListItem) {
+  openDeleteDialog(article);
+}
+
+/**
+ * 打开删除确认对话框
+ */
+function openDeleteDialog(article: ArticleListItem) {
+  deleteDialog.value = {
+    open: true,
+    target: article,
+  };
+}
+
+/**
+ * 处理删除对话框开关
+ */
+function handleDeleteDialogOpen(open: boolean) {
+  if (!open) {
+    closeDeleteDialog();
+    return;
+  }
+  deleteDialog.value.open = true;
+}
+
+/**
+ * 关闭删除确认对话框
+ */
+function closeDeleteDialog() {
+  deleteDialog.value.open = false;
+  deleteDialog.value.target = null;
+}
+
+/**
+ * 确认删除文章
+ */
+async function confirmDeleteArticle() {
+  const target = deleteDialog.value.target;
+  if (!target) return;
   try {
-    await articleApi.delete(id);
+    await articleApi.delete(target.id);
     await fetchArticles();
   } catch (err) {
     console.error("删除文章失败:", err);
+  } finally {
+    closeDeleteDialog();
   }
 }
 

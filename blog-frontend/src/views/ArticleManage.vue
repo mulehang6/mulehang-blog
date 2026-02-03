@@ -189,6 +189,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUserStore } from "@/stores/user";
 import { useLocaleStore } from "@/stores/locale";
+import { parseServerDate } from "@/utils/date";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -353,7 +354,9 @@ function getStatusLabel(status?: number) {
  * 格式化日期
  */
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString();
+  const date = parseServerDate(dateStr);
+  if (!date) return "";
+  return date.toLocaleDateString();
 }
 
 onMounted(() => {

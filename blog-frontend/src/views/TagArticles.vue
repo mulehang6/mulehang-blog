@@ -122,6 +122,7 @@ import { tagApi } from "@/api/tag";
 import { articleApi } from "@/api/article";
 import type { Tag, ArticleListItem } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseServerDate } from "@/utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -203,7 +204,8 @@ function goToPage(page: number) {
  * 格式化日期
  */
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  const date = parseServerDate(dateStr);
+  if (!date) return "";
   return date.toLocaleDateString("zh-CN", {
     year: "numeric",
     month: "2-digit",

@@ -301,6 +301,7 @@ import TagCloud from "@/components/Sidebar/TagCloud.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { parseServerDate } from "@/utils/date";
 
 const router = useRouter();
 const localeStore = useLocaleStore();
@@ -404,7 +405,8 @@ function changePage(page: number) {
  * 格式化日期
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseServerDate(dateString);
+  if (!date) return "";
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));

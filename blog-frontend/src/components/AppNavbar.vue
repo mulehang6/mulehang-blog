@@ -9,6 +9,7 @@ import { useNotificationStore } from "@/stores/notifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/components/Logo.vue";
 import ModeToggle from "@/components/ModeToggle.vue";
+import { parseServerDate } from "@/utils/date";
 
 const router = useRouter();
 const route = useRoute();
@@ -170,8 +171,8 @@ function handleNotificationClick(notificationId: string, url?: string) {
  */
 function formatNotificationTime(value?: string): string {
   if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+  const date = parseServerDate(value);
+  if (!date) return "";
   return date.toLocaleString(localeStore.locale === "zh-CN" ? "zh-CN" : "en-US", {
     month: "2-digit",
     day: "2-digit",

@@ -186,6 +186,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { parseServerDate } from "@/utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -293,7 +294,8 @@ function changePage(page: number) {
  * 格式化日期
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseServerDate(dateString);
+  if (!date) return "";
   return date.toLocaleDateString("zh-CN", {
     year: "numeric",
     month: "2-digit",

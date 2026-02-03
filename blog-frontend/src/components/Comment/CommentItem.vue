@@ -128,6 +128,7 @@ import MarkdownRenderer from "@/components/Markdown/MarkdownRenderer.vue";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import CommentForm from "./CommentForm.vue";
+import { parseServerDate } from "@/utils/date";
 
 /**
  * 组件 Props
@@ -307,9 +308,9 @@ function handleReplySuccess() {
 function formatDate(dateStr: string): string {
   if (!dateStr) return "刚刚";
 
-  const date = new Date(dateStr);
+  const date = parseServerDate(dateStr);
   // 检查日期是否有效
-  if (isNaN(date.getTime())) {
+  if (!date) {
     return "日期解析错误";
   }
 

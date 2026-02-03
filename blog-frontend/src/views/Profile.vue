@@ -204,6 +204,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { parseServerDate } from "@/utils/date";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -300,7 +301,8 @@ function goToCommentArticle(comment: CommentVO) {
  */
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
-  const date = new Date(dateStr);
+  const date = parseServerDate(dateStr);
+  if (!date) return "";
   return date.toLocaleDateString("zh-CN");
 }
 

@@ -105,7 +105,11 @@
             v-if="article.contentMd"
             :content="article.contentMd"
           />
-          <div v-else v-html="article.contentHtml"></div>
+          <div
+            v-else
+            class="markdown-body prose prose-lg max-w-none"
+            v-html="article.contentHtml"
+          ></div>
         </CardContent>
       </Card>
 

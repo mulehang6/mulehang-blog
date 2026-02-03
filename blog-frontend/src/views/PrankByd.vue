@@ -27,9 +27,6 @@
             <CardTitle class="font-serif text-2xl text-ink">
               角色基本信息
             </CardTitle>
-            <CardDescription class="text-ink-light">
-              角色面板流（官方同款）
-            </CardDescription>
           </CardHeader>
           <CardContent class="space-y-4 text-sm text-ink-light">
             <div class="space-y-2">
@@ -74,9 +71,6 @@
               <CardTitle class="font-serif text-2xl text-ink"
                 >天赋技能</CardTitle
               >
-              <CardDescription class="text-ink-light">
-                中二损人流
-              </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4 text-sm text-ink-light">
               <div class="space-y-2">
@@ -110,9 +104,6 @@
               <CardTitle class="font-serif text-2xl text-ink"
                 >命之座</CardTitle
               >
-              <CardDescription class="text-ink-light">
-                进阶损人流
-              </CardDescription>
             </CardHeader>
             <CardContent class="space-y-3 text-sm text-ink-light">
               <p><span class="font-medium text-ink">第 1 层【起床困难症】</span>：体力回复速度降低 50%，但睡眠质量提升 200%。</p>

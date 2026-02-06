@@ -5,12 +5,5 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <include file="changes/001-init-schema.sql" relativeToChangelogFile="true"/>
-    <include file="changes/002-add-file-detail-table.sql" relativeToChangelogFile="true"/>
-    <include file="changes/003-seed-test-data.sql" relativeToChangelogFile="true"/>
-    <include file="changes/004-init-roles-and-users.sql" relativeToChangelogFile="true"/>
-    <include file="changes/005-add-creator-id-to-category-and-tag.sql" relativeToChangelogFile="true"/>
-    <include file="changes/006-fix-unique-key-with-is-deleted.sql" relativeToChangelogFile="true"/>
-    <include file="changes/007-clean-duplicate-deleted-records.sql" relativeToChangelogFile="true"/>
-
+    <include file="changes/000-init-schema-final.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

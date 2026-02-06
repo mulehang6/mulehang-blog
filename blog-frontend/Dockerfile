@@ -8,7 +8,7 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-ARG VITE_API_BASE_URL
+ARG VITE_API_BASE_URL=https://mulehang.top
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN pnpm build
 

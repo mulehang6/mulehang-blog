@@ -2,9 +2,7 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [ master ]
-    tags:
-      - 'v*'
+    branches: [ prod ]
 
 env:
   REGISTRY: ghcr.io
@@ -87,7 +85,7 @@ jobs:
         cache-to: type=gha,mode=max
         
     - name: Deploy to server
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/prod'
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}

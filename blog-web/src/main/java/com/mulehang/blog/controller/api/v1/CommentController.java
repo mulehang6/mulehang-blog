@@ -10,6 +10,7 @@ import com.mulehang.blog.vo.CommentVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +49,7 @@ public class CommentController {
      */
     @PostMapping("/api/v1/comments")
     @Operation(summary = "发表评论/回复")
-    public Result<Long> create(@RequestBody CommentCreateDTO dto, HttpServletRequest request) {
+    public Result<Long> create(@Valid @RequestBody CommentCreateDTO dto, HttpServletRequest request) {
         String ip = request == null ? null : request.getRemoteAddr();
         String userAgent = request == null ? null : request.getHeader("User-Agent");
         return Result.ok(commentService.create(dto, ip, userAgent));
@@ -127,7 +128,7 @@ public class CommentController {
      */
     @PutMapping("/api/v1/comments/{id}")
     @Operation(summary = "编辑评论")
-    public Result<Boolean> update(@PathVariable Long id, @RequestBody CommentUpdateDTO dto) {
+    public Result<Boolean> update(@PathVariable Long id, @Valid @RequestBody CommentUpdateDTO dto) {
         commentService.update(id, dto);
         return Result.ok(true);
     }

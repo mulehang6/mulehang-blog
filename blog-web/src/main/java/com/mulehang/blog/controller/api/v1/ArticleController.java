@@ -16,10 +16,12 @@ import com.mulehang.blog.vo.ArticleDetailVO;
 import com.mulehang.blog.vo.ArticleListVO;
 import com.mulehang.blog.vo.ArticlePublicVO;
 import com.mulehang.blog.vo.ArticleSearchVO;
+import com.mulehang.blog.context.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -186,12 +188,16 @@ public class ArticleController {
      * 点赞文章。
      *
      * @param id 文章 ID
-     * @param userId 用户 ID
      * @return 点赞结果（true=成功，false=已点赞或未获取到锁）
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/like")
-    @Operation(summary = "点赞文章（简单演示：通过 userId 参数传入）")
-    public Result<Boolean> like(@PathVariable Long id, @RequestParam Long userId) {
+    @Operation(summary = "点赞文章")
+    public Result<Boolean> like(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
         return Result.ok(likeService.likeArticle(userId, id));
     }
 
@@ -199,12 +205,16 @@ public class ArticleController {
      * 查询用户是否已点赞文章。
      *
      * @param id 文章 ID
-     * @param userId 用户 ID
      * @return true=已点赞，false=未点赞
      */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}/like/status")
     @Operation(summary = "查询用户是否已点赞文章")
-    public Result<Boolean> getLikeStatus(@PathVariable Long id, @RequestParam Long userId) {
+    public Result<Boolean> getLikeStatus(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.ok(false);
+        }
         return Result.ok(likeService.hasLiked(userId, id));
     }
 
@@ -212,17 +222,21 @@ public class ArticleController {
      * 取消点赞文章。
      *
      * @param id 文章 ID
-     * @param userId 用户 ID
      * @return 取消结果（true=成功，false=未点赞或未获取到锁）
      */
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}/like")
     @Operation(summary = "取消点赞文章")
-    public Result<Boolean> unlike(@PathVariable Long id, @RequestParam Long userId) {
+    public Result<Boolean> unlike(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        if (userId == null) {
+            return Result.fail("未登录或登录已过期");
+        }
         return Result.ok(likeService.unlikeArticle(userId, id));
     }
 
     /**
-     * 延迟邮件测试（仅开发/演示）。
+     * 延迟邮件测试（仅开发/演示，需要管理员权限）。
      *
      * @param to 收件人邮箱
      * @param subject 邮件主题
@@ -232,6 +246,7 @@ public class ArticleController {
      */
     @PostMapping("/email/test")
     @Operation(summary = "2.6 延迟邮件测试：投递一条延迟任务（仅开发/演示）")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> enqueueEmail(@RequestParam String to,
                                      @RequestParam(defaultValue = "Test") String subject,
                                      @RequestParam(defaultValue = "Hello") String content,
@@ -270,6 +285,7 @@ public class ArticleController {
     @PostMapping("/rebuild-search-index")
     @Operation(summary = "重建文章搜索索引（ES）", 
                description = "全量同步已发布文章到 Elasticsearch，用于初始化或修复索引")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Integer> rebuildSearchIndex() {
         ArticleIndexService indexService = articleIndexServiceProvider.getIfAvailable();
         if (indexService == null) {

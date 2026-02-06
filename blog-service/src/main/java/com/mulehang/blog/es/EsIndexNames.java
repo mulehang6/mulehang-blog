@@ -9,9 +9,6 @@ public final class EsIndexNames {
 
     /**
      * 文章搜索索引。
-     * <p>
-     * 对应开发指南（Milestone 3）中的索引设计：{@code blog_article}。
-     * </p>
      */
     public static final String BLOG_ARTICLE = "blog_article";
 

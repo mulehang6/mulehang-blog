@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  *
  * <p>容错策略：</p>
  * <ul>
- *     <li>ES 属于可选组件（Milestone 3），因此任何 ES 异常都不应影响主业务。</li>
+ *     <li>ES 属于可选组件，因此任何 ES 异常都不应影响主业务。</li>
  *     <li>同步失败只记录 warn 日志，后续可通过“补偿任务”或“手动重建索引”兜底。</li>
  * </ul>
  */
@@ -183,7 +183,7 @@ public class ArticleIndexService {
         List<BlogArticle> allArticles = articleMapper.selectList(new LambdaQueryWrapper<>());
         log.info("数据库中共有 {} 篇文章", allArticles.size());
         if (!allArticles.isEmpty()) {
-            BlogArticle first = allArticles.get(0);
+            BlogArticle first = allArticles.getFirst();
             log.info("第一篇文章: id={}, title={}, status={}, isDeleted={}", 
                 first.getId(), first.getTitle(), first.getStatus(), first.getIsDeleted());
         }

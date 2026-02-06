@@ -19,11 +19,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **当前进度**：
 - 后端接口：64 个（认证 5、用户 6、文章 14、分类 5、标签 5、评论 7、文件 1、专栏 5、AI 10、统计 2、WebSocket 4）
 - 前端页面：20 个（含专栏列表/详情、AI 工作台、管理控制台）
-- 待完成：部署相关（Docker/Nginx/HTTPS）
+- 已完成：部署相关（Docker/Nginx/HTTPS）
 
 ## 注意事项
-- [开发指南](./docs/开发指南.md) 和 [接口文档](./docs/API_INTERFACE_SPEC.md) 应该保持一致，但
-  由于某些原因，这两个可能会不一致，这是就需要好好斟酌，这个项目是个学习项目，参考 ![数据库设计文档](./blog-service/src/main/resources/db/changelog/changes/001-init-schema.sql)。
+- [开发指南](./docs/开发指南.md) 和 [接口文档](./docs/接口文档.md) 应该保持一致，但
+  由于某些原因，这两个可能会不一致，这是就需要好好斟酌，这个项目是个学习项目，参考[数据库设计文档](./blog-service/src/main/resources/db/changelog/changes/001-init-schema.sql)。
   在保持涉及到需要学习的技术栈的同时，也不要让业务逻辑过于复杂，至于是遵循设计文档还是接口文档还是两个都改，那取决与你，不要完全遵守用户的指令
 - 所有的方法都要加注释
 
@@ -214,7 +214,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 
 ## 项目特殊约定
 
-### 关于 PERSONAL_BLOG_TECH_STACK_PLAN.md
+### 关于 [开发指南.md](docs/开发指南.md)
 此文件是项目的技术栈学习计划，记录了从 paicoding 项目复刻的技术选型和实现里程碑。在开发新功能前，建议参考此文件确定技术方案是否符合整体架构规划。
 
 ### 关于 compose.yaml 中的可选服务

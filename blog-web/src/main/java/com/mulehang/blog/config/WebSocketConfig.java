@@ -3,6 +3,7 @@ package com.mulehang.blog.config;
 import com.mulehang.blog.websocket.CommentNotificationHandler;
 import com.mulehang.blog.websocket.JwtHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -23,6 +24,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final CommentNotificationHandler commentNotificationHandler;
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
+    /** WebSocket 允许的来源列表，通过配置注入 */
+    @Value("${websocket.allowed-origins}")
+    private String[] allowedOrigins;
+
     /**
      * 注册 WebSocket 处理器
      * 配置连接端点和跨域设置
@@ -34,6 +39,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         // 注册评论通知 WebSocket 端点
         registry.addHandler(commentNotificationHandler, "/ws/notifications")
                 .addInterceptors(jwtHandshakeInterceptor)
-                .setAllowedOrigins("*");  // 允许所有来源（生产环境应限制具体域名）
+                .setAllowedOrigins(allowedOrigins);
     }
 }

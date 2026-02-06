@@ -59,28 +59,22 @@ export const articleApi = {
   /**
    * 点赞文章
    */
-  like(articleId: number, userId: number): Promise<boolean> {
-    return request.post(`/api/v1/articles/${articleId}/like`, null, {
-      params: { userId }
-    })
+  like(articleId: number): Promise<boolean> {
+    return request.post(`/api/v1/articles/${articleId}/like`)
   },
 
   /**
    * 取消点赞文章
    */
-  unlike(articleId: number, userId: number): Promise<boolean> {
-    return request.delete(`/api/v1/articles/${articleId}/like`, {
-      params: { userId }
-    })
+  unlike(articleId: number): Promise<boolean> {
+    return request.delete(`/api/v1/articles/${articleId}/like`)
   },
 
   /**
    * 查询用户是否已点赞文章
    */
-  getLikeStatus(articleId: number, userId: number): Promise<boolean> {
-    return request.get(`/api/v1/articles/${articleId}/like/status`, {
-      params: { userId }
-    })
+  getLikeStatus(articleId: number): Promise<boolean> {
+    return request.get(`/api/v1/articles/${articleId}/like/status`)
   },
 
   /**

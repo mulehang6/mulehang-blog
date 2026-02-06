@@ -200,6 +200,10 @@ springdoc:
 knife4j:
   enable: true
 
+# WebSocket 配置（开发环境默认允许本地前端）
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173}
+
 # 服务器配置
 server:
   port: 8080

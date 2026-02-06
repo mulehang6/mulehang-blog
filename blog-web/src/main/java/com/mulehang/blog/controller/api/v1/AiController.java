@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/ai")
 @Tag(name = "AI 服务", description = "AI 对话与内容生产")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class AiController {
 
         private final AiServiceFactory aiServiceFactory;
@@ -86,7 +87,6 @@ public class AiController {
          */
         @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
         @Operation(summary = "AI 对话(流式)")
-        @PreAuthorize("isAuthenticated()")
         @SentinelResource(value = "ai-chat-stream", blockHandler = "chatStreamBlockHandler", fallback = "chatStreamFallback")
         public Flux<ServerSentEvent<String>> chatStream(@Valid @RequestBody AiChatDTO dto) {
                 AiService aiService = resolveAiService(dto.getProvider(), dto.getBaseUrl(), dto.getApiKey());
@@ -274,7 +274,6 @@ public class AiController {
          */
         @PostMapping(value = "/writing/continue/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
         @Operation(summary = "续写文章（流式）", description = "根据已有内容续写文章，使用SSE流式输出结果，需要登录认证")
-        @PreAuthorize("isAuthenticated()")
         @SentinelResource(value = "ai-writing-stream", blockHandler = "writingStreamBlockHandler", fallback = "writingStreamFallback")
         public Flux<ServerSentEvent<String>> continueWritingStream(@Valid @RequestBody AiWritingDTO dto) {
                 if (dto.getContent() == null || dto.getContent().trim().isEmpty()) {

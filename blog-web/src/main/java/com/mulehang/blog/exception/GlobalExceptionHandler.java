@@ -3,6 +3,7 @@ package com.mulehang.blog.exception;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.model.ResultCodeEnum;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * 全局异常处理（统一返回 {@link com.mulehang.blog.model.Result}）。
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -64,17 +66,14 @@ public class GlobalExceptionHandler {
     /**
      * 处理通用异常。
      *
-     * <p>生产环境可在这里接入日志与告警。</p>
+     * <p>生产环境不向前端暴露内部异常信息，仅记录日志用于排查。</p>
      *
      * @param e 异常
      * @return 错误响应
      */
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
-        // 记录详细异常信息用于排查问题
-        e.printStackTrace();
-        // 返回异常消息，避免前端只看到 "internal server error"
-        String errorMessage = e.getMessage() != null ? e.getMessage() : "服务器内部错误";
-        return Result.fail(errorMessage);
+        log.error("未处理异常", e);
+        return Result.fail("服务器内部错误");
     }
 }

@@ -241,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { articleApi } from "@/api/article";
@@ -289,10 +289,7 @@ async function fetchArticle() {
     }
     // 查询用户是否已点赞
     if (userStore.isLoggedIn && userStore.userInfo) {
-      isLiked.value = await articleApi.getLikeStatus(
-        article.value.id,
-        userStore.userInfo.id,
-      );
+      isLiked.value = await articleApi.getLikeStatus(article.value.id);
     }
   } catch (err: any) {
     error.value = err.message || "获取文章失败";
@@ -317,10 +314,7 @@ async function handleLike() {
   try {
     if (isLiked.value) {
       // 已点赞，执行取消点赞
-      const success = await articleApi.unlike(
-        article.value.id,
-        userStore.userInfo.id,
-      );
+      const success = await articleApi.unlike(article.value.id);
       if (success) {
         article.value.likeCount--;
         isLiked.value = false;
@@ -330,10 +324,7 @@ async function handleLike() {
       }
     } else {
       // 未点赞，执行点赞
-      const success = await articleApi.like(
-        article.value.id,
-        userStore.userInfo.id,
-      );
+      const success = await articleApi.like(article.value.id);
       if (success) {
         article.value.likeCount++;
         isLiked.value = true;
@@ -413,4 +404,15 @@ function formatDate(dateString: string): string {
 onMounted(() => {
   fetchArticle();
 });
+
+// 监听路由参数变化，解决同组件复用时点击相关推荐不刷新的问题
+watch(
+  () => route.params.slug,
+  (newSlug, oldSlug) => {
+    if (newSlug && newSlug !== oldSlug) {
+      window.scrollTo(0, 0);
+      fetchArticle();
+    }
+  },
+);
 </script>

@@ -18,7 +18,7 @@
     <packaging>pom</packaging>
     <groupId>com.mulehang</groupId>
     <artifactId>mulehang-blog-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <name>mulehang-blog</name>
     <description>mulehang-blog</description>
     <url/>

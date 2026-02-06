@@ -1,5 +1,8 @@
 package com.mulehang.blog.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -7,13 +10,22 @@ import lombok.Data;
  */
 @Data
 public class CommentCreateDTO {
-    private Long articleId;// 文章ID
 
-    private Long parentId;// 父评论ID
+    /** 文章ID */
+    @NotNull(message = "文章ID不能为空")
+    private Long articleId;
 
-    private Long rootId;// 根评论ID
+    /** 父评论ID */
+    private Long parentId;
 
-    private Long replyToUser;// 被回复的用户ID
+    /** 根评论ID */
+    private Long rootId;
 
-    private String content;// 评论内容
+    /** 被回复的用户ID */
+    private Long replyToUser;
+
+    /** 评论内容 */
+    @NotBlank(message = "评论内容不能为空")
+    @Size(max = 2000, message = "评论内容不能超过2000字")
+    private String content;
 }

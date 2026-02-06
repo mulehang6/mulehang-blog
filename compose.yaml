@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mulehang-blog-app:latest
+    image: ${BLOG_APP_IMAGE:-ghcr.io/mulehang6/mulehang-blog:latest}
     container_name: blog-app
     restart: unless-stopped
     ports:
@@ -72,14 +72,11 @@ services:
         condition: service_healthy
 
   blog-frontend:
-    image: nginx:1.27-alpine
+    image: ${BLOG_FRONTEND_IMAGE:-ghcr.io/mulehang6/mulehang-blog-frontend:latest}
     container_name: blog-frontend
     restart: unless-stopped
     expose:
       - "80"
-    volumes:
-      - ./blog-frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./blog-frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       - blog-app
   
@@ -113,7 +110,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5

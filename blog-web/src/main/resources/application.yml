@@ -85,17 +85,17 @@ spring:
         acknowledge-mode: manual
         prefetch: 1
 
-  # Elasticsearch 配置（Milestone 3：搜索）
+  # Elasticsearch 配置
   # 说明：
   # - 使用 Spring Boot 自动配置的 ES Java Client（elasticsearch-java）
-  # - 默认端口按你本地 ES 设置为 9201；如需调整，用环境变量 ELASTICSEARCH_URIS 覆盖
+  # - 默认端口本地设置为 9201；如需调整，用环境变量 ELASTICSEARCH_URIS 覆盖
   # - blog.elasticsearch.enabled=true 时才加载 ES 相关 Bean
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9201}
     username: ${ELASTICSEARCH_USERNAME:}
     password: ${ELASTICSEARCH_PASSWORD:}
 
-  # 邮件配置（Milestone 3: 异步邮件通知）
+  # 邮件配置（异步邮件通知）
   # 说明：
   # - 默认使用日志模拟（LogEmailServiceImpl），spring.mail.enabled=false
   # - 若需真实发信，请设置 spring.mail.enabled=true 并配置以下参数
@@ -130,13 +130,6 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-
-  # Thymeleaf 配置
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-    encoding: UTF-8
 
   # Liquibase 配置
   liquibase:
@@ -216,7 +209,7 @@ server:
 
 # JWT 配置
 jwt:
-  secret: ${JWT_SECRET:mulehang-blog-secret-key-2025}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400}  # 过期时间（秒），默认 24 小时
   issuer: ${JWT_ISSUER:mulehang-blog}
 

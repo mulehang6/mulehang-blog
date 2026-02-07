@@ -26,10 +26,11 @@ public interface AuthService {
     LoginResponse register(RegisterRequest request);
 
     /**
-     * 退出登录（可选：用于清理缓存等）
+     * 退出登录（用于主动失效 Token）
      *
      * @param userId 用户ID
+     * @param token  当前 Token
      */
-    void logout(Long userId);
+    void logout(Long userId, String token);
 
 }

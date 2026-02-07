@@ -77,6 +77,36 @@ public class SentinelConfig {
         aiWritingStreamRule.setLimitApp("default");
         rules.add(aiWritingStreamRule);
 
+        // 登录/注册限流
+        FlowRule authLoginRule = new FlowRule();
+        authLoginRule.setResource("auth-login");
+        authLoginRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        authLoginRule.setCount(5);
+        authLoginRule.setLimitApp("default");
+        rules.add(authLoginRule);
+
+        FlowRule authRegisterRule = new FlowRule();
+        authRegisterRule.setResource("auth-register");
+        authRegisterRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        authRegisterRule.setCount(3);
+        authRegisterRule.setLimitApp("default");
+        rules.add(authRegisterRule);
+
+        // 评论与上传限流
+        FlowRule commentCreateRule = new FlowRule();
+        commentCreateRule.setResource("comment-create");
+        commentCreateRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        commentCreateRule.setCount(10);
+        commentCreateRule.setLimitApp("default");
+        rules.add(commentCreateRule);
+
+        FlowRule fileUploadRule = new FlowRule();
+        fileUploadRule.setResource("file-upload");
+        fileUploadRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        fileUploadRule.setCount(5);
+        fileUploadRule.setLimitApp("default");
+        rules.add(fileUploadRule);
+
         FlowRuleManager.loadRules(rules);
         log.info("已加载 {} 条流控规则", rules.size());
     }

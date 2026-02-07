@@ -1,6 +1,7 @@
 package com.mulehang.blog.es;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Conflicts;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mulehang.blog.entity.BlogArticle;
 import com.mulehang.blog.entity.BlogArticleBody;
@@ -9,6 +10,7 @@ import com.mulehang.blog.entity.BlogCategory;
 import com.mulehang.blog.entity.BlogTag;
 import com.mulehang.blog.entity.SysUser;
 import com.mulehang.blog.es.document.ArticleDocument;
+import com.mulehang.blog.es.init.BlogArticleIndexInitializer;
 import com.mulehang.blog.mapper.BlogArticleBodyMapper;
 import com.mulehang.blog.mapper.BlogArticleMapper;
 import com.mulehang.blog.mapper.BlogArticleTagMapper;
@@ -88,6 +90,7 @@ public class ArticleIndexService {
     private final BlogTagMapper tagMapper;
     private final BlogCategoryMapper categoryMapper;
     private final SysUserMapper userMapper;
+    private final BlogArticleIndexInitializer indexInitializer;
 
     /**
      * 在事务提交后同步文章索引。
@@ -166,10 +169,39 @@ public class ArticleIndexService {
      *     <li>索引结构变更后的重建</li>
      * </ul>
      *
+     * <p>实现策略：</p>
+     * <ol>
+     *     <li>确保索引存在（不存在则创建）</li>
+     *     <li>清空索引中的旧文档（避免残留/脏数据）</li>
+     *     <li>将数据库中已发布文章全量同步到 ES</li>
+     * </ol>
+     *
      * @return 同步成功的文章数量
      */
     public int rebuildAllArticlesIndex() {
         log.info("开始全量重建文章索引...");
+
+        try {
+            indexInitializer.ensureBlogArticleIndex();
+        } catch (Exception e) {
+            log.warn("ES 索引检查/创建失败: msg={}", e.getMessage());
+            log.debug("ES 索引检查/创建异常详情", e);
+            return 0;
+        }
+
+        try {
+            esClient.deleteByQuery(req -> req
+                .index(EsIndexNames.BLOG_ARTICLE)
+                .conflicts(Conflicts.Proceed)
+                .refresh(true)
+                .query(q -> q.matchAll(ma -> ma))
+            );
+            log.info("ES 索引清空完成: {}", EsIndexNames.BLOG_ARTICLE);
+        } catch (Exception e) {
+            log.warn("ES 索引清空失败: msg={}", e.getMessage());
+            log.debug("ES 索引清空异常详情", e);
+            return 0;
+        }
         
         // 查询所有已发布的文章
         List<BlogArticle> articles = articleMapper.selectList(

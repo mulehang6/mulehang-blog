@@ -40,7 +40,7 @@ class SentinelConfigTest {
 
         // Then
         assertNotNull(rules, "流控规则不应为 null");
-        assertEquals(5, rules.size(), "应该加载 5 条流控规则");
+        assertEquals(9, rules.size(), "应该加载 9 条流控规则");
 
         FlowRule aiChatRule = rules.stream()
                 .filter(r -> "ai-chat".equals(r.getResource()))
@@ -77,6 +77,34 @@ class SentinelConfigTest {
                 .orElse(null);
         assertNotNull(aiWritingStreamRule, "ai-writing-stream 流控规则应该存在");
         assertEquals(5.0, aiWritingStreamRule.getCount(), "写作助手流式 QPS 限制应该为 5");
+
+        FlowRule authLoginRule = rules.stream()
+                .filter(r -> "auth-login".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(authLoginRule, "auth-login 流控规则应该存在");
+        assertEquals(5.0, authLoginRule.getCount(), "登录 QPS 限制应该为 5");
+
+        FlowRule authRegisterRule = rules.stream()
+                .filter(r -> "auth-register".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(authRegisterRule, "auth-register 流控规则应该存在");
+        assertEquals(3.0, authRegisterRule.getCount(), "注册 QPS 限制应该为 3");
+
+        FlowRule commentCreateRule = rules.stream()
+                .filter(r -> "comment-create".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(commentCreateRule, "comment-create 流控规则应该存在");
+        assertEquals(10.0, commentCreateRule.getCount(), "评论 QPS 限制应该为 10");
+
+        FlowRule fileUploadRule = rules.stream()
+                .filter(r -> "file-upload".equals(r.getResource()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(fileUploadRule, "file-upload 流控规则应该存在");
+        assertEquals(5.0, fileUploadRule.getCount(), "上传 QPS 限制应该为 5");
     }
 
     @Test
@@ -141,9 +169,9 @@ class SentinelConfigTest {
         List<FlowRule> flowRules = FlowRuleManager.getRules();
         List<DegradeRule> degradeRules = DegradeRuleManager.getRules();
 
-        // 验证每个资源都有对应的流控和熔断规则
-        String[] resources = {"ai-chat", "ai-chat-stream", "ai-assistant", "ai-writing", "ai-writing-stream"};
-        for (String resource : resources) {
+        // 验证 AI 资源有对应的流控和熔断规则
+        String[] aiResources = {"ai-chat", "ai-chat-stream", "ai-assistant", "ai-writing", "ai-writing-stream"};
+        for (String resource : aiResources) {
             long flowCount = flowRules.stream()
                     .filter(r -> resource.equals(r.getResource()))
                     .count();
@@ -153,6 +181,20 @@ class SentinelConfigTest {
 
             assertEquals(1, flowCount, resource + " 应该有 1 条流控规则");
             assertEquals(1, degradeCount, resource + " 应该有 1 条熔断规则");
+        }
+
+        // 验证新增业务资源仅有流控规则
+        String[] extraFlowResources = {"auth-login", "auth-register", "comment-create", "file-upload"};
+        for (String resource : extraFlowResources) {
+            long flowCount = flowRules.stream()
+                    .filter(r -> resource.equals(r.getResource()))
+                    .count();
+            long degradeCount = degradeRules.stream()
+                    .filter(r -> resource.equals(r.getResource()))
+                    .count();
+
+            assertEquals(1, flowCount, resource + " 应该有 1 条流控规则");
+            assertEquals(0, degradeCount, resource + " 不应配置熔断规则");
         }
     }
 

@@ -8,12 +8,17 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 /**
  * Elasticsearch 配置类，手动配置 ElasticsearchClient Bean。
@@ -30,6 +35,12 @@ public class ElasticsearchConfig {
     @Value("${spring.elasticsearch.uris:http://localhost:9200}")
     private String uris;
 
+    @Value("${spring.elasticsearch.username:}")
+    private String username;
+
+    @Value("${spring.elasticsearch.password:}")
+    private String password;
+
     /**
      * 创建 RestClient Bean（带生命周期管理）。
      *
@@ -40,7 +51,19 @@ public class ElasticsearchConfig {
         String uri = uris.split(",")[0].trim();
         HttpHost host = HttpHost.create(uri);
         log.info("Elasticsearch RestClient 初始化，连接地址：{}", uri);
-        return RestClient.builder(host).build();
+        RestClientBuilder builder = RestClient.builder(host);
+        if (StringUtils.hasText(username) && StringUtils.hasText(password)) {
+            BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials(username, password)
+            );
+            builder.setHttpClientConfigCallback(
+                httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+            );
+            log.info("Elasticsearch RestClient 已启用 Basic 认证用户：{}", username);
+        }
+        return builder.build();
     }
 
     /**

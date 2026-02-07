@@ -28,12 +28,11 @@ export const useNotificationStore = defineStore("notifications", () => {
   /**
    * 构建 WebSocket 连接地址。
    */
-  function resolveWebSocketUrl(token: string): string {
+  function resolveWebSocketUrl(): string {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
     const url = new URL(baseUrl, window.location.origin);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
     url.pathname = "/ws/notifications";
-    url.searchParams.set("token", token);
     return url.toString();
   }
 
@@ -68,7 +67,7 @@ export const useNotificationStore = defineStore("notifications", () => {
   /**
    * 计划重连（指数退避）。
    */
-  function scheduleReconnect(token: string) {
+  function scheduleReconnect() {
     if (reconnectTimer.value) return;
     if (reconnectAttempts.value >= 5) {
       connectionStatus.value = "error";
@@ -79,15 +78,14 @@ export const useNotificationStore = defineStore("notifications", () => {
     reconnectAttempts.value += 1;
     reconnectTimer.value = window.setTimeout(() => {
       reconnectTimer.value = null;
-      connect(token);
+      connect();
     }, delay);
   }
 
   /**
    * 建立 WebSocket 连接。
    */
-  function connect(token: string) {
-    if (!token) return;
+  function connect() {
     if (
       socket.value &&
       (connectionStatus.value === "connected" ||
@@ -100,7 +98,7 @@ export const useNotificationStore = defineStore("notifications", () => {
     connectionStatus.value = "connecting";
     lastError.value = "";
 
-    const ws = new WebSocket(resolveWebSocketUrl(token));
+    const ws = new WebSocket(resolveWebSocketUrl());
     socket.value = ws;
 
     ws.onopen = () => {
@@ -139,7 +137,7 @@ export const useNotificationStore = defineStore("notifications", () => {
         connectionStatus.value = "disconnected";
       }
       if (shouldReconnect.value) {
-        scheduleReconnect(token);
+        scheduleReconnect();
       }
     };
   }

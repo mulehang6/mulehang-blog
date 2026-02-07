@@ -13,10 +13,6 @@ function buildHeaders() {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
-  const token = localStorage.getItem('token')
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
   return headers
 }
 
@@ -137,7 +133,8 @@ function streamSse(path: string, payload: unknown, handlers: StreamHandlers): Ab
     method: 'POST',
     headers: buildHeaders(),
     body: JSON.stringify(payload),
-    signal: controller.signal
+    signal: controller.signal,
+    credentials: 'include'
   })
     .then(async (response) => {
       if (!response.ok) {

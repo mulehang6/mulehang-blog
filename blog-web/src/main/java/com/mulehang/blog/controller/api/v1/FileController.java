@@ -1,5 +1,7 @@
 package com.mulehang.blog.controller.api.v1;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.mulehang.blog.model.Result;
 import com.mulehang.blog.storage.StorageService;
 import com.mulehang.blog.vo.UploadFileVO;
@@ -39,6 +41,7 @@ public class FileController {
      */
     @PostMapping("/upload")
     @Operation(summary = "上传文件")
+    @SentinelResource(value = "file-upload", blockHandler = "uploadBlockHandler")
     public Result<UploadFileVO> upload(@RequestParam("file") MultipartFile file) {
         FileInfo info = storageService.upload(file);
 
@@ -52,5 +55,12 @@ public class FileController {
         vo.setSize(info.getSize());
 
         return Result.ok(vo);
+    }
+
+    /**
+     * 上传限流降级处理。
+     */
+    public Result<UploadFileVO> uploadBlockHandler(MultipartFile file, BlockException e) {
+        return Result.fail("上传过于频繁，请稍后再试");
     }
 }

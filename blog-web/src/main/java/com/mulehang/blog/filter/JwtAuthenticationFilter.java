@@ -4,10 +4,12 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.entity.SysUser;
 import com.mulehang.blog.mapper.SysUserMapper;
+import com.mulehang.blog.security.TokenBlacklistService;
 import com.mulehang.blog.util.JwtUtil;
 import com.mulehang.blog.vo.UserInfoVO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * JWT 认证过滤器
@@ -32,8 +35,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String AUTH_COOKIE_NAME = "AUTH_TOKEN";
+
     private final JwtUtil jwtUtil;
     private final SysUserMapper userMapper;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -43,30 +49,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
             if (token != null) {
                 DecodedJWT jwt = jwtUtil.verifyToken(token);
-                Long userId = jwt.getClaim("userId").asLong();
-                if (!isUserActive(userId)) {
-                    log.debug("JWT 用户已禁用或不存在: {}", userId);
+                String tokenId = jwt.getId();
+                if (tokenBlacklistService.isBlacklisted(tokenId)) {
+                    log.debug("JWT 已失效: jti={}", tokenId);
                     SecurityContextHolder.clearContext();
-                    return;
+                } else {
+                    Long userId = jwt.getClaim("userId").asLong();
+                    if (!isUserActive(userId)) {
+                        log.debug("JWT 用户已禁用或不存在: {}", userId);
+                        SecurityContextHolder.clearContext();
+                    } else {
+                        String username = jwt.getClaim("username").asString();
+                        List<String> roles = jwt.getClaim("roles").asList(String.class);
+
+                        // 设置 Spring Security 上下文
+                        List<SimpleGrantedAuthority> authorities = roles.stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                                .toList();
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+
+                        // 设置 UserContext
+                        UserInfoVO userInfo = UserInfoVO.builder()
+                                .id(userId)
+                                .username(username)
+                                .roles(roles)
+                                .build();
+                        UserContext.setCurrentUser(userInfo);
+                    }
                 }
-                String username = jwt.getClaim("username").asString();
-                List<String> roles = jwt.getClaim("roles").asList(String.class);
-
-                // 设置 Spring Security 上下文
-                List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .toList();
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(auth);
-
-                // 设置 UserContext
-                UserInfoVO userInfo = UserInfoVO.builder()
-                        .id(userId)
-                        .username(username)
-                        .roles(roles)
-                        .build();
-                UserContext.setCurrentUser(userInfo);
             }
         } catch (Exception e) {
             log.debug("JWT 验证失败: {}", e.getMessage());
@@ -115,6 +127,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7);
+        }
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (Objects.equals(AUTH_COOKIE_NAME, cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        return value;
+                    }
+                }
+            }
         }
         return null;
     }

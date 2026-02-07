@@ -10,7 +10,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * WebSocket 握手拦截器
@@ -21,14 +24,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
+    private static final String AUTH_COOKIE_NAME = "AUTH_TOKEN";
+
     private final JwtUtil jwtUtil;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
         if (request instanceof ServletServerHttpRequest servletRequest) {
-            // 从 URL 参数中获取 token
-            String token = servletRequest.getServletRequest().getParameter("token");
+            HttpServletRequest httpRequest = servletRequest.getServletRequest();
+            String token = extractToken(httpRequest);
             if (token != null && !token.isEmpty()) {
                 try {
                     // 验证 token 并提取用户 ID
@@ -43,7 +48,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                     log.error("WebSocket 握手失败: Token 验证异常", e);
                 }
             } else {
-                log.warn("WebSocket 握手失败: 未找到 token 参数");
+                log.warn("WebSocket 握手失败: 未找到 token");
             }
         }
         return false; // 验证失败，拒绝握手
@@ -53,5 +58,26 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                WebSocketHandler wsHandler, Exception exception) {
         // 握手后的处理
+    }
+
+    /**
+     * 从请求头或 Cookie 提取 Token。
+     */
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (Objects.equals(AUTH_COOKIE_NAME, cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

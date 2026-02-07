@@ -8,6 +8,8 @@ import com.mulehang.blog.entity.SysUserRole;
 import com.mulehang.blog.mapper.SysUserMapper;
 import com.mulehang.blog.mapper.SysUserRoleMapper;
 import com.mulehang.blog.service.AuthService;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.mulehang.blog.security.TokenBlacklistService;
 import com.mulehang.blog.util.JwtUtil;
 import com.mulehang.blog.util.PasswordUtil;
 import com.mulehang.blog.vo.LoginResponse;
@@ -16,8 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysUserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
     private final PasswordUtil passwordUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 用户登录
@@ -145,10 +150,22 @@ public class AuthServiceImpl implements AuthService {
      * 退出登录
      *
      * @param userId 用户 ID
+     * @param token  当前 Token
      */
     @Override
-    public void logout(Long userId) {
-        // JWT 是无状态的，这里可以用于清理缓存等操作
+    public void logout(Long userId, String token) {
+        if (StringUtils.hasText(token)) {
+            try {
+                DecodedJWT jwt = jwtUtil.verifyToken(token);
+                String jti = jwt.getId();
+                Date expiresAt = jwt.getExpiresAt();
+                long ttlSeconds = expiresAt == null ? 0L
+                        : Math.max(0L, (expiresAt.getTime() - System.currentTimeMillis()) / 1000);
+                tokenBlacklistService.blacklist(jti, ttlSeconds);
+            } catch (Exception e) {
+                log.warn("注销时 Token 处理失败: {}", e.getMessage());
+            }
+        }
         log.info("用户 {} 退出登录", userId);
     }
 

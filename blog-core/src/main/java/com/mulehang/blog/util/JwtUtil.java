@@ -4,13 +4,16 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * JWT 工具类
@@ -19,7 +22,7 @@ import java.util.List;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:mulehang-blog-secret-key-2025}")
+    @Value("${jwt.secret}")
     private String secret;
 
     /**
@@ -32,6 +35,16 @@ public class JwtUtil {
 
     @Value("${jwt.issuer:mulehang-blog}")
     private String issuer;
+
+    /**
+     * 校验 JWT 密钥强度。
+     */
+    @PostConstruct
+    public void validateSecret() {
+        if (!StringUtils.hasText(secret) || secret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET 未配置或长度不足（至少 32 位）");
+        }
+    }
 
     /**
      * 生成 JWT Token
@@ -61,6 +74,7 @@ public class JwtUtil {
         return JWT.create()
                 .withIssuer(issuer)
                 .withSubject(username)
+                .withJWTId(UUID.randomUUID().toString())
                 .withClaim("userId", userId)
                 .withClaim("username", username)
                 .withClaim("roles", roles)
@@ -121,6 +135,17 @@ public class JwtUtil {
     }
 
     /**
+     * 从 Token 中获取 jti
+     *
+     * @param token JWT Token
+     * @return jti
+     */
+    public String getTokenIdFromToken(String token) {
+        DecodedJWT jwt = verifyToken(token);
+        return jwt.getId();
+    }
+
+    /**
      * 检查 Token 是否过期
      *
      * @param token JWT Token
@@ -136,4 +161,3 @@ public class JwtUtil {
     }
 
 }
-

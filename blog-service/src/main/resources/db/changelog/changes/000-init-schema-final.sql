@@ -260,6 +260,7 @@ INSERT IGNORE INTO `sys_role` (`code`, `name`, `description`, `sort`, `status`) 
 -- 注意：生产环境应该通过注册接口创建用户，这里仅用于开发测试
 -- 盐值：见 password_salt（Base64 字符串）
 -- 密码哈希：使用 BCrypt 对 "mulehang" + password_salt 进行加密
+-- 生产时请使用sql更新，不要使用默认管理员
 INSERT IGNORE INTO `sys_user` (`username`, `password_hash`, `password_salt`, `nickname`, `email`, `status`) VALUES
 ('admin', '$2a$10$1PUPrLToxeD2Ktfun6373.yOaDJHDlAtDxcGVWUHxpIHa3ILWS6GS', 'ZUc1eFE2bk4ydkIxbUIyZ0Q4Y1I1dlM0', '管理员', '15871935167@163.com', 1);
 

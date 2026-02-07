@@ -95,6 +95,9 @@ jobs:
         command_timeout: 60m
         script: |
           cd ${{ secrets.DEPLOY_PATH }}
+          git fetch origin prod
+          git checkout prod
+          git pull origin prod
           if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
           fi

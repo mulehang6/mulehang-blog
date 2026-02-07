@@ -8,28 +8,11 @@ import { authApi } from '@/api/auth'
  */
 export const useUserStore = defineStore('user', () => {
   // 状态
-  const token = ref<string>(localStorage.getItem('token') || '')
+  const token = ref<string>('')
   const userInfo = ref<UserInfo | null>(null)
 
-  /**
-   * 判断 Token 是否过期
-   */
-  function isTokenExpired(tokenValue: string): boolean {
-    try {
-      const payload = tokenValue.split('.')[1]
-      if (!payload) return true
-      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
-      const decoded = JSON.parse(atob(padded)) as { exp?: number }
-      if (!decoded.exp || typeof decoded.exp !== 'number') return true
-      return Date.now() >= decoded.exp * 1000
-    } catch (error) {
-      return true
-    }
-  }
-
   // 计算属性
-  const isLoggedIn = computed(() => !!token.value && !isTokenExpired(token.value))
+  const isLoggedIn = computed(() => !!userInfo.value)
   const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN') || false)
 
   /**
@@ -80,7 +63,6 @@ export const useUserStore = defineStore('user', () => {
    */
   function setToken(newToken: string) {
     token.value = newToken
-    localStorage.setItem('token', newToken)
   }
 
   /**
@@ -88,7 +70,7 @@ export const useUserStore = defineStore('user', () => {
    */
   function setUserInfo(user: UserInfo) {
     userInfo.value = user
-    localStorage.setItem('user', JSON.stringify(user))
+    sessionStorage.setItem('auth_logged_in', '1')
   }
 
   /**
@@ -97,31 +79,24 @@ export const useUserStore = defineStore('user', () => {
   function clearUserData() {
     token.value = ''
     userInfo.value = null
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-  }
-
-  if (token.value && isTokenExpired(token.value)) {
-    clearUserData()
+    sessionStorage.removeItem('auth_logged_in')
   }
 
   /**
-   * 从 localStorage 恢复用户信息
+   * 初始化时尝试恢复会话（基于 Cookie）。
    */
-  function restoreUserInfo() {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      try {
-        userInfo.value = JSON.parse(storedUser)
-      } catch (error) {
-        console.error('解析用户信息失败:', error)
-        clearUserData()
+  async function restoreSession() {
+    try {
+      const currentUser = await authApi.getCurrentUser()
+      if (currentUser) {
+        setUserInfo(currentUser)
       }
+    } catch (error) {
+      clearUserData()
     }
   }
 
-  // 初始化时恢复用户信息
-  restoreUserInfo()
+  void restoreSession()
 
   return {
     token,

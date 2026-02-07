@@ -33,10 +33,10 @@ const isStandalonePage = computed(() => {
  * 根据登录状态自动连接/断开 WebSocket 通知。
  */
 watch(
-  () => ({ loggedIn: userStore.isLoggedIn, token: userStore.token }),
-  ({ loggedIn, token }) => {
-    if (loggedIn && token) {
-      notificationStore.connect(token);
+  () => ({ loggedIn: userStore.isLoggedIn }),
+  ({ loggedIn }) => {
+    if (loggedIn) {
+      notificationStore.connect();
       return;
     }
     notificationStore.disconnect();

@@ -10,8 +10,11 @@ import com.mulehang.blog.mapper.SysUserRoleMapper;
 import com.mulehang.blog.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * 用户数据初始化组件
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class UserDataInitializer implements CommandLineRunner {
 
@@ -26,6 +30,8 @@ public class UserDataInitializer implements CommandLineRunner {
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final PasswordUtil passwordUtil;
+    @Value("${blog.admin.init-password:}")
+    private String initPassword;
 
     @Override
     public void run(String... args) {
@@ -49,8 +55,11 @@ public class UserDataInitializer implements CommandLineRunner {
      * 创建默认管理员用户
      */
     private void createDefaultAdmin() {
-        // 生成密码（默认密码：mulehang）
-        String rawPassword = "mulehang";
+        if (!StringUtils.hasText(initPassword)) {
+            log.warn("未配置初始化管理员密码（blog.admin.init-password），跳过默认管理员创建");
+            return;
+        }
+        String rawPassword = initPassword.trim();
         String salt = passwordUtil.generateSalt();
         String passwordHash = passwordUtil.encryptPassword(rawPassword, salt);
 
@@ -64,7 +73,7 @@ public class UserDataInitializer implements CommandLineRunner {
         admin.setStatus(1);
         userMapper.insert(admin);
 
-        log.info("创建默认管理员用户成功，用户名：admin，密码：mulehang");
+        log.info("创建默认管理员用户成功，用户名：admin（请尽快修改密码）");
 
         // 查询管理员角色
         SysRole adminRole = roleMapper.selectOne(new LambdaQueryWrapper<SysRole>()

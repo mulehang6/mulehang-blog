@@ -1,5 +1,7 @@
 package com.mulehang.blog.controller.api.v1;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.mulehang.blog.context.UserContext;
 import com.mulehang.blog.dto.CommentCreateDTO;
 import com.mulehang.blog.dto.CommentUpdateDTO;
@@ -49,10 +51,18 @@ public class CommentController {
      */
     @PostMapping("/api/v1/comments")
     @Operation(summary = "发表评论/回复")
+    @SentinelResource(value = "comment-create", blockHandler = "createBlockHandler")
     public Result<Long> create(@Valid @RequestBody CommentCreateDTO dto, HttpServletRequest request) {
         String ip = request == null ? null : request.getRemoteAddr();
         String userAgent = request == null ? null : request.getHeader("User-Agent");
         return Result.ok(commentService.create(dto, ip, userAgent));
+    }
+
+    /**
+     * 评论限流降级处理。
+     */
+    public Result<Long> createBlockHandler(CommentCreateDTO dto, HttpServletRequest request, BlockException e) {
+        return Result.fail("评论过于频繁，请稍后再试");
     }
 
     /**

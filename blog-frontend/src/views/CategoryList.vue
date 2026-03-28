@@ -155,8 +155,10 @@
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDeleteCategory">
-            确认删除
+          <AlertDialogAction as-child>
+            <Button variant="destructive" @click="confirmDeleteCategory">
+              确认删除
+            </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -300,11 +302,7 @@ function openDeleteDialog(category: Category) {
  * 处理删除对话框开关。
  */
 function handleDeleteDialogOpen(open: boolean) {
-  if (!open) {
-    closeDeleteDialog();
-    return;
-  }
-  deleteDialog.value.open = true;
+  deleteDialog.value.open = open;
 }
 
 /**

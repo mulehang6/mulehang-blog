@@ -158,8 +158,10 @@
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDeleteArticle">
-            确认删除
+          <AlertDialogAction as-child>
+            <Button variant="destructive" @click="confirmDeleteArticle">
+              确认删除
+            </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

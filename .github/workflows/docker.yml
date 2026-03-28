@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  IMAGE_SHA_TAG: ${{ github.sha }}
 
 jobs:
   docker:
@@ -56,7 +57,9 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: |
+          ${{ steps.meta.outputs.tags }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_SHA_TAG }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -79,7 +82,9 @@ jobs:
         context: ./blog-frontend
         file: ./blog-frontend/Dockerfile
         push: true
-        tags: ${{ steps.meta-frontend.outputs.tags }}
+        tags: |
+          ${{ steps.meta-frontend.outputs.tags }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ env.IMAGE_SHA_TAG }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -98,8 +103,8 @@ jobs:
           git fetch origin prod
           git checkout prod
           git pull origin prod
-          export BLOG_APP_IMAGE=ghcr.io/${{ github.repository }}:prod
-          export BLOG_FRONTEND_IMAGE=ghcr.io/${{ github.repository }}-frontend:prod
+          export BLOG_APP_IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
+          export BLOG_FRONTEND_IMAGE=ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
           if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
           fi

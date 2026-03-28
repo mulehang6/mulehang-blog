@@ -40,4 +40,45 @@ public interface BlogArticleTagMapper extends BaseMapper<BlogArticleTag> {
      */
     @Select("SELECT COUNT(*) FROM blog_article_tag WHERE tag_id = #{tagId}")
     Long countByTagId(@Param("tagId") Long tagId);
+
+    /**
+     * 统计每个标签的可见文章数量。
+     *
+     * <p>
+     * 只统计未逻辑删除且已发布的文章，避免标签计数包含失效关联。
+     * </p>
+     *
+     * @return 标签可见文章数量列表
+     */
+    @Select("""
+            SELECT at.tag_id AS tagId, COUNT(*) AS articleCount
+            FROM blog_article_tag at
+            INNER JOIN blog_article a ON a.id = at.article_id
+            WHERE at.is_deleted = 0
+              AND a.is_deleted = 0
+              AND a.status = 1
+            GROUP BY at.tag_id
+            """)
+    List<TagArticleCountDTO> selectVisibleTagArticleCounts();
+
+    /**
+     * 统计指定标签下的可见文章数量。
+     *
+     * <p>
+     * 只统计未逻辑删除且已发布的文章，保证与公开文章列表口径一致。
+     * </p>
+     *
+     * @param tagId 标签 ID
+     * @return 标签可见文章数量
+     */
+    @Select("""
+            SELECT COUNT(*)
+            FROM blog_article_tag at
+            INNER JOIN blog_article a ON a.id = at.article_id
+            WHERE at.tag_id = #{tagId}
+              AND at.is_deleted = 0
+              AND a.is_deleted = 0
+              AND a.status = 1
+            """)
+    Long countVisibleByTagId(@Param("tagId") Long tagId);
 }

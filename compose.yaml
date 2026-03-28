@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${BLOG_APP_IMAGE:-ghcr.io/mulehang6/mulehang-blog:latest}
+    image: ${BLOG_APP_IMAGE:-ghcr.io/mulehang6/mulehang-blog:prod}
     container_name: blog-app
     restart: unless-stopped
     ports:
@@ -72,7 +72,7 @@ services:
         condition: service_healthy
 
   blog-frontend:
-    image: ${BLOG_FRONTEND_IMAGE:-ghcr.io/mulehang6/mulehang-blog-frontend:latest}
+    image: ${BLOG_FRONTEND_IMAGE:-ghcr.io/mulehang6/mulehang-blog-frontend:prod}
     container_name: blog-frontend
     restart: unless-stopped
     expose:

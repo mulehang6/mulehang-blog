@@ -131,7 +131,7 @@ public class TagServiceImpl implements TagService {
         }
         TagVO vo = toVO(tagMapper.selectById(id));
         if (vo != null) {
-            Long count = articleTagMapper.countByTagId(id);
+            Long count = articleTagMapper.countVisibleByTagId(id);
             vo.setArticleCount(count == null ? 0L : count);
         }
         return vo;
@@ -153,7 +153,7 @@ public class TagServiceImpl implements TagService {
             return tags;
         }
 
-        List<TagArticleCountDTO> countList = articleTagMapper.selectTagArticleCounts();
+        List<TagArticleCountDTO> countList = articleTagMapper.selectVisibleTagArticleCounts();
         if (countList == null || countList.isEmpty()) {
             tags.forEach(tag -> tag.setArticleCount(0L));
             return tags;

@@ -98,8 +98,10 @@ jobs:
           git fetch origin prod
           git checkout prod
           git pull origin prod
+          export BLOG_APP_IMAGE=ghcr.io/${{ github.repository }}:prod
+          export BLOG_FRONTEND_IMAGE=ghcr.io/${{ github.repository }}-frontend:prod
           if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
           fi
-          docker compose -f compose.yaml pull
-          docker compose -f compose.yaml up -d
+          docker compose -f compose.yaml pull blog-app blog-frontend
+          docker compose -f compose.yaml up -d --force-recreate blog-app blog-frontend caddy

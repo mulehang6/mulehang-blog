@@ -51,17 +51,17 @@ public class AuthServiceImpl implements AuthService {
                 .eq(SysUser::getUsername, request.getUsername()));
 
         if (user == null) {
-            throw new RuntimeException("用户名或密码错误");
+            throw new IllegalArgumentException("用户名或密码错误");
         }
 
         // 2. 验证密码
         if (!passwordUtil.matches(request.getPassword(), user.getPasswordSalt(), user.getPasswordHash())) {
-            throw new RuntimeException("用户名或密码错误");
+            throw new IllegalArgumentException("用户名或密码错误");
         }
 
         // 3. 检查用户状态
         if (user.getStatus() == 0) {
-            throw new RuntimeException("账号已被禁用");
+            throw new IllegalArgumentException("账号已被禁用");
         }
 
         // 4. 更新最后登录时间
@@ -107,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
         Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUsername, request.getUsername()));
         if (count > 0) {
-            throw new RuntimeException("用户名已存在");
+            throw new IllegalArgumentException("用户名已存在");
         }
 
         // 2. 检查邮箱是否已存在
@@ -115,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
             count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                     .eq(SysUser::getEmail, request.getEmail()));
             if (count > 0) {
-                throw new RuntimeException("邮箱已被注册");
+                throw new IllegalArgumentException("邮箱已被注册");
             }
         }
 

@@ -8,8 +8,9 @@ import { authApi } from '@/api/auth'
  */
 export const useUserStore = defineStore('user', () => {
   // 状态
-  const token = ref<string>('')
+  const token = ref<string>(sessionStorage.getItem('auth_token') || '')
   const userInfo = ref<UserInfo | null>(null)
+  let restorePromise: Promise<void> | null = null
 
   // 计算属性
   const isLoggedIn = computed(() => !!userInfo.value)
@@ -63,6 +64,11 @@ export const useUserStore = defineStore('user', () => {
    */
   function setToken(newToken: string) {
     token.value = newToken
+    if (newToken) {
+      sessionStorage.setItem('auth_token', newToken)
+    } else {
+      sessionStorage.removeItem('auth_token')
+    }
   }
 
   /**
@@ -79,6 +85,7 @@ export const useUserStore = defineStore('user', () => {
   function clearUserData() {
     token.value = ''
     userInfo.value = null
+    sessionStorage.removeItem('auth_token')
     sessionStorage.removeItem('auth_logged_in')
   }
 
@@ -86,12 +93,26 @@ export const useUserStore = defineStore('user', () => {
    * 初始化时尝试恢复会话（基于 Cookie）。
    */
   async function restoreSession() {
-    try {
-      const currentUser = await authApi.getCurrentUser()
-      if (currentUser) {
-        setUserInfo(currentUser)
+    if (restorePromise) {
+      return restorePromise
+    }
+
+    restorePromise = (async () => {
+      try {
+        const currentUser = await authApi.getCurrentUser()
+        if (currentUser) {
+          setUserInfo(currentUser)
+        }
+      } catch (error) {
+        clearUserData()
+      } finally {
+        restorePromise = null
       }
-    } catch (error) {
+    })()
+
+    try {
+      await restorePromise
+    } catch {
       clearUserData()
     }
   }
@@ -108,6 +129,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     setToken,
     setUserInfo,
-    clearUserData
+    clearUserData,
+    restoreSession
   }
 })

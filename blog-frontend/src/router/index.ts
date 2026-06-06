@@ -148,26 +148,27 @@ const router = createRouter({
 /**
  * 全局前置守卫：权限控制
  */
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to) => {
   const userStore = useUserStore()
 
   // 设置页面标题
   document.title = (to.meta.title as string) || 'MuleHang'
 
+  // 整页刷新时 Pinia 会丢失内存态；若此前已登录，先尝试基于 Cookie 恢复会话。
+  if (to.meta.requiresAuth && !userStore.isLoggedIn && sessionStorage.getItem('auth_logged_in') === '1') {
+    await userStore.restoreSession()
+  }
+
   // 需要登录的页面
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
-    return
+    return { name: 'Login', query: { redirect: to.fullPath } }
   }
 
   // 需要管理员权限的页面
   if (to.meta.requiresAdmin && !userStore.isAdmin) {
     console.error('需要管理员权限')
-    next({ name: 'Home' })
-    return
+    return { name: 'Home' }
   }
-
-  next()
 })
 
 export default router

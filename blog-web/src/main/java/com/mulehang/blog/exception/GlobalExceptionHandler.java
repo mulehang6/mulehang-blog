@@ -5,6 +5,7 @@ import com.mulehang.blog.model.ResultCodeEnum;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -61,6 +62,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<?> handleAccessDeniedException(AccessDeniedException e) {
         return Result.fail(ResultCodeEnum.FORBIDDEN, "权限不足");
+    }
+
+    /**
+     * 处理历史代码中直接抛出的 {@link RuntimeException} 业务异常。
+     *
+     * <p>仅对“裸 RuntimeException 且带明确消息”的情况返回 40000，
+     * 其余运行时异常仍按服务端内部错误处理，避免误暴露系统异常细节。</p>
+     *
+     * @param e 异常
+     * @return 错误响应
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public Result<?> handleRuntimeException(RuntimeException e) {
+        if (e.getClass().equals(RuntimeException.class) && StringUtils.hasText(e.getMessage())) {
+            log.warn("业务运行时异常: {}", e.getMessage());
+            return Result.fail(ResultCodeEnum.BAD_REQUEST, e.getMessage());
+        }
+        log.error("未处理运行时异常", e);
+        return Result.fail("服务器内部错误");
     }
 
     /**

@@ -31,6 +31,7 @@
                 v-model="username"
                 type="text"
                 placeholder="请输入用户名"
+                data-testid="login-username"
                 required
                 :disabled="loading"
               />
@@ -52,6 +53,7 @@
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="请输入密码"
+                  data-testid="login-password"
                   required
                   :disabled="loading"
                   class="pr-10"
@@ -85,6 +87,7 @@
             <!-- 错误提示 -->
             <div
               v-if="errorMessage"
+              data-testid="login-error"
               class="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md p-3"
             >
               {{ errorMessage }}
@@ -94,6 +97,7 @@
             <Button
               type="submit"
               :disabled="loading"
+              data-testid="login-submit"
               class="w-full rounded-xl bg-ink text-white hover:bg-clay dark:bg-clay dark:text-paper-bg"
               size="lg"
             >
@@ -140,6 +144,7 @@
             type="button"
             :disabled="loading"
             @click="handleGitHubLogin"
+            data-testid="login-github"
             class="w-full rounded-xl border-ink/20 text-ink hover:bg-paper-dark"
           >
             <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -237,7 +242,7 @@ async function handleLogin() {
     await userStore.login(username.value, password.value);
 
     // 登录成功，跳转到首页
-    router.push("/");
+    await router.push("/");
   } catch (error: any) {
     // 显示错误信息
     errorMessage.value = error.message || "登录失败，请检查用户名和密码";

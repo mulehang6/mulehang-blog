@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-10">
     <header class="space-y-3">
-      <h1 class="font-serif text-4xl font-medium text-ink">
+      <h1 class="font-serif text-4xl font-medium text-ink" data-testid="article-manage-title">
         {{ localeStore.t.articleManage }}
       </h1>
       <p class="text-ink-light">
@@ -15,6 +15,7 @@
         :key="option.key"
         size="sm"
         variant="outline"
+        :data-testid="`article-filter-${option.key}`"
         class="rounded-full border-ink/10 text-ink-light transition-colors hover:bg-paper-dark"
         :class="
           activeStatus === option.key
@@ -37,6 +38,7 @@
       <Card
         v-for="article in articles"
         :key="article.id"
+        :data-testid="`article-card-${article.id}`"
         class="group cursor-pointer overflow-hidden border-ink/10 bg-paper-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-none"
         @click="handleOpenArticle(article)"
       >
@@ -73,6 +75,7 @@
                 v-if="isDraft(article.status)"
                 size="sm"
                 variant="ghost"
+                :data-testid="`article-publish-${article.id}`"
                 class="text-clay hover:text-clay-dark"
                 @click.stop="handlePublish(article.id)"
               >
@@ -81,6 +84,7 @@
               <Button
                 size="sm"
                 variant="ghost"
+                :data-testid="`article-edit-${article.id}`"
                 class="text-ink-light hover:text-clay"
                 @click.stop="handleEdit(article.id)"
               >
@@ -89,6 +93,7 @@
               <Button
                 size="sm"
                 variant="ghost"
+                :data-testid="`article-delete-${article.id}`"
                 class="text-destructive"
                 @click.stop="handleDelete(article)"
               >
@@ -145,7 +150,7 @@
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>确认删除</AlertDialogTitle>
+          <AlertDialogTitle data-testid="article-delete-dialog-title">确认删除</AlertDialogTitle>
           <AlertDialogDescription>
             {{ localeStore.t.confirmDeleteArticle }}
             <span
@@ -160,6 +165,7 @@
           <AlertDialogCancel @click="closeDeleteDialog">取消</AlertDialogCancel>
           <AlertDialogAction as-child>
             <Button variant="destructive" @click="confirmDeleteArticle">
+              <span data-testid="article-delete-confirm">确认删除</span>
               确认删除
             </Button>
           </AlertDialogAction>

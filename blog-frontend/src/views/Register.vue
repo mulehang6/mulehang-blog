@@ -31,6 +31,7 @@
                 v-model="formData.username"
                 type="text"
                 placeholder="请输入用户名（4-20位）"
+                data-testid="register-username"
                 required
                 :disabled="loading"
               />
@@ -46,6 +47,7 @@
                 v-model="formData.nickname"
                 type="text"
                 placeholder="请输入昵称"
+                data-testid="register-nickname"
                 required
                 :disabled="loading"
               />
@@ -61,6 +63,7 @@
                 v-model="formData.email"
                 type="email"
                 placeholder="请输入邮箱地址"
+                data-testid="register-email"
                 required
                 :disabled="loading"
               />
@@ -76,6 +79,7 @@
                 v-model="formData.password"
                 type="password"
                 placeholder="请输入密码（至少6位）"
+                data-testid="register-password"
                 required
                 :disabled="loading"
               />
@@ -91,6 +95,7 @@
                 v-model="formData.confirmPassword"
                 type="password"
                 placeholder="请再次输入密码"
+                data-testid="register-confirm-password"
                 required
                 :disabled="loading"
               />
@@ -102,6 +107,7 @@
                 id="agree"
                 type="checkbox"
                 v-model="formData.agree"
+                data-testid="register-agree"
                 class="h-4 w-4 rounded border-ink/20 accent-clay"
               />
               <label for="agree" class="text-sm font-medium text-ink">
@@ -121,6 +127,7 @@
             <!-- 错误提示 -->
             <div
               v-if="errorMessage"
+              data-testid="register-error"
               class="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md p-3"
             >
               {{ errorMessage }}
@@ -129,6 +136,7 @@
             <!-- 成功提示 -->
             <div
               v-if="successMessage"
+              data-testid="register-success"
               class="bg-green-500/10 border border-green-500/20 text-green-600 text-sm rounded-md p-3"
             >
               {{ successMessage }}
@@ -138,6 +146,7 @@
             <Button
               type="submit"
               :disabled="loading || !formData.agree"
+              data-testid="register-submit"
               class="w-full rounded-xl bg-ink text-white hover:bg-clay dark:bg-clay dark:text-paper-bg"
               size="lg"
             >

@@ -22,6 +22,7 @@
             v-model="form.title"
             type="text"
             placeholder="请输入文章标题"
+            data-testid="article-title"
             class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
             required
           />
@@ -33,6 +34,7 @@
           <Textarea
             v-model="form.summary"
             placeholder="请输入文章摘要（可选）"
+            data-testid="article-summary"
             class="min-h-25"
           />
         </div>
@@ -67,6 +69,7 @@
                   v-model="categorySearchKeyword"
                   type="text"
                   placeholder="搜索或输入新分类名称..."
+                  data-testid="article-category-input"
                   class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
                   @focus="showCategoryDropdown = true"
                 />
@@ -183,6 +186,7 @@
                   v-model="tagSearchKeyword"
                   type="text"
                   placeholder="搜索或输入新标签名称..."
+                  data-testid="article-tag-input"
                   class="flex h-11 w-full rounded-xl border border-ink/10 bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-lighter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40"
                   @focus="showTagDropdown = true"
                 />
@@ -307,6 +311,7 @@
                 <Textarea
                   v-model="form.contentMd"
                   placeholder="请使用 Markdown 格式编写文章内容..."
+                  data-testid="article-content"
                   class="min-h-[560px] max-h-[560px] overflow-auto font-mono"
                   @paste="handlePasteImage"
                   required
@@ -347,6 +352,7 @@
             variant="secondary"
             @click="handleSaveDraft"
             :disabled="loading"
+            data-testid="article-save-draft"
             class="rounded-xl bg-paper-dark text-ink hover:bg-paper-dark/80"
           >
             保存草稿
@@ -354,6 +360,7 @@
           <Button
             type="submit"
             :disabled="loading"
+            data-testid="article-publish-submit"
             class="rounded-xl bg-ink text-paper-bg hover:bg-clay dark:bg-clay dark:text-paper-bg"
           >
             {{ isEditMode && form.status === 1 ? "更新文章" : "发布文章" }}
